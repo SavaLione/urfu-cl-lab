@@ -30,11 +30,56 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief Execution time
  * @author Saveliy Pototskiy (SavaLione)
  * @date 21 Sep 2022
  */
-#ifndef CORE_NYX_H
-#define CORE_NYX_H
+#ifndef CORE_EXECUTION_TIME_H
+#define CORE_EXECUTION_TIME_H
 
-#endif // CORE_NYX_H
+#include <chrono>
+
+class execution_time
+{
+public:
+	execution_time();
+	~execution_time();
+	void start();
+	void stop();
+
+	long long const count_nanoseconds() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::nanoseconds>(_stop - _start)).count();
+	}
+
+	long long const count_microseconds() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::microseconds>(_stop - _start)).count();
+	}
+
+	long long const count_milliseconds() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::milliseconds>(_stop - _start)).count();
+	}
+
+	long long const count_seconds() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::seconds>(_stop - _start)).count();
+	}
+
+	long long const count_minutes() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::minutes>(_stop - _start)).count();
+	}
+
+	long long const count_hours() const &
+	{
+		return (std::chrono::duration_cast<std::chrono::hours>(_stop - _start)).count();
+	}
+
+private:
+	std::chrono::steady_clock::time_point _start;
+	std::chrono::steady_clock::time_point _stop;
+};
+
+#endif // CORE_EXECUTION_TIME_H

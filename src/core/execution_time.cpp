@@ -30,11 +30,29 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief Execution time
  * @author Saveliy Pototskiy (SavaLione)
  * @date 21 Sep 2022
  */
-#ifndef CORE_NYX_H
-#define CORE_NYX_H
+#include "core/execution_time.h"
 
-#endif // CORE_NYX_H
+execution_time::execution_time()
+{
+
+}
+
+execution_time::~execution_time()
+{
+
+}
+
+void execution_time::start()
+{
+    _start = std::chrono::high_resolution_clock::now();
+}
+
+void execution_time::stop()
+{
+    _stop = std::chrono::high_resolution_clock::now();
+    
+}
