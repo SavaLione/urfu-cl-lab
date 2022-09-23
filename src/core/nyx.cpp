@@ -36,19 +36,19 @@
  */
 #include "core/nyx.h"
 
-#include <CL/cl.h>
 #include <cstddef>
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#if defined(__APPLE__) || defined(__MACOSX)
-	#include <OpenCL/cl.hpp>
-#else
-	#include <CL/cl.hpp>
-#endif
+// #if defined(__APPLE__) || defined(__MACOSX)
+// 	#include <OpenCL/cl.hpp>
+// #else
+// 	#include <CL/cl.hpp>
+// #endif
 
 #include "core/execution_time.h"
 
+#include <CL/opencl.hpp>
 #include <chrono>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -89,7 +89,18 @@ void cl_platform()
 	std::vector<cl::Platform> cl_platforms;
 	cl::Platform::get(&cl_platforms);
 
+	cl::Platform cl_platform_default;
+
 	spdlog::info("OpenCL platforms total: {}", cl_platforms.size());
+
+	for(auto &p : cl_platforms)
+	{
+		std::string platform_name	 = p.getInfo<CL_PLATFORM_NAME>();
+		std::string platform_version = p.getInfo<CL_PLATFORM_VERSION>();
+		spdlog::info("OpenCL platform: {} version: {}", platform_name, platform_version);
+
+		cl_platform_default = p;
+	}
 
 	if(cl_platforms.size() == 0)
 	{
@@ -171,7 +182,159 @@ void cl_platform()
 		}
 	}
 
-	// cl::Platform default_platform = cl_platforms[0];
+	//
+
+	cl::Platform cl_platform_new = cl::Platform::setDefault(cl_platform_default);
+	if(cl_platform_new != cl_platform_default)
+	{
+		spdlog::error("Error setting default platform.");
+		return;
+	}
+
+	// C++11 raw string literal for the first kernel
+	// std::string kernel1 {R"CLC(
+	//     global int globalA;
+	//     kernel void updateGlobal()
+	//     {
+	//       globalA = 75;
+	//     }
+	// )CLC"};
+
+	std::string kernel1 {R"CLC(
+		__kernel void sup()
+		{
+		}
+    )CLC"};
+
+	// Raw string literal for the second kernel
+	// std::string kernel2 {R"CLC(
+	//     typedef struct { global int *bar; } Foo;
+	//     kernel void vectorAdd(global const Foo* aNum, global const int *inputA, global const int *inputB,
+	//                           global int *output, int val, write_only pipe int outPipe, queue_t childQueue)
+	//     {
+	//       output[get_global_id(0)] = inputA[get_global_id(0)] + inputB[get_global_id(0)] + val + *(aNum->bar);
+	//       write_pipe(outPipe, &val);
+	//       queue_t default_queue = get_default_queue();
+	//       ndrange_t ndrange = ndrange_1D(get_global_size(0)/2, get_global_size(0)/2);
+
+	//       // Have a child kernel write into third quarter of output
+	//       enqueue_kernel(default_queue, CLK_ENQUEUE_FLAGS_WAIT_KERNEL, ndrange,
+	//         ^{
+	//             output[get_global_size(0)*2 + get_global_id(0)] =
+	//               inputA[get_global_size(0)*2 + get_global_id(0)] + inputB[get_global_size(0)*2 + get_global_id(0)] + globalA;
+	//         });
+
+	//       // Have a child kernel write into last quarter of output
+	//       enqueue_kernel(childQueue, CLK_ENQUEUE_FLAGS_WAIT_KERNEL, ndrange,
+	//         ^{
+	//             output[get_global_size(0)*3 + get_global_id(0)] =
+	//               inputA[get_global_size(0)*3 + get_global_id(0)] + inputB[get_global_size(0)*3 + get_global_id(0)] + globalA + 2;
+	//         });
+	//     }
+	// )CLC"};
+
+	std::string kernel2 {R"CLC(
+		__kernel void simple_add(__global const int* A, __global const int* B, __global int* C)
+		{
+			int index = get_global_id(0);
+			C[index] = A[index] + B[index];
+		}
+    )CLC"};
+
+	std::vector<std::string> cl_program_strings;
+	cl_program_strings.push_back(kernel1);
+	cl_program_strings.push_back(kernel2);
+
+	cl::Program cl_vector_add_program(cl_program_strings);
+
+	try
+	{
+		// cl_vector_add_program.build("-cl-std=CL2.0");
+		cl_vector_add_program.build("-cl-std=CL1.2");
+	}
+	catch(...)
+	{
+		// Print build info for all devices
+		cl_int build_err = CL_SUCCESS;
+		auto build_info	 = cl_vector_add_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(&build_err);
+		for(auto &pair : build_info)
+		{
+			spdlog::error("Error building kernel.");
+			spdlog::error(pair.second);
+		}
+
+		return;
+	}
+
+	// Get and run kernel that initializes the program-scope global
+	// A test for kernels that take no arguments
+	// auto program_2_kernel = cl::KernelFunctor<>(cl_vector_add_program, "updateGlobal");
+	// program_2_kernel(cl::EnqueueArgs(cl::NDRange(1)));
+
+	///
+	std::vector<cl::Device> all_devices;
+	cl_platform_default.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+
+	if(all_devices.size() == 0)
+	{
+		spdlog::error("No OpenCL devices found.");
+		return;
+	}
+
+	cl::Device cl_device_default = all_devices[0];
+	spdlog::info("Using OpenCL device: {}", cl_device_default.getInfo<CL_DEVICE_NAME>());
+
+	cl::Context context({cl_device_default});
+
+	cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+	cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+	cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+
+	int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
+
+	//create queue to which we will push commands for the device.
+	cl::CommandQueue queue(context, cl_device_default);
+
+	//write arrays A and B to the device
+	queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
+	queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
+
+	cl::Kernel kernel(cl_vector_add_program, "simple_add");
+
+	kernel.setArg(0, buffer_A);
+	kernel.setArg(1, buffer_B);
+	kernel.setArg(2, buffer_C);
+
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(10), cl::NullRange);
+
+	int C[10];
+
+	//read result C from the device to array C
+	queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(int) * 10, C);
+	queue.finish();
+
+	std::string arr_a = "";
+	std::string arr_b = "";
+
+	for(int i = 0; i < 10; i++)
+	{
+		arr_a += std::to_string(A[i]);
+		arr_a += " ";
+		arr_b += std::to_string(B[i]);
+		arr_b += " ";
+	}
+
+	spdlog::info("A:      {}", arr_a);
+	spdlog::info("B:      {}", arr_b);
+
+	std::string result = "";
+	for(int i = 0; i < 10; i++)
+	{
+		result += std::to_string(C[i]);
+		result += " ";
+	}
+	spdlog::info("Result: {}", result);
 }
 
 void print_platform_info(cl::Platform const &platform, std::size_t id)
