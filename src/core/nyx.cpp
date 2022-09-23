@@ -36,26 +36,26 @@
  */
 #include "core/nyx.h"
 
-#include <cstddef>
-
 #define __CL_ENABLE_EXCEPTIONS
 
-// #if defined(__APPLE__) || defined(__MACOSX)
-// 	#include <OpenCL/cl.hpp>
-// #else
-// 	#include <CL/cl.hpp>
-// #endif
+#if defined(__APPLE__) || defined(__MACOSX)
+	#include <OpenCL/cl.hpp>
+#else
+	#include <CL/cl.h>
+#endif
 
 #include "core/execution_time.h"
 
 #include <CL/opencl.hpp>
 #include <chrono>
+#include <exception>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 
 void cl_platform();
 void print_platform_info(cl::Platform const &platform, std::size_t id);
+void sample();
 
 static cl_int cl_allocate_and_get_info(cl_device_id const &device, cl_device_info const &param_name, std::string &param_value)
 {
@@ -374,9 +374,110 @@ void print_platform_info(cl::Platform const &platform, std::size_t id)
 		platform_version);
 }
 
+void sample()
+{
+	try
+	{
+		//get all platforms (drivers)
+		std::vector<cl::Platform> all_platforms;
+		cl::Platform::get(&all_platforms);
+		if(all_platforms.size() == 0)
+		{
+			spdlog::error("No OpenCL platforms found.");
+			return;
+		}
+		cl::Platform default_platform = all_platforms[0];
+		spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
+
+		//get default device of the default platform
+		std::vector<cl::Device> all_devices;
+		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if(all_devices.size() == 0)
+		{
+			spdlog::error("No OpenCL devices found.");
+			return;
+		}
+		cl::Device default_device = all_devices[0];
+		spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
+
+		cl::Context context({default_device});
+
+		cl::Program::Sources sources;
+		// kernel calculates for each element C=A+B
+		std::string kernel_code = "__kernel void simple_add(__global const int* A, __global const int* B, __global int* C) {"
+								  "	int index = get_global_id(0);"
+								  "	C[index] = A[index] + B[index];"
+								  "};";
+		sources.push_back({kernel_code.c_str(), kernel_code.length()});
+
+		cl::Program program(context, sources);
+		try
+		{
+			program.build({default_device});
+		}
+		catch(cl::Error err)
+		{
+			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+			return;
+		}
+
+		// create buffers on the device
+		cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
+
+		int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+		int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
+
+		//create queue to which we will push commands for 	the device.
+		cl::CommandQueue queue(context, default_device);
+
+		//write arrays A and B to the device
+		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
+		queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
+
+		cl::Kernel kernel(program, "simple_add");
+
+		kernel.setArg(0, buffer_A);
+		kernel.setArg(1, buffer_B);
+		kernel.setArg(2, buffer_C);
+		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(10), cl::NullRange);
+
+		int C[10];
+		//read result C from the device to array C
+		queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(int) * 10, C);
+		queue.finish();
+
+		std::string vec_a = "";
+		std::string vec_b = "";
+		std::string vec_c = "";
+
+		for(int i = 0; i < 10; i++)
+		{
+			vec_a += std::to_string(A[i]);
+			vec_a += " ";
+
+			vec_b += std::to_string(B[i]);
+			vec_b += " ";
+
+			vec_c += std::to_string(C[i]);
+			vec_c += " ";
+		}
+
+		spdlog::info("vec_a: {}", vec_a);
+		spdlog::info("vec_b: {}", vec_b);
+		spdlog::info("vec_c: {}", vec_c);
+	}
+	catch(std::exception const &e)
+	{
+		spdlog::error(e.what());
+	}
+}
+
 int main()
 {
-	cl_platform();
+	// cl_platform();
+	sample();
 	return 0;
 	const long long vector_size		= 102400000;
 	const long long iteration_count = 100;
