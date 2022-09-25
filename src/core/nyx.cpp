@@ -439,8 +439,8 @@ void cl_task_new()
 			spdlog::error(err.err());
 		}
 
-		// const std::size_t vector_size = 102400000 / 8192;
-		const std::size_t vector_size = 102400000;
+		const std::size_t vector_size	  = 102400000;
+		const std::size_t iteration_count = 100;
 
 		std::vector<float> vec_a(vector_size), vec_b(vector_size), vec_c(vector_size);
 
@@ -483,11 +483,22 @@ void cl_task_new()
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
 		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_add");
 
-		kernel_funktor_simple_add(cl::EnqueueArgs(queue, cl::NDRange(256)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
+		execution_time et;
+		et.start();
 
-		cl::copy(queue, vec_buffer_c, vec_c.begin(), vec_c.end());
+		for(std::size_t n = 0; n < iteration_count; n++)
+		{
+			kernel_funktor_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
 
-		spdlog::info("GPU check: {} {} {}", std::to_string(vec_c[0]), std::to_string(vec_c[1]), std::to_string(vec_c[128]));
+			cl::copy(queue, vec_buffer_c, vec_c.begin(), vec_c.end());
+		}
+
+		et.stop();
+
+		spdlog::info("Time to parallel compute vec_c on gpu: {} (nanoseconds)", et.count_nanoseconds());
+		spdlog::info("Time to parallel compute vec_c on gpu: {} (milliseconds)", et.count_milliseconds());
+
+		spdlog::info("GPU check: {} {} {}", std::to_string(vec_c[0]), std::to_string(vec_c[1]), std::to_string(vec_c[4096]));
 	}
 	catch(cl::Error &e)
 	{
@@ -499,251 +510,71 @@ void cl_task_new()
 	spdlog::info("New GPU task completed.");
 }
 
-void cltask()
-{
-	spdlog::info("GPU task started.");
-	try
-	{
-		//get all platforms (drivers)
-		std::vector<cl::Platform> all_platforms;
-		cl::Platform::get(&all_platforms);
-		if(all_platforms.size() == 0)
-		{
-			spdlog::error("No OpenCL platforms found.");
-			return;
-		}
-		cl::Platform default_platform = all_platforms[0];
-		spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
-
-		//get default device of the default platform
-		std::vector<cl::Device> all_devices;
-		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-		if(all_devices.size() == 0)
-		{
-			spdlog::error("No OpenCL devices found.");
-			return;
-		}
-		cl::Device default_device = all_devices[0];
-		spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
-
-		cl::Context context({default_device});
-
-		cl::Program::Sources sources;
-
-		// kernel calculates for each element C=A+B
-		std::string kernel_code =
-			"__kernel void simple_add(__global const float* A, __global const float* B, __global float* C) {"
-			"	int index = get_global_id(0);"
-			"	C[index] = A[index] + B[index];"
-			"};";
-		sources.push_back({kernel_code.c_str(), kernel_code.length()});
-
-		cl::Program program(context, sources);
-		try
-		{
-			program.build({default_device});
-		}
-		catch(cl::BuildError err)
-		{
-			spdlog::error("OpenCL build error.");
-			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
-			return;
-		}
-		catch(cl::Error const &err)
-		{
-			spdlog::error("OpenCL error.");
-			spdlog::error(err.what());
-			spdlog::error(err.err());
-		}
-
-		///
-
-		// const std::size_t vector_size	  = 102400000;
-		const std::size_t iteration_count = 1;
-		const std::size_t vector_size	  = 102400000 / 8192;
-		// const long long iteration_count = 100;
-
-		float arr_a[vector_size];
-		float arr_b[vector_size];
-
-		std::vector<float> vec_a(vector_size), vec_b(vector_size), vec_c(vector_size);
-
-#pragma omp parallel for
-		for(std::size_t i = 0; i < vec_a.size(); i++)
-		{
-			vec_a[i] = (float)i / 2;
-		}
-
-#pragma omp parallel for
-		for(std::size_t i = 0; i < vec_b.size(); i++)
-		{
-			vec_b[i] = (float)i * 3;
-		}
-
-		// 		std::vector<float> vec_a(vector_size, 0);
-		// 		std::vector<float> vec_b(vector_size, 0);
-		// 		std::vector<float> vec_c(vector_size, 0);
-
-		// 		spdlog::info("vec_a size: {}", vec_a.size());
-		// 		spdlog::info("vec_b size: {}", vec_b.size());
-		// 		spdlog::info("vec_c size: {}", vec_c.size());
-
-		// #pragma omp parallel for
-		// 		for(std::size_t i = 0; i < vec_a.size(); i++)
-		// 		{
-		// 			vec_a[i] = (float)i / 2;
-		// 		}
-
-		// #pragma omp parallel for
-		// 		for(std::size_t i = 0; i < vec_b.size(); i++)
-		// 		{
-		// 			vec_b[i] = (float)i * 3;
-		// 		}
-
-#pragma omp parallel for
-		for(std::size_t i = 0; i < vector_size; i++)
-		{
-			arr_a[i] = (float)i / 2;
-		}
-
-#pragma omp parallel for
-		for(std::size_t i = 0; i < vector_size; i++)
-		{
-			arr_b[i] = (float)i * 3;
-		}
-
-		/* Create buffers on the device */
-		// cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
-		// cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
-		// cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
-
-		cl::Buffer buffer_A(context, CL_MEM_READ_ONLY, sizeof(float) * vector_size);
-		cl::Buffer buffer_B(context, CL_MEM_READ_ONLY, sizeof(float) * vector_size);
-		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, sizeof(float) * vector_size);
-
-		/*
-			true means that this is a read-only buffer
-			(false) means: read/write (default)
-		*/
-		cl::Buffer vec_buffer_a(context, vec_a.begin(), vec_a.end(), true);
-		cl::Buffer vec_buffer_b(context, vec_b.begin(), vec_b.end(), true);
-		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(float) * vector_size);
-
-		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_simple_add(program, "simple_add");
-
-		//create queue to which we will push commands for the device.
-		cl::CommandQueue queue(context, default_device);
-
-		//write arrays A and B to the device
-		// queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
-		// queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
-		// queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(float) * vector_size, static_cast<void *>(vec_a.data()));
-		// queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(float) * vector_size, static_cast<void *>(vec_b.data()));
-		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(float) * vector_size, arr_a);
-		queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(float) * vector_size, arr_b);
-
-		execution_time et;
-		et.start();
-
-		for(std::size_t n = 0; n < iteration_count; n++)
-		{
-			cl::Kernel kernel(program, "simple_add");
-
-			kernel.setArg(0, buffer_A);
-			kernel.setArg(1, buffer_B);
-			kernel.setArg(2, buffer_C);
-
-			queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(vector_size), cl::NullRange);
-
-			float C[vector_size];
-			//read result C from the device to array C
-			queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(float) * vector_size, C);
-			queue.finish();
-
-			// spdlog::info("GPU check: {} {} {}", C[0], C[1], C[2839]);
-			// spdlog::info("GPU check: {} {} {}", std::to_string(C[0]), std::to_string(C[1]), std::to_string(C[128]));
-		}
-		et.stop();
-
-		spdlog::info("Time to compute data on gpu: {} (nanoseconds)", et.count_nanoseconds());
-		spdlog::info("Time to compute data on gpu: {} (milliseconds)", et.count_milliseconds());
-	}
-	catch(cl::Error &e)
-	{
-		spdlog::error("GPU error.");
-		spdlog::error(e.what());
-		spdlog::error(e.err());
-	}
-	spdlog::info("GPU task completed.");
-}
-
 int main()
 {
-	// cltask();
+	const std::size_t vector_size	  = 102400000;
+	const std::size_t iteration_count = 100;
+
+	std::vector<float> vec_a(vector_size, 0);
+	std::vector<float> vec_b(vector_size, 0);
+	std::vector<float> vec_c(vector_size, 0);
+
+	spdlog::info("vec_a size: {}", vec_a.size());
+	spdlog::info("vec_b size: {}", vec_b.size());
+	spdlog::info("vec_c size: {}", vec_c.size());
+
+	execution_time et;
+	et.start();
+
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a.size(); i++)
+	{
+		vec_a[i] = (float)i / 2;
+	}
+
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_b.size(); i++)
+	{
+		vec_b[i] = (float)i * 3;
+	}
+
+	et.stop();
+
+	spdlog::info("Time to parallel fill vectors: {} (nanoseconds)", et.count_nanoseconds());
+	spdlog::info("Time to parallel fill vectors: {} (milliseconds)", et.count_milliseconds());
+
+	et.start();
+
+	for(std::size_t n = 0; n < iteration_count; n++)
+	{
+		for(std::size_t i = 0; i < vec_c.size(); i++)
+		{
+			vec_c[i] = vec_a[i] + vec_b[i];
+		}
+	}
+
+	et.stop();
+
+	spdlog::info("Time to compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	spdlog::info("Time to compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
+
+	et.start();
+
+#pragma omp parallel for
+	for(std::size_t n = 0; n < iteration_count; n++)
+	{
+		for(std::size_t i = 0; i < vec_c.size(); i++)
+		{
+			vec_c[i] = vec_a[i] + vec_b[i];
+		}
+	}
+
+	et.stop();
+
+	spdlog::info("Time to parallel compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
+
+	spdlog::info("CPU check: {} {} {}", vec_c[0], vec_c[1], vec_c[4096]);
+
 	cl_task_new();
-	return 0;
-
-	// 	const long long vector_size		= 102400000;
-	// 	const long long iteration_count = 100;
-
-	// 	std::vector<float> vec_a(vector_size, 0);
-	// 	std::vector<float> vec_b(vector_size, 0);
-	// 	std::vector<float> vec_c(vector_size, 0);
-
-	// 	spdlog::info("vec_a size: {}", vec_a.size());
-	// 	spdlog::info("vec_b size: {}", vec_b.size());
-	// 	spdlog::info("vec_c size: {}", vec_c.size());
-
-	// 	execution_time et;
-	// 	et.start();
-
-	// #pragma omp parallel for
-	// 	for(std::size_t i = 0; i < vec_a.size(); i++)
-	// 	{
-	// 		vec_a[i] = (float)i / 2;
-	// 	}
-
-	// #pragma omp parallel for
-	// 	for(std::size_t i = 0; i < vec_b.size(); i++)
-	// 	{
-	// 		vec_b[i] = (float)i * 3;
-	// 	}
-
-	// 	et.stop();
-
-	// 	spdlog::info("Time to parallel fill vectors: {} (nanoseconds)", et.count_nanoseconds());
-	// 	spdlog::info("Time to parallel fill vectors: {} (milliseconds)", et.count_milliseconds());
-
-	// 	et.start();
-
-	// 	for(std::size_t n = 0; n < iteration_count; n++)
-	// 	{
-	// 		for(std::size_t i = 0; i < vec_c.size(); i++)
-	// 		{
-	// 			vec_c[i] = vec_a[i] + vec_b[i];
-	// 		}
-	// 	}
-
-	// 	et.stop();
-
-	// 	spdlog::info("Time to compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
-	// 	spdlog::info("Time to compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
-
-	// 	et.start();
-
-	// #pragma omp parallel for
-	// 	for(std::size_t n = 0; n < iteration_count; n++)
-	// 	{
-	// 		for(std::size_t i = 0; i < vec_c.size(); i++)
-	// 		{
-	// 			vec_c[i] = vec_a[i] + vec_b[i];
-	// 		}
-	// 	}
-
-	// 	et.stop();
-
-	// 	spdlog::info("Time to parallel compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
-	// 	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
-
-	// 	spdlog::info("CPU check: {} {} {}", vec_c[0], vec_c[1], vec_c[2839]);
 }
