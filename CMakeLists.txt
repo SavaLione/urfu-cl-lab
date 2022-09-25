@@ -17,9 +17,24 @@ project(${NYX_PROJECT}
     LANGUAGES CXX
 )
 
-# flags
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fopenmp")               # default
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fopenmp")           # debug
+# Set default build to release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fopenmp")
+elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fopenmp")
+elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -fopenmp")
+elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -DNDEBUG -fopenmp")
+else()
+    message(STATUS "Unknown build type: " ${CMAKE_BUILD_TYPE})
+endif()
+
+message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
 #################################################################################
 #                               Macros and functions                            #

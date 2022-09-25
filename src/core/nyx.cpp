@@ -37,8 +37,6 @@
 #include "core/nyx.h"
 
 #define CL_HPP_ENABLE_EXCEPTIONS
-// #define CL_HPP_TARGET_OPENCL_VERSION 120
-// #define CL_HPP_TARGET_OPENCL_VERSION 200
 #define CL_HPP_TARGET_OPENCL_VERSION  120
 #define CL_HPP_MINIMUM_OPENCL_VERSION 120
 
@@ -60,7 +58,6 @@
 
 void cl_platform();
 void print_platform_info(cl::Platform const &platform, std::size_t id);
-void cltask();
 void cl_task_new();
 
 static cl_int cl_allocate_and_get_info(cl_device_id const &device, cl_device_info const &param_name, std::string &param_value)
@@ -442,7 +439,7 @@ void cl_task_new()
 		const std::size_t vector_size	  = 102400000;
 		const std::size_t iteration_count = 100;
 
-		std::vector<float> vec_a(vector_size), vec_b(vector_size), vec_c(vector_size);
+		std::vector<float> vec_a(vector_size, .0), vec_b(vector_size, .0), vec_c(vector_size, .0);
 
 #pragma omp parallel for
 		for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -470,7 +467,7 @@ void cl_task_new()
 			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
 		spdlog::info("OpenGL kernel work group size: {}", local_work_group_size);
 
-		cl::CommandQueue queue(context);
+		cl::CommandQueue queue(context, default_device);
 
 		/*
 			We need to specify global (and local) dimensions
@@ -480,6 +477,7 @@ void cl_task_new()
 			If you don’t specify a local dimension, it is assumed as cl::NullRange, and
 			the runtime picks a size for you
 		*/
+		cl::NDRange global(vector_size);
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
 		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_add");
 
@@ -488,17 +486,22 @@ void cl_task_new()
 
 		for(std::size_t n = 0; n < iteration_count; n++)
 		{
-			kernel_funktor_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
-
-			cl::copy(queue, vec_buffer_c, vec_c.begin(), vec_c.end());
+			kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), vec_buffer_a, vec_buffer_b, vec_buffer_c).wait();
 		}
 
 		et.stop();
 
+		cl::copy(queue, vec_buffer_c, vec_c.begin(), vec_c.end());
+
 		spdlog::info("Time to parallel compute vec_c on gpu: {} (nanoseconds)", et.count_nanoseconds());
 		spdlog::info("Time to parallel compute vec_c on gpu: {} (milliseconds)", et.count_milliseconds());
 
-		spdlog::info("GPU check: {} {} {}", std::to_string(vec_c[0]), std::to_string(vec_c[1]), std::to_string(vec_c[4096]));
+		spdlog::info(
+			"GPU check: {} {} {} {}",
+			std::to_string(vec_c[0]),
+			std::to_string(vec_c[1]),
+			std::to_string(vec_c[1337]),
+			std::to_string(vec_c[4096]));
 	}
 	catch(cl::Error &e)
 	{
@@ -574,7 +577,12 @@ int main()
 	spdlog::info("Time to parallel compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
 	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
 
-	spdlog::info("CPU check: {} {} {}", vec_c[0], vec_c[1], vec_c[4096]);
+	spdlog::info(
+		"CPU check: {} {} {} {}",
+		std::to_string(vec_c[0]),
+		std::to_string(vec_c[1]),
+		std::to_string(vec_c[1337]),
+		std::to_string(vec_c[4096]));
 
 	cl_task_new();
 }
