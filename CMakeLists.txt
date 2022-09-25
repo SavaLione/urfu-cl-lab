@@ -18,8 +18,8 @@ project(${NYX_PROJECT}
 )
 
 # flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fopenmp")               # default
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fopenmp")           # debug
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fopenmp")               # default
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fopenmp")           # debug
 
 #################################################################################
 #                               Macros and functions                            #

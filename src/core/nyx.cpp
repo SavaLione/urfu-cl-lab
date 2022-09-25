@@ -36,7 +36,11 @@
  */
 #include "core/nyx.h"
 
-#define __CL_ENABLE_EXCEPTIONS
+#define CL_HPP_ENABLE_EXCEPTIONS
+// #define CL_HPP_TARGET_OPENCL_VERSION 120
+// #define CL_HPP_TARGET_OPENCL_VERSION 200
+#define CL_HPP_TARGET_OPENCL_VERSION  120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
 
 #if defined(__APPLE__) || defined(__MACOSX)
 	#include <OpenCL/cl.hpp>
@@ -49,14 +53,15 @@
 #include <CL/opencl.hpp>
 #include <chrono>
 #include <exception>
+#include <iostream>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 
 void cl_platform();
 void print_platform_info(cl::Platform const &platform, std::size_t id);
-void sample();
-// void cltask();
+void cltask();
+void cl_task_new();
 
 static cl_int cl_allocate_and_get_info(cl_device_id const &device, cl_device_info const &param_name, std::string &param_value)
 {
@@ -83,6 +88,7 @@ static cl_int cl_allocate_and_get_info(cl_device_id const &device, cl_device_inf
 	// {
 	// 	error_code = clGetDeviceInfo(device, param_name, size, param_value, NULL);
 	// }
+	return CL_SUCCESS;
 }
 
 void cl_platform()
@@ -375,8 +381,10 @@ void print_platform_info(cl::Platform const &platform, std::size_t id)
 		platform_version);
 }
 
-void sample()
+void cl_task_new()
 {
+	spdlog::info("New GPU task started.");
+
 	try
 	{
 		//get all platforms (drivers)
@@ -404,11 +412,13 @@ void sample()
 		cl::Context context({default_device});
 
 		cl::Program::Sources sources;
+
 		// kernel calculates for each element C=A+B
-		std::string kernel_code = "__kernel void simple_add(__global const int* A, __global const int* B, __global int* C) {"
-								  "	int index = get_global_id(0);"
-								  "	C[index] = A[index] + B[index];"
-								  "};";
+		std::string kernel_code =
+			"__kernel void simple_add(__global const float* A, __global const float* B, __global float* C) {"
+			"	int index = get_global_id(0);"
+			"	C[index] = A[index] + B[index];"
+			"};";
 		sources.push_back({kernel_code.c_str(), kernel_code.length()});
 
 		cl::Program program(context, sources);
@@ -416,63 +426,77 @@ void sample()
 		{
 			program.build({default_device});
 		}
-		catch(cl::Error err)
+		catch(cl::BuildError err)
 		{
+			spdlog::error("OpenCL build error.");
 			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
 			return;
 		}
-
-		// create buffers on the device
-		cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-
-		int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-		int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
-
-		//create queue to which we will push commands for 	the device.
-		cl::CommandQueue queue(context, default_device);
-
-		//write arrays A and B to the device
-		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(int) * 10, A);
-		queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(int) * 10, B);
-
-		cl::Kernel kernel(program, "simple_add");
-
-		kernel.setArg(0, buffer_A);
-		kernel.setArg(1, buffer_B);
-		kernel.setArg(2, buffer_C);
-		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(10), cl::NullRange);
-
-		int C[10];
-		//read result C from the device to array C
-		queue.enqueueReadBuffer(buffer_C, CL_TRUE, 0, sizeof(int) * 10, C);
-		queue.finish();
-
-		std::string vec_a = "";
-		std::string vec_b = "";
-		std::string vec_c = "";
-
-		for(int i = 0; i < 10; i++)
+		catch(cl::Error const &err)
 		{
-			vec_a += std::to_string(A[i]);
-			vec_a += " ";
-
-			vec_b += std::to_string(B[i]);
-			vec_b += " ";
-
-			vec_c += std::to_string(C[i]);
-			vec_c += " ";
+			spdlog::error("OpenCL error.");
+			spdlog::error(err.what());
+			spdlog::error(err.err());
 		}
 
-		spdlog::info("vec_a: {}", vec_a);
-		spdlog::info("vec_b: {}", vec_b);
-		spdlog::info("vec_c: {}", vec_c);
+		// const std::size_t vector_size = 102400000 / 8192;
+		const std::size_t vector_size = 102400000;
+
+		std::vector<float> vec_a(vector_size), vec_b(vector_size), vec_c(vector_size);
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_a.size(); i++)
+		{
+			vec_a[i] = (float)i / 2;
+		}
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_b.size(); i++)
+		{
+			vec_b[i] = (float)i * 3;
+		}
+
+		/*
+			true means that this is a read-only buffer
+			(false) means: read/write (default)
+		*/
+		cl::Buffer vec_buffer_a(context, vec_a.begin(), vec_a.end(), true);
+		cl::Buffer vec_buffer_b(context, vec_b.begin(), vec_b.end(), true);
+		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(float) * vector_size);
+
+		cl::Kernel kernel_simple_add(program, "simple_add");
+
+		std::size_t local_work_group_size =
+			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
+		spdlog::info("OpenGL kernel work group size: {}", local_work_group_size);
+
+		cl::CommandQueue queue(context);
+
+		/*
+			We need to specify global (and local) dimensions
+			cl::NDRange global(1024);
+			cl::NDRange local(64)
+
+			If you don’t specify a local dimension, it is assumed as cl::NullRange, and
+			the runtime picks a size for you
+		*/
+		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_add");
+
+		kernel_funktor_simple_add(cl::EnqueueArgs(queue, cl::NDRange(256)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
+
+		cl::copy(queue, vec_buffer_c, vec_c.begin(), vec_c.end());
+
+		spdlog::info("GPU check: {} {} {}", std::to_string(vec_c[0]), std::to_string(vec_c[1]), std::to_string(vec_c[128]));
 	}
-	catch(std::exception const &e)
+	catch(cl::Error &e)
 	{
+		spdlog::error("GPU error.");
 		spdlog::error(e.what());
+		spdlog::error(e.err());
 	}
+
+	spdlog::info("New GPU task completed.");
 }
 
 void cltask()
@@ -505,6 +529,7 @@ void cltask()
 		cl::Context context({default_device});
 
 		cl::Program::Sources sources;
+
 		// kernel calculates for each element C=A+B
 		std::string kernel_code =
 			"__kernel void simple_add(__global const float* A, __global const float* B, __global float* C) {"
@@ -518,20 +543,42 @@ void cltask()
 		{
 			program.build({default_device});
 		}
-		catch(cl::Error err)
+		catch(cl::BuildError err)
 		{
+			spdlog::error("OpenCL build error.");
 			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
 			return;
+		}
+		catch(cl::Error const &err)
+		{
+			spdlog::error("OpenCL error.");
+			spdlog::error(err.what());
+			spdlog::error(err.err());
 		}
 
 		///
 
-		// const long long vector_size		= 102400000;
-		const long long vector_size		= 102400000 / 8192;
-		const long long iteration_count = 100;
+		// const std::size_t vector_size	  = 102400000;
+		const std::size_t iteration_count = 1;
+		const std::size_t vector_size	  = 102400000 / 8192;
+		// const long long iteration_count = 100;
 
 		float arr_a[vector_size];
 		float arr_b[vector_size];
+
+		std::vector<float> vec_a(vector_size), vec_b(vector_size), vec_c(vector_size);
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_a.size(); i++)
+		{
+			vec_a[i] = (float)i / 2;
+		}
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_b.size(); i++)
+		{
+			vec_b[i] = (float)i * 3;
+		}
 
 		// 		std::vector<float> vec_a(vector_size, 0);
 		// 		std::vector<float> vec_b(vector_size, 0);
@@ -565,23 +612,26 @@ void cltask()
 			arr_b[i] = (float)i * 3;
 		}
 
-		// create buffers on the device
-		// cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-		// cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-		// cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(int) * 10);
-
+		/* Create buffers on the device */
 		// cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
 		// cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
 		// cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
 
-		cl::Buffer buffer_A(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
-		cl::Buffer buffer_B(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
-		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE, sizeof(float) * vector_size);
+		cl::Buffer buffer_A(context, CL_MEM_READ_ONLY, sizeof(float) * vector_size);
+		cl::Buffer buffer_B(context, CL_MEM_READ_ONLY, sizeof(float) * vector_size);
+		cl::Buffer buffer_C(context, CL_MEM_READ_WRITE | CL_MEM_HOST_READ_ONLY, sizeof(float) * vector_size);
 
-		// int A[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-		// int B[] = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0};
+		/*
+			true means that this is a read-only buffer
+			(false) means: read/write (default)
+		*/
+		cl::Buffer vec_buffer_a(context, vec_a.begin(), vec_a.end(), true);
+		cl::Buffer vec_buffer_b(context, vec_b.begin(), vec_b.end(), true);
+		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(float) * vector_size);
 
-		//create queue to which we will push commands for 	the device.
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_simple_add(program, "simple_add");
+
+		//create queue to which we will push commands for the device.
 		cl::CommandQueue queue(context, default_device);
 
 		//write arrays A and B to the device
@@ -592,17 +642,17 @@ void cltask()
 		queue.enqueueWriteBuffer(buffer_A, CL_TRUE, 0, sizeof(float) * vector_size, arr_a);
 		queue.enqueueWriteBuffer(buffer_B, CL_TRUE, 0, sizeof(float) * vector_size, arr_b);
 
-		cl::Kernel kernel(program, "simple_add");
-
-		kernel.setArg(0, buffer_A);
-		kernel.setArg(1, buffer_B);
-		kernel.setArg(2, buffer_C);
-
 		execution_time et;
 		et.start();
 
 		for(std::size_t n = 0; n < iteration_count; n++)
 		{
+			cl::Kernel kernel(program, "simple_add");
+
+			kernel.setArg(0, buffer_A);
+			kernel.setArg(1, buffer_B);
+			kernel.setArg(2, buffer_C);
+
 			queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(vector_size), cl::NullRange);
 
 			float C[vector_size];
@@ -618,79 +668,82 @@ void cltask()
 		spdlog::info("Time to compute data on gpu: {} (nanoseconds)", et.count_nanoseconds());
 		spdlog::info("Time to compute data on gpu: {} (milliseconds)", et.count_milliseconds());
 	}
-	catch(std::exception const &e)
+	catch(cl::Error &e)
 	{
 		spdlog::error("GPU error.");
 		spdlog::error(e.what());
+		spdlog::error(e.err());
 	}
 	spdlog::info("GPU task completed.");
 }
 
 int main()
 {
-	const long long vector_size		= 102400000;
-	const long long iteration_count = 100;
+	// cltask();
+	cl_task_new();
+	return 0;
 
-	std::vector<float> vec_a(vector_size, 0);
-	std::vector<float> vec_b(vector_size, 0);
-	std::vector<float> vec_c(vector_size, 0);
+	// 	const long long vector_size		= 102400000;
+	// 	const long long iteration_count = 100;
 
-	spdlog::info("vec_a size: {}", vec_a.size());
-	spdlog::info("vec_b size: {}", vec_b.size());
-	spdlog::info("vec_c size: {}", vec_c.size());
+	// 	std::vector<float> vec_a(vector_size, 0);
+	// 	std::vector<float> vec_b(vector_size, 0);
+	// 	std::vector<float> vec_c(vector_size, 0);
 
-	execution_time et;
-	et.start();
+	// 	spdlog::info("vec_a size: {}", vec_a.size());
+	// 	spdlog::info("vec_b size: {}", vec_b.size());
+	// 	spdlog::info("vec_c size: {}", vec_c.size());
 
-#pragma omp parallel for
-	for(std::size_t i = 0; i < vec_a.size(); i++)
-	{
-		vec_a[i] = (float)i / 2;
-	}
+	// 	execution_time et;
+	// 	et.start();
 
-#pragma omp parallel for
-	for(std::size_t i = 0; i < vec_b.size(); i++)
-	{
-		vec_b[i] = (float)i * 3;
-	}
+	// #pragma omp parallel for
+	// 	for(std::size_t i = 0; i < vec_a.size(); i++)
+	// 	{
+	// 		vec_a[i] = (float)i / 2;
+	// 	}
 
-	et.stop();
+	// #pragma omp parallel for
+	// 	for(std::size_t i = 0; i < vec_b.size(); i++)
+	// 	{
+	// 		vec_b[i] = (float)i * 3;
+	// 	}
 
-	spdlog::info("Time to parallel fill vectors: {} (nanoseconds)", et.count_nanoseconds());
-	spdlog::info("Time to parallel fill vectors: {} (milliseconds)", et.count_milliseconds());
+	// 	et.stop();
 
-	et.start();
+	// 	spdlog::info("Time to parallel fill vectors: {} (nanoseconds)", et.count_nanoseconds());
+	// 	spdlog::info("Time to parallel fill vectors: {} (milliseconds)", et.count_milliseconds());
 
-	for(std::size_t n = 0; n < iteration_count; n++)
-	{
-		for(std::size_t i = 0; i < vec_c.size(); i++)
-		{
-			vec_c[i] = vec_a[i] + vec_b[i];
-		}
-	}
+	// 	et.start();
 
-	et.stop();
+	// 	for(std::size_t n = 0; n < iteration_count; n++)
+	// 	{
+	// 		for(std::size_t i = 0; i < vec_c.size(); i++)
+	// 		{
+	// 			vec_c[i] = vec_a[i] + vec_b[i];
+	// 		}
+	// 	}
 
-	spdlog::info("Time to compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
-	spdlog::info("Time to compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
+	// 	et.stop();
 
-	et.start();
+	// 	spdlog::info("Time to compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	// 	spdlog::info("Time to compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
 
-#pragma omp parallel for
-	for(std::size_t n = 0; n < iteration_count; n++)
-	{
-		for(std::size_t i = 0; i < vec_c.size(); i++)
-		{
-			vec_c[i] = vec_a[i] + vec_b[i];
-		}
-	}
+	// 	et.start();
 
-	et.stop();
+	// #pragma omp parallel for
+	// 	for(std::size_t n = 0; n < iteration_count; n++)
+	// 	{
+	// 		for(std::size_t i = 0; i < vec_c.size(); i++)
+	// 		{
+	// 			vec_c[i] = vec_a[i] + vec_b[i];
+	// 		}
+	// 	}
 
-	spdlog::info("Time to parallel compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
-	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
+	// 	et.stop();
 
-	spdlog::info("CPU check: {} {} {}", vec_c[0], vec_c[1], vec_c[2839]);
+	// 	spdlog::info("Time to parallel compute vec_c on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	// 	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
 
-	cltask();
+	// 	spdlog::info("CPU check: {} {} {}", vec_c[0], vec_c[1], vec_c[2839]);
 }
