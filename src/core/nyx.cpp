@@ -47,5 +47,5 @@ int main()
 	kernel_loader_instance.load();
 
 	cpu_task();
-	cl_task_new();
+	compute_opencl_add();
 }

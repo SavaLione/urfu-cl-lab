@@ -37,6 +37,6 @@
 #ifndef COMPUTE_OPENCL_H
 #define COMPUTE_OPENCL_H
 
-void cl_task_new();
+void compute_opencl_add();
 
 #endif // COMPUTE_OPENCL_H
