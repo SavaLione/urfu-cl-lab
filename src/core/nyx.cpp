@@ -40,8 +40,6 @@
 #include "compute/kernel_loader.h"
 #include "compute/opencl.h"
 
-#include <spdlog/spdlog.h>
-
 int main()
 {
 	/* Kernel loader instance */

@@ -137,8 +137,13 @@ void cl_task_new()
 			true means that this is a read-only buffer
 			(false) means: read/write (default)
 		*/
+		execution_time ett;
+		ett.start();
 		cl::Buffer vec_buffer_a(context, vec_a.begin(), vec_a.end(), true);
 		cl::Buffer vec_buffer_b(context, vec_b.begin(), vec_b.end(), true);
+		ett.stop();
+		spdlog::info("Time to fill GPU buffers: {} nanoseconds", ett.count_nanoseconds());
+		spdlog::info("Time to fill GPU buffers: {} milliseconds", ett.count_milliseconds());
 		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(float) * vector_size);
 
 		cl::Kernel kernel_simple_add(program, "simple_add");
