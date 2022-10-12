@@ -30,24 +30,13 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief CPU
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 12 Oct 2022
  */
-#include "core/nyx.h"
+#ifndef COMPUTE_CPU_H
+#define COMPUTE_CPU_H
 
-#include "compute/cpu.h"
-#include "compute/kernel_loader.h"
-#include "compute/opencl.h"
+void cpu_task();
 
-#include <spdlog/spdlog.h>
-
-int main()
-{
-	/* Kernel loader instance */
-	kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	kernel_loader_instance.load();
-
-	cpu_task();
-	cl_task_new();
-}
+#endif // COMPUTE_CPU_H

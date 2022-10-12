@@ -30,47 +30,13 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief OpenCL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 12 Oct 2022
  */
-#ifndef CL_KERNEL_LOADER_H
-#define CL_KERNEL_LOADER_H
+#ifndef COMPUTE_OPENCL_H
+#define COMPUTE_OPENCL_H
 
-#include <string>
-#include <vector>
+void cl_task_new();
 
-class kernel_loader
-{
-public:
-	static kernel_loader &instance()
-	{
-		static kernel_loader kl;
-		return kl;
-	}
-
-	~kernel_loader();
-
-	void load();
-	void load(std::string const &name);
-
-	std::vector<std::string> const &get() const
-	{
-		return _string_kernels;
-	}
-
-	void print();
-
-	void reset();
-	void reload();
-
-private:
-	kernel_loader();
-	kernel_loader(kernel_loader const &)			= delete;
-	kernel_loader &operator=(kernel_loader const &) = delete;
-
-	std::vector<std::string> _loaded_kernels;
-	std::vector<std::string> _string_kernels;
-};
-
-#endif // CL_KERNEL_LOADER_H
+#endif // COMPUTE_OPENCL_H

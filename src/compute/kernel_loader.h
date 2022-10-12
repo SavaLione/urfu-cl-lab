@@ -30,24 +30,47 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief OpenCL kernel loader
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 26 Sep 2022
  */
-#include "core/nyx.h"
+#ifndef COMPUTE_KERNEL_LOADER_H
+#define COMPUTE_KERNEL_LOADER_H
 
-#include "compute/cpu.h"
-#include "compute/kernel_loader.h"
-#include "compute/opencl.h"
+#include <string>
+#include <vector>
 
-#include <spdlog/spdlog.h>
-
-int main()
+class kernel_loader
 {
-	/* Kernel loader instance */
-	kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	kernel_loader_instance.load();
+public:
+	static kernel_loader &instance()
+	{
+		static kernel_loader kl;
+		return kl;
+	}
 
-	cpu_task();
-	cl_task_new();
-}
+	~kernel_loader();
+
+	void load();
+	void load(std::string const &name);
+
+	std::vector<std::string> const &get() const
+	{
+		return _string_kernels;
+	}
+
+	void print();
+
+	void reset();
+	void reload();
+
+private:
+	kernel_loader();
+	kernel_loader(kernel_loader const &)			= delete;
+	kernel_loader &operator=(kernel_loader const &) = delete;
+
+	std::vector<std::string> _loaded_kernels;
+	std::vector<std::string> _string_kernels;
+};
+
+#endif // COMPUTE_KERNEL_LOADER_H

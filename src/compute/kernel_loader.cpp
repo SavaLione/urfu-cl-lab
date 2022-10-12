@@ -34,7 +34,7 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Sep 2022
  */
-#include "cl/kernel_loader.h"
+#include "compute/kernel_loader.h"
 
 #include <cstddef>
 #include <exception>

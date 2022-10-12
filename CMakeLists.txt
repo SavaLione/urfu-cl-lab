@@ -76,23 +76,29 @@ set(NYX_CORE_SRC
 )
 
 # OpenCL kernels
-set(NYX_CL_KERNELS_SRC
-    src/cl/kernels/simple_add.cl
-    src/cl/kernels/sum.cl
-    src/cl/kernels/test.cl
+set(NYX_COMPUTE_KERNELS_SRC
+    src/compute/kernels/simple_add.cl
+    src/compute/kernels/simple_divide.cl
+    src/compute/kernels/simple_exponentiation.cl
+    src/compute/kernels/simple_multiple.cl
+    src/compute/kernels/simple_remove.cl
 )
 
-# OpenCL
-set(NYX_CL_SRC
-    src/cl/kernel_loader.h
-    src/cl/kernel_loader.cpp
-    ${NYX_CL_KERNELS_SRC}
+# OpenCL and CPU source files
+set(NYX_COMPUTE_SRC
+    src/compute/cpu.h
+    src/compute/cpu.cpp
+    src/compute/kernel_loader.h
+    src/compute/kernel_loader.cpp
+    src/compute/opencl.h
+    src/compute/opencl.cpp
+    ${NYX_COMPUTE_KERNELS_SRC}
 )
 
 # Nyx application
 set(NYX_SRC
     ${NYX_CORE_SRC}
-    ${NYX_CL_SRC}
+    ${NYX_COMPUTE_SRC}
 )
 
 #################################################################################
@@ -124,4 +130,4 @@ target_include_directories(${NYX_PROJECT} PUBLIC ${SPDLOG_INCLUDE_DIR})
 #                                 Output directory                              #
 #################################################################################
 function_output_directory(${NYX_PROJECT})                       # Nyx application
-file(COPY src/cl/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)  # OpenCL kernels destination directory
+file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)  # OpenCL kernels destination directory
