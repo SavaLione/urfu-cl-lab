@@ -46,6 +46,7 @@
 	#include <CL/cl.h>
 #endif
 
+#include "cl/kernel_loader.h"
 #include "core/execution_time.h"
 
 #include <CL/opencl.hpp>
@@ -382,6 +383,9 @@ void cl_task_new()
 {
 	spdlog::info("New GPU task started.");
 
+	/* Kernel loader instance */
+	kernel_loader &kernel_loader_instance = kernel_loader::instance();
+
 	try
 	{
 		//get all platforms (drivers)
@@ -410,13 +414,20 @@ void cl_task_new()
 
 		cl::Program::Sources sources;
 
-		// kernel calculates for each element C=A+B
-		std::string kernel_code =
-			"__kernel void simple_add(__global const float* A, __global const float* B, __global float* C) {"
-			"	int index = get_global_id(0);"
-			"	C[index] = A[index] + B[index];"
-			"};";
-		sources.push_back({kernel_code.c_str(), kernel_code.length()});
+		// // kernel calculates for each element C=A+B
+		// std::string kernel_code =
+		// 	"__kernel void simple_add(__global const float* A, __global const float* B, __global float* C) {"
+		// 	"	int index = get_global_id(0);"
+		// 	"	C[index] = A[index] + B[index];"
+		// 	"};";
+		// sources.push_back({kernel_code.c_str(), kernel_code.length()});
+
+		std::vector<std::string> kernels = kernel_loader_instance.get();
+
+		for(auto &kern : kernels)
+		{
+			sources.push_back({kern.c_str(), kern.length()});
+		}
 
 		cl::Program program(context, sources);
 		try
@@ -497,11 +508,12 @@ void cl_task_new()
 		spdlog::info("Time to parallel compute vec_c on gpu: {} (milliseconds)", et.count_milliseconds());
 
 		spdlog::info(
-			"GPU check: {} {} {} {}",
+			"GPU check: {} {} {} {} {}",
 			std::to_string(vec_c[0]),
 			std::to_string(vec_c[1]),
 			std::to_string(vec_c[1337]),
-			std::to_string(vec_c[4096]));
+			std::to_string(vec_c[4096]),
+			std::to_string(vec_c[vector_size - 1]));
 	}
 	catch(cl::Error &e)
 	{
@@ -515,6 +527,10 @@ void cl_task_new()
 
 int main()
 {
+	/* Kernel loader instance */
+	kernel_loader &kernel_loader_instance = kernel_loader::instance();
+	kernel_loader_instance.load();
+
 	const std::size_t vector_size	  = 102400000;
 	const std::size_t iteration_count = 100;
 
@@ -578,11 +594,12 @@ int main()
 	spdlog::info("Time to parallel compute vec_c on cpu: {} (milliseconds)", et.count_milliseconds());
 
 	spdlog::info(
-		"CPU check: {} {} {} {}",
+		"CPU check: {} {} {} {} {}",
 		std::to_string(vec_c[0]),
 		std::to_string(vec_c[1]),
 		std::to_string(vec_c[1337]),
-		std::to_string(vec_c[4096]));
+		std::to_string(vec_c[4096]),
+		std::to_string(vec_c[vector_size - 1]));
 
 	cl_task_new();
 }

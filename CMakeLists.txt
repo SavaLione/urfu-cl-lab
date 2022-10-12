@@ -36,6 +36,9 @@ endif()
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
+# Export commands
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
 #################################################################################
 #                               Macros and functions                            #
 #################################################################################
@@ -74,12 +77,15 @@ set(NYX_CORE_SRC
 
 # OpenCL kernels
 set(NYX_CL_KERNELS_SRC
-    src/cl/kernels/test.cl
+    src/cl/kernels/simple_add.cl
     src/cl/kernels/sum.cl
+    src/cl/kernels/test.cl
 )
 
-# cl
+# OpenCL
 set(NYX_CL_SRC
+    src/cl/kernel_loader.h
+    src/cl/kernel_loader.cpp
     ${NYX_CL_KERNELS_SRC}
 )
 
