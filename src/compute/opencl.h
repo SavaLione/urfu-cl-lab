@@ -38,5 +38,6 @@
 #define COMPUTE_OPENCL_H
 
 void compute_opencl_add();
+void compute_opencl_vec_add();
 
 #endif // COMPUTE_OPENCL_H

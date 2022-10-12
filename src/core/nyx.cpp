@@ -46,6 +46,7 @@ int main()
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
 	kernel_loader_instance.load();
 
-	cpu_task();
-	compute_opencl_add();
+	// cpu_task();
+	// compute_opencl_add();
+	compute_opencl_vec_add();
 }

@@ -135,4 +135,5 @@ void kernel_loader::load()
 	load("simple_exponentiation");
 	load("simple_multiple");
 	load("simple_remove");
+	load("simple_vec_add");
 }

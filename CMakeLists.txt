@@ -82,6 +82,7 @@ set(NYX_COMPUTE_KERNELS_SRC
     src/compute/kernels/simple_exponentiation.cl
     src/compute/kernels/simple_multiple.cl
     src/compute/kernels/simple_remove.cl
+    src/compute/kernels/simple_vec_add.cl
 )
 
 # OpenCL and CPU source files
