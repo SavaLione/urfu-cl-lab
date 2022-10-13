@@ -39,5 +39,6 @@
 
 void compute_opencl_add();
 void compute_opencl_vec_add();
+void compute_opencl_vector_addition_16();
 
 #endif // COMPUTE_OPENCL_H

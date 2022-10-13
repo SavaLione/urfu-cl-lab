@@ -48,5 +48,6 @@ int main()
 
 	// cpu_task();
 	// compute_opencl_add();
-	compute_opencl_vec_add();
+	// compute_opencl_vec_add();
+	compute_opencl_vector_addition_16();
 }

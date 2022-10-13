@@ -136,4 +136,8 @@ void kernel_loader::load()
 	load("simple_multiple");
 	load("simple_remove");
 	load("simple_vec_add");
+	load("simple_vector_addition_2");
+	load("simple_vector_addition_4");
+	load("simple_vector_addition_8");
+	load("simple_vector_addition_16");
 }
