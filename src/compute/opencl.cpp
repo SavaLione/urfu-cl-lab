@@ -418,7 +418,7 @@ void compute_opencl_vec_add()
 
 void compute_opencl_vector_addition_16()
 {
-	spdlog::info("GPU task started.");
+	spdlog::info("GPU task vector_addition_16 started.");
 
 	/* Kernel loader instance */
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
@@ -488,7 +488,6 @@ void compute_opencl_vector_addition_16()
 		std::vector<cl_float16> vec_c_float_16(
 			vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 
-
 		/* Fill vectors */
 #pragma omp parallel for
 		for(std::size_t i = 0; i < vec_a_float_16.size(); i++)
@@ -531,8 +530,7 @@ void compute_opencl_vector_addition_16()
 				(float)(i + 12) * 3,
 				(float)(i + 13) * 3,
 				(float)(i + 14) * 3,
-				(float)(i + 15) * 3
-			};
+				(float)(i + 15) * 3};
 		}
 
 		/*
@@ -615,5 +613,178 @@ void compute_opencl_vector_addition_16()
 		spdlog::error(e.err());
 	}
 
-	spdlog::info("GPU task completed.");
+	spdlog::info("GPU task vector_addition_16 completed.");
+}
+
+void compute_opencl_vector_addition_8()
+{
+	spdlog::info("GPU task vector_addition_8 started.");
+
+	/* Kernel loader instance */
+	kernel_loader &kernel_loader_instance = kernel_loader::instance();
+
+	try
+	{
+		// Get all platforms (drivers)
+		std::vector<cl::Platform> all_platforms;
+		cl::Platform::get(&all_platforms);
+		if(all_platforms.size() == 0)
+		{
+			spdlog::error("No OpenCL platforms found.");
+			return;
+		}
+		cl::Platform default_platform = all_platforms[0];
+		spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
+
+		// Get default device of the default platform
+		std::vector<cl::Device> all_devices;
+		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if(all_devices.size() == 0)
+		{
+			spdlog::error("No OpenCL devices found.");
+			return;
+		}
+		cl::Device default_device = all_devices[0];
+		spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
+
+		cl::Context context({default_device});
+
+		cl::Program::Sources sources;
+
+		std::vector<std::string> kernels = kernel_loader_instance.get();
+
+		for(auto &kern : kernels)
+		{
+			sources.push_back({kern.c_str(), kern.length()});
+		}
+
+		cl::Program program(context, sources);
+		try
+		{
+			program.build({default_device});
+		}
+		catch(cl::BuildError err)
+		{
+			spdlog::error("OpenCL build error.");
+			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+			return;
+		}
+		catch(cl::Error const &err)
+		{
+			spdlog::error("OpenCL error.");
+			spdlog::error(err.what());
+			spdlog::error(err.err());
+		}
+
+		const std::size_t vector_size	  = 102400000;
+		const std::size_t iteration_count = 100;
+
+		std::vector<float> vec_c(vector_size, .0);
+
+		std::vector<cl_float8> vec_a_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+		std::vector<cl_float8> vec_b_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+		std::vector<cl_float8> vec_c_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
+		/* Fill vectors */
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_a_float_8.size(); i++)
+		{
+			vec_a_float_8[i] = {
+				(float)(i + 0) / 2,
+				(float)(i + 1) / 2,
+				(float)(i + 2) / 2,
+				(float)(i + 3) / 2,
+				(float)(i + 4) / 2,
+				(float)(i + 5) / 2,
+				(float)(i + 6) / 2,
+				(float)(i + 7) / 2};
+		}
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_b_float_8.size(); i++)
+		{
+			vec_b_float_8[i] = {
+				(float)(i + 0) * 3,
+				(float)(i + 1) * 3,
+				(float)(i + 2) * 3,
+				(float)(i + 3) * 3,
+				(float)(i + 4) * 3,
+				(float)(i + 5) * 3,
+				(float)(i + 6) * 3,
+				(float)(i + 7) * 3};
+		}
+
+		/*
+			true means that this is a read-only buffer
+			(false) means: read/write (default)
+		*/
+		cl::Buffer vec_buffer_a(context, vec_a_float_8.begin(), vec_a_float_8.end(), true);
+		cl::Buffer vec_buffer_b(context, vec_b_float_8.begin(), vec_b_float_8.end(), true);
+		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(cl_float8) * (vector_size / 8));
+
+		cl::Kernel kernel_simple_add(program, "simple_vector_addition_8");
+
+		std::size_t local_work_group_size =
+			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
+		spdlog::info("OpenGL kernel work group size: {}", local_work_group_size);
+
+		cl::CommandQueue queue(context, default_device);
+
+		/*
+			We need to specify global (and local) dimensions
+			cl::NDRange global(1024);
+			cl::NDRange local(64)
+
+			If you don’t specify a local dimension, it is assumed as cl::NullRange, and
+			the runtime picks a size for you
+		*/
+		cl::NDRange global(vector_size / 8);
+		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_vector_addition_8");
+
+		execution_time et;
+		et.start();
+
+		for(std::size_t n = 0; n < iteration_count; n++)
+		{
+			kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), vec_buffer_a, vec_buffer_b, vec_buffer_c).wait();
+		}
+
+		et.stop();
+
+		cl::copy(queue, vec_buffer_c, vec_c_float_8.begin(), vec_c_float_8.end());
+
+		/* Unpack vector */
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_c_float_8.size(); i++)
+		{
+			vec_c[i * 8 + 0]  = vec_c_float_8[i].s0;
+			vec_c[i * 8 + 1]  = vec_c_float_8[i].s1;
+			vec_c[i * 8 + 2]  = vec_c_float_8[i].s2;
+			vec_c[i * 8 + 3]  = vec_c_float_8[i].s3;
+			vec_c[i * 8 + 4]  = vec_c_float_8[i].s4;
+			vec_c[i * 8 + 5]  = vec_c_float_8[i].s5;
+			vec_c[i * 8 + 6]  = vec_c_float_8[i].s6;
+			vec_c[i * 8 + 7]  = vec_c_float_8[i].s7;
+		}
+
+		spdlog::info("Time to parallel compute vec_c on gpu: {} (nanoseconds)", et.count_nanoseconds());
+		spdlog::info("Time to parallel compute vec_c on gpu: {} (milliseconds)", et.count_milliseconds());
+
+		spdlog::info(
+			"GPU check: {} {} {} {} {}",
+			std::to_string(vec_c[0]),
+			std::to_string(vec_c[1]),
+			std::to_string(vec_c[1337]),
+			std::to_string(vec_c[4096]),
+			std::to_string(vec_c[vector_size - 1]));
+	}
+	catch(cl::Error &e)
+	{
+		spdlog::error("GPU error.");
+		spdlog::error(e.what());
+		spdlog::error(e.err());
+	}
+
+	spdlog::info("GPU task vector_addition_16 completed.");
 }
