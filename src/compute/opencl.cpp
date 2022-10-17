@@ -36,27 +36,6 @@
  */
 #include "compute/opencl.h"
 
-#include <CL/cl_platform.h>
-
-// clang-format off
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_TARGET_OPENCL_VERSION  120
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-
-#if defined(__APPLE__) || defined(__MACOSX)
-	#include <OpenCL/cl.hpp>
-#else
-	#include <CL/cl.h>
-#endif
-// clang-format on
-
-#include "compute/kernel_loader.h"
-#include "core/execution_time.h"
-
-#include <CL/opencl.hpp>
-#include <exception>
-#include <spdlog/spdlog.h>
-
 void compute_opencl_add()
 {
 	spdlog::info("GPU task started.");
@@ -758,14 +737,14 @@ void compute_opencl_addition_vector_8()
 #pragma omp parallel for
 		for(std::size_t i = 0; i < vec_c_float_8.size(); i++)
 		{
-			vec_c[i * 8 + 0]  = vec_c_float_8[i].s0;
-			vec_c[i * 8 + 1]  = vec_c_float_8[i].s1;
-			vec_c[i * 8 + 2]  = vec_c_float_8[i].s2;
-			vec_c[i * 8 + 3]  = vec_c_float_8[i].s3;
-			vec_c[i * 8 + 4]  = vec_c_float_8[i].s4;
-			vec_c[i * 8 + 5]  = vec_c_float_8[i].s5;
-			vec_c[i * 8 + 6]  = vec_c_float_8[i].s6;
-			vec_c[i * 8 + 7]  = vec_c_float_8[i].s7;
+			vec_c[i * 8 + 0] = vec_c_float_8[i].s0;
+			vec_c[i * 8 + 1] = vec_c_float_8[i].s1;
+			vec_c[i * 8 + 2] = vec_c_float_8[i].s2;
+			vec_c[i * 8 + 3] = vec_c_float_8[i].s3;
+			vec_c[i * 8 + 4] = vec_c_float_8[i].s4;
+			vec_c[i * 8 + 5] = vec_c_float_8[i].s5;
+			vec_c[i * 8 + 6] = vec_c_float_8[i].s6;
+			vec_c[i * 8 + 7] = vec_c_float_8[i].s7;
 		}
 
 		spdlog::info("Time to parallel compute vec_c on gpu: {} (nanoseconds)", et.count_nanoseconds());
@@ -787,4 +766,70 @@ void compute_opencl_addition_vector_8()
 	}
 
 	spdlog::info("GPU task addition_vector_8 completed.");
+}
+
+void example_compute()
+{
+	const std::size_t vector_size = 102400000;
+
+	std::vector<cl_float16> vec_a_float_16(
+		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+	std::vector<cl_float16> vec_b_float_16(
+		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+	std::vector<cl_float16> vec_c_float_16(
+		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
+	/* Fill vectors */
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a_float_16.size(); i++)
+	{
+		vec_a_float_16[i] = {
+			(float)(i + 0) / 2,
+			(float)(i + 1) / 2,
+			(float)(i + 2) / 2,
+			(float)(i + 3) / 2,
+			(float)(i + 4) / 2,
+			(float)(i + 5) / 2,
+			(float)(i + 6) / 2,
+			(float)(i + 7) / 2,
+			(float)(i + 8) / 2,
+			(float)(i + 9) / 2,
+			(float)(i + 10) / 2,
+			(float)(i + 11) / 2,
+			(float)(i + 12) / 2,
+			(float)(i + 13) / 2,
+			(float)(i + 14) / 2,
+			(float)(i + 15) / 2};
+	}
+
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_b_float_16.size(); i++)
+	{
+		vec_b_float_16[i] = {
+			(float)(i + 0) * 3,
+			(float)(i + 1) * 3,
+			(float)(i + 2) * 3,
+			(float)(i + 3) * 3,
+			(float)(i + 4) * 3,
+			(float)(i + 5) * 3,
+			(float)(i + 6) * 3,
+			(float)(i + 7) * 3,
+			(float)(i + 8) * 3,
+			(float)(i + 9) * 3,
+			(float)(i + 10) * 3,
+			(float)(i + 11) * 3,
+			(float)(i + 12) * 3,
+			(float)(i + 13) * 3,
+			(float)(i + 14) * 3,
+			(float)(i + 15) * 3};
+	}
+
+	compute_opencl(
+		"addition_vector_16",
+		vec_a_float_16.begin(),
+		vec_a_float_16.end(),
+		vec_b_float_16.begin(),
+		vec_b_float_16.end(),
+		vec_c_float_16.begin(),
+		vec_c_float_16.end());
 }

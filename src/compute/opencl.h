@@ -37,9 +37,174 @@
 #ifndef COMPUTE_OPENCL_H
 #define COMPUTE_OPENCL_H
 
+// clang-format off
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION  120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+
+#if defined(__APPLE__) || defined(__MACOSX)
+	#include <OpenCL/cl.hpp>
+#else
+	#include <CL/cl.h>
+#endif
+// clang-format on
+
+#include "compute/kernel_loader.h"
+#include "core/execution_time.h"
+
+#include <CL/opencl.hpp>
+#include <exception>
+#include <iterator>
+#include <spdlog/spdlog.h>
+#include <string>
+
 void compute_opencl_add();
 void compute_opencl_vec_add();
 void compute_opencl_addition_vector_8();
 void compute_opencl_addition_vector_16();
+
+/*
+	opencl_application_name 		- OpenCL application name
+	start_iterator_a/end_iterator_a - vector a
+	start_iterator_b/end_iterator_b - vector b
+	start_iterator_c/end_iterator_c - vector c (result)
+*/
+template<typename iterator_type>
+void compute_opencl(
+	std::string opencl_application_name,
+	iterator_type start_iterator_a,
+	iterator_type end_iterator_a,
+	iterator_type start_iterator_b,
+	iterator_type end_iterator_b,
+	iterator_type start_iterator_c,
+	iterator_type end_iterator_c)
+{
+	typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+
+	std::size_t size_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
+	std::size_t size_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
+	std::size_t size_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
+
+	if((size_a != size_b) && (size_a != size_c))
+	{
+		spdlog::error("Iterators are not equal.");
+		return;
+	}
+
+	spdlog::info("GPU task {} started.", opencl_application_name);
+
+	/* Kernel loader instance */
+	kernel_loader &kernel_loader_instance = kernel_loader::instance();
+
+	try
+	{
+		// Get all platforms (drivers)
+		std::vector<cl::Platform> all_platforms;
+		cl::Platform::get(&all_platforms);
+		if(all_platforms.size() == 0)
+		{
+			spdlog::error("No OpenCL platforms found.");
+			return;
+		}
+		cl::Platform default_platform = all_platforms[0];
+		spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
+
+		// Get default device of the default platform
+		std::vector<cl::Device> all_devices;
+		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+		if(all_devices.size() == 0)
+		{
+			spdlog::error("No OpenCL devices found.");
+			return;
+		}
+		cl::Device default_device = all_devices[0];
+		spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
+
+		cl::Context context({default_device});
+
+		cl::Program::Sources sources;
+
+		std::vector<std::string> kernels = kernel_loader_instance.get();
+
+		for(auto &kern : kernels)
+		{
+			sources.push_back({kern.c_str(), kern.length()});
+		}
+
+		cl::Program program(context, sources);
+		try
+		{
+			program.build({default_device});
+		}
+		catch(cl::BuildError err)
+		{
+			spdlog::error("OpenCL build error.");
+			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+			return;
+		}
+		catch(cl::Error const &err)
+		{
+			spdlog::error("OpenCL error.");
+			spdlog::error(err.what());
+			spdlog::error(err.err());
+		}
+
+		const std::size_t iteration_count = 100;
+
+		/*
+			true means that this is a read-only buffer
+			(false) means: read/write (default)
+		*/
+		cl::Buffer vec_buffer_a(context, start_iterator_a, end_iterator_a, true);
+		cl::Buffer vec_buffer_b(context, start_iterator_b, end_iterator_b, true);
+		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, size_c);
+
+		cl::Kernel kernel_simple_add(program, opencl_application_name.c_str());
+
+		std::size_t local_work_group_size =
+			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
+		spdlog::info("OpenGL kernel work group size: {}", local_work_group_size);
+
+		cl::CommandQueue queue(context, default_device);
+
+		/*
+			We need to specify global (and local) dimensions
+			cl::NDRange global(1024);
+			cl::NDRange local(64)
+
+			If you don’t specify a local dimension, it is assumed as cl::NullRange, and
+			the runtime picks a size for you
+		*/
+		cl::NDRange global(end_iterator_a - start_iterator_a);
+		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, opencl_application_name);
+
+		execution_time et;
+		et.start();
+
+		for(std::size_t n = 0; n < iteration_count; n++)
+		{
+			kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), vec_buffer_a, vec_buffer_b, vec_buffer_c).wait();
+		}
+
+		et.stop();
+
+		cl::copy(queue, vec_buffer_c, start_iterator_c, end_iterator_c);
+
+		spdlog::info("Time to parallel compute on gpu: {} (nanoseconds)", et.count_nanoseconds());
+		spdlog::info("Time to parallel compute on gpu: {} (milliseconds)", et.count_milliseconds());
+	}
+	catch(cl::Error &e)
+	{
+		spdlog::error("GPU error.");
+		spdlog::error(e.what());
+		spdlog::error(e.err());
+		return;
+	}
+
+	spdlog::info("GPU task {} completed.", opencl_application_name);
+}
+
+void example_compute();
 
 #endif // COMPUTE_OPENCL_H

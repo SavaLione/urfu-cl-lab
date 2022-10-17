@@ -51,5 +51,6 @@ int main()
 	// compute_opencl_vec_add();
 	// compute_opencl_vector_addition_16();
 	// compute_opencl_vector_addition_8();
-	compute_opencl_addition_vector_16();
+	// compute_opencl_addition_vector_16();
+	example_compute();
 }
