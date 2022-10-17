@@ -136,8 +136,29 @@ void kernel_loader::load()
 	load("simple_multiple");
 	load("simple_remove");
 	load("simple_vec_add");
-	load("simple_vector_addition_2");
-	load("simple_vector_addition_4");
-	load("simple_vector_addition_8");
-	load("simple_vector_addition_16");
+
+	load("addition_vector_16");
+	load("addition_vector_8");
+	load("addition_vector_4");
+	load("addition_vector_2");
+
+	load("divide_vector_16");
+	load("divide_vector_8");
+	load("divide_vector_4");
+	load("divide_vector_2");
+
+	load("exponentiation_vector_16");
+	load("exponentiation_vector_8");
+	load("exponentiation_vector_4");
+	load("exponentiation_vector_2");
+
+	load("multiple_vector_16");
+	load("multiple_vector_8");
+	load("multiple_vector_4");
+	load("multiple_vector_2");
+
+	load("remove_vector_16");
+	load("remove_vector_8");
+	load("remove_vector_4");
+	load("remove_vector_2");
 }

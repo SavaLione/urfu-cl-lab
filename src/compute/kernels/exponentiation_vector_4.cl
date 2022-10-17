@@ -1,9 +1,8 @@
-__kernel void simple_vector_addition_4(
+__kernel void exponentiation_vector_4(
     __global const float4* a,
     __global const float4* b,
     __global float4* c)
 {
 	int index = get_global_id(0);
-
-    c[index] = a[index] + b[index];
+	c[index] = (a[index] + b[index]) * (a[index] + b[index]);
 };

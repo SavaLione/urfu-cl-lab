@@ -416,9 +416,9 @@ void compute_opencl_vec_add()
 	spdlog::info("GPU task completed.");
 }
 
-void compute_opencl_vector_addition_16()
+void compute_opencl_addition_vector_16()
 {
-	spdlog::info("GPU task vector_addition_16 started.");
+	spdlog::info("GPU task addition_vector_16 started.");
 
 	/* Kernel loader instance */
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
@@ -541,7 +541,7 @@ void compute_opencl_vector_addition_16()
 		cl::Buffer vec_buffer_b(context, vec_b_float_16.begin(), vec_b_float_16.end(), true);
 		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(cl_float16) * (vector_size / 16));
 
-		cl::Kernel kernel_simple_add(program, "simple_vector_addition_16");
+		cl::Kernel kernel_simple_add(program, "addition_vector_16");
 
 		std::size_t local_work_group_size =
 			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
@@ -559,7 +559,7 @@ void compute_opencl_vector_addition_16()
 		*/
 		cl::NDRange global(vector_size / 16);
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
-		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_vector_addition_16");
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "addition_vector_16");
 
 		execution_time et;
 		et.start();
@@ -613,12 +613,12 @@ void compute_opencl_vector_addition_16()
 		spdlog::error(e.err());
 	}
 
-	spdlog::info("GPU task vector_addition_16 completed.");
+	spdlog::info("GPU task addition_vector_16 completed.");
 }
 
-void compute_opencl_vector_addition_8()
+void compute_opencl_addition_vector_8()
 {
-	spdlog::info("GPU task vector_addition_8 started.");
+	spdlog::info("GPU task addition_vector_8 started.");
 
 	/* Kernel loader instance */
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
@@ -722,7 +722,7 @@ void compute_opencl_vector_addition_8()
 		cl::Buffer vec_buffer_b(context, vec_b_float_8.begin(), vec_b_float_8.end(), true);
 		cl::Buffer vec_buffer_c(context, CL_MEM_WRITE_ONLY, sizeof(cl_float8) * (vector_size / 8));
 
-		cl::Kernel kernel_simple_add(program, "simple_vector_addition_8");
+		cl::Kernel kernel_simple_add(program, "addition_vector_8");
 
 		std::size_t local_work_group_size =
 			kernel_simple_add.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(cl::Device::getDefault());
@@ -740,7 +740,7 @@ void compute_opencl_vector_addition_8()
 		*/
 		cl::NDRange global(vector_size / 8);
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
-		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "simple_vector_addition_8");
+		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, "addition_vector_8");
 
 		execution_time et;
 		et.start();
@@ -786,5 +786,5 @@ void compute_opencl_vector_addition_8()
 		spdlog::error(e.err());
 	}
 
-	spdlog::info("GPU task vector_addition_16 completed.");
+	spdlog::info("GPU task addition_vector_8 completed.");
 }
