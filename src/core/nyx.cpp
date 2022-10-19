@@ -41,7 +41,6 @@
 #include "compute/kernel_loader.h"
 #include "compute/opencl.h"
 
-
 int main()
 {
 	/* Kernel loader instance */
@@ -55,6 +54,8 @@ int main()
 	// compute_opencl_vector_addition_8();
 	// compute_opencl_addition_vector_16();
 	// example_compute();
+
 	compute c;
-	c.test();
+	c.compute_vec_16("addition_vector_16");
+	c.compute_vec_16("addition_vector_8");
 }

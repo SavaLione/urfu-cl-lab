@@ -93,7 +93,7 @@ void kernel_loader::load(std::string const &name)
 			_loaded_kernels.push_back(name);
 			_string_kernels.push_back(kernel);
 
-			spdlog::info("Kernel {} loaded.", name);
+			spdlog::debug("Kernel {} loaded.", name);
 		}
 		catch(std::exception const &e)
 		{

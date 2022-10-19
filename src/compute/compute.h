@@ -48,7 +48,12 @@ public:
 	compute();
 	~compute();
 
-	void test();
+	void print_info();
+
+	void compute_vec_16(std::string opencl_kernel_name);
+	void compute_vec_8(std::string opencl_kernel_name);
+	void compute_vec_4(std::string opencl_kernel_name);
+	void compute_vec_2(std::string opencl_kernel_name);
 
 private:
 	/* Kernel loader instance */
@@ -62,6 +67,13 @@ private:
 	cl::Program::Sources sources;
 	std::vector<std::string> kernels;
 	cl::Program program;
+	const std::size_t vector_size	  = 102400000;
+	const std::size_t iteration_count = 100;
+
+	void fill(std::vector<cl_float16> &vec_a, std::vector<cl_float16> &vec_b);
+	void fill(std::vector<cl_float8> &vec_a, std::vector<cl_float8> &vec_b);
+	void fill(std::vector<cl_float4> &vec_a, std::vector<cl_float4> &vec_b);
+	void fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b);
 
 	template<typename iterator_type>
 	void compute_cl(
@@ -111,8 +123,6 @@ private:
 		cl::NDRange global(end_iterator_a - start_iterator_a);
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
 		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, opencl_application_name);
-
-		const std::size_t iteration_count = 100;
 
 		execution_time et;
 		et.start();
