@@ -95,6 +95,10 @@ set(NYX_COMPUTE_KERNELS_SRC
     src/compute/kernels/exponentiation_vector_4.cl
     src/compute/kernels/exponentiation_vector_8.cl
     src/compute/kernels/exponentiation_vector_16.cl
+    src/compute/kernels/log_vector_2.cl
+    src/compute/kernels/log_vector_4.cl
+    src/compute/kernels/log_vector_8.cl
+    src/compute/kernels/log_vector_16.cl
     src/compute/kernels/multiple_vector_2.cl
     src/compute/kernels/multiple_vector_4.cl
     src/compute/kernels/multiple_vector_8.cl

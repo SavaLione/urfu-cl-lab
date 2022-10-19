@@ -161,4 +161,9 @@ void kernel_loader::load()
 	load("remove_vector_8");
 	load("remove_vector_4");
 	load("remove_vector_2");
+
+	load("log_vector_16");
+	load("log_vector_8");
+	load("log_vector_4");
+	load("log_vector_2");
 }

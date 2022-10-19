@@ -119,12 +119,17 @@ void compute::print_info()
 		spdlog::info("Device vendor: {}", default_device.getInfo<CL_DEVICE_VENDOR>());
 		spdlog::info("Device version: {}", default_device.getInfo<CL_DEVICE_VERSION>());
 		spdlog::info("Device CL_DEVICE_BUILT_IN_KERNELS: {}", default_device.getInfo<CL_DEVICE_BUILT_IN_KERNELS>());
-		spdlog::info("Device CL_DEVICE_EXTENSIONS: {}", default_device.getInfo<CL_DEVICE_EXTENSIONS>());
+		spdlog::info("Device extensions: {}", default_device.getInfo<CL_DEVICE_EXTENSIONS>());
 		//spdlog::info("Device CL_DEVICE_MAX_WORK_ITEM_SIZES: {}", default_device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>());
 		spdlog::info("Device CL_DEVICE_OPENCL_C_VERSION: {}", default_device.getInfo<CL_DEVICE_OPENCL_C_VERSION>());
 		//spdlog::info("Device CL_DEVICE_PARTITION_PROPERTIES: {}", default_device.getInfo<CL_DEVICE_PARTITION_PROPERTIES>());
 		//spdlog::info("Device CL_DEVICE_PARTITION_TYPE: {}", default_device.getInfo<CL_DEVICE_PARTITION_TYPE>());
 		spdlog::info("Device CL_DEVICE_PROFILE: {}", default_device.getInfo<CL_DEVICE_PROFILE>());
+		spdlog::info("Device CL_DEVICE_MAX_CLOCK_FREQUENCY: {}", default_device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
+		spdlog::info("Device CL_DEVICE_MAX_MEM_ALLOC_SIZE: {}", default_device.getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>());
+		spdlog::info("Device CL_DEVICE_GLOBAL_MEM_SIZE: {}", default_device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>());
+		spdlog::info("Device CL_DEVICE_LOCAL_MEM_SIZE: {}", default_device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>());
+		spdlog::info("Device CL_DEVICE_AVAILABLE: {}", default_device.getInfo<CL_DEVICE_AVAILABLE>());
 	}
 	catch(cl::Error &e)
 	{
@@ -241,6 +246,66 @@ void compute::fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b)
 	}
 }
 
+void compute::fill(std::vector<cl_float16> &vec_a)
+{
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a.size(); i++)
+	{
+		vec_a[i] = {
+			(float)(i + 0) / 2,
+			(float)(i + 1) / 2,
+			(float)(i + 2) / 2,
+			(float)(i + 3) / 2,
+			(float)(i + 4) / 2,
+			(float)(i + 5) / 2,
+			(float)(i + 6) / 2,
+			(float)(i + 7) / 2,
+			(float)(i + 8) / 2,
+			(float)(i + 9) / 2,
+			(float)(i + 10) / 2,
+			(float)(i + 11) / 2,
+			(float)(i + 12) / 2,
+			(float)(i + 13) / 2,
+			(float)(i + 14) / 2,
+			(float)(i + 15) / 2};
+	}
+}
+
+void compute::fill(std::vector<cl_float8> &vec_a)
+{
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a.size(); i++)
+	{
+		vec_a[i] = {
+			(float)(i + 0) / 2,
+			(float)(i + 1) / 2,
+			(float)(i + 2) / 2,
+			(float)(i + 3) / 2,
+			(float)(i + 4) / 2,
+			(float)(i + 5) / 2,
+			(float)(i + 6) / 2,
+			(float)(i + 7) / 2};
+	}
+}
+
+void compute::fill(std::vector<cl_float4> &vec_a)
+{
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a.size(); i++)
+	{
+		vec_a[i] = {(float)(i + 0) / 2, (float)(i + 1) / 2, (float)(i + 2) / 2, (float)(i + 3) / 2};
+	}
+}
+
+void compute::fill(std::vector<cl_float2> &vec_a)
+{
+#pragma omp parallel for
+	for(std::size_t i = 0; i < vec_a.size(); i++)
+	{
+		vec_a[i] = {(float)(i + 0) / 2, (float)(i + 1) / 2};
+	}
+}
+
 void compute::compute_vec_16(std::string opencl_kernel_name)
 {
 	std::vector<cl_float16> vec_a_float_16(
@@ -318,4 +383,50 @@ void compute::compute_vec_2(std::string opencl_kernel_name)
 		vec_b_float_2.end(),
 		vec_c_float_2.begin(),
 		vec_c_float_2.end());
+}
+
+void compute::compute_one_vec_16(std::string opencl_kernel_name)
+{
+	std::vector<cl_float16> vec_a_float_16(
+		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+	std::vector<cl_float16> vec_c_float_16(
+		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
+	/* Fill vectors */
+	fill(vec_a_float_16);
+
+	compute_cl(opencl_kernel_name, vec_a_float_16.begin(), vec_a_float_16.end(), vec_c_float_16.begin(), vec_c_float_16.end());
+}
+
+void compute::compute_one_vec_8(std::string opencl_kernel_name)
+{
+	std::vector<cl_float8> vec_a_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+	std::vector<cl_float8> vec_c_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+
+	/* Fill vectors */
+	fill(vec_a_float_8);
+
+	compute_cl(opencl_kernel_name, vec_a_float_8.begin(), vec_a_float_8.end(), vec_c_float_8.begin(), vec_c_float_8.end());
+}
+
+void compute::compute_one_vec_4(std::string opencl_kernel_name)
+{
+	std::vector<cl_float4> vec_a_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
+	std::vector<cl_float4> vec_c_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
+
+	/* Fill vectors */
+	fill(vec_a_float_4);
+
+	compute_cl(opencl_kernel_name, vec_a_float_4.begin(), vec_a_float_4.end(), vec_c_float_4.begin(), vec_c_float_4.end());
+}
+
+void compute::compute_one_vec_2(std::string opencl_kernel_name)
+{
+	std::vector<cl_float2> vec_a_float_2(vector_size / 2, {0.0, 0.0});
+	std::vector<cl_float2> vec_c_float_2(vector_size / 2, {0.0, 0.0});
+
+	/* Fill vectors */
+	fill(vec_a_float_2);
+
+	compute_cl(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
 }
