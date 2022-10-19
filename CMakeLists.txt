@@ -83,10 +83,32 @@ set(NYX_COMPUTE_KERNELS_SRC
     src/compute/kernels/simple_multiple.cl
     src/compute/kernels/simple_remove.cl
     src/compute/kernels/simple_vec_add.cl
+    src/compute/kernels/addition_vector_2.cl
+    src/compute/kernels/addition_vector_4.cl
+    src/compute/kernels/addition_vector_8.cl
+    src/compute/kernels/addition_vector_16.cl
+    src/compute/kernels/divide_vector_2.cl
+    src/compute/kernels/divide_vector_4.cl
+    src/compute/kernels/divide_vector_8.cl
+    src/compute/kernels/divide_vector_16.cl
+    src/compute/kernels/exponentiation_vector_2.cl
+    src/compute/kernels/exponentiation_vector_4.cl
+    src/compute/kernels/exponentiation_vector_8.cl
+    src/compute/kernels/exponentiation_vector_16.cl
+    src/compute/kernels/multiple_vector_2.cl
+    src/compute/kernels/multiple_vector_4.cl
+    src/compute/kernels/multiple_vector_8.cl
+    src/compute/kernels/multiple_vector_16.cl
+    src/compute/kernels/remove_vector_2.cl
+    src/compute/kernels/remove_vector_4.cl
+    src/compute/kernels/remove_vector_8.cl
+    src/compute/kernels/remove_vector_16.cl
 )
 
 # OpenCL and CPU source files
 set(NYX_COMPUTE_SRC
+    src/compute/compute.h
+    src/compute/compute.cpp
     src/compute/cpu.h
     src/compute/cpu.cpp
     src/compute/kernel_loader.h

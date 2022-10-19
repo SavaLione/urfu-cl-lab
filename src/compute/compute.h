@@ -30,126 +30,59 @@
  */
 /**
  * @file
- * @brief OpenCL
+ * @brief Compute
  * @author Saveliy Pototskiy (SavaLione)
- * @date 12 Oct 2022
+ * @date 19 Oct 2022
  */
-#ifndef COMPUTE_OPENCL_H
-#define COMPUTE_OPENCL_H
+#ifndef COMPUTE_COMPUTE_H
+#define COMPUTE_COMPUTE_H
 
-// clang-format off
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_TARGET_OPENCL_VERSION  120
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#include "compute/opencl.h"
 
-#if defined(__APPLE__) || defined(__MACOSX)
-	#include <OpenCL/cl.hpp>
-#else
-	#include <CL/cl.h>
-#endif
-// clang-format on
-
-#include "compute/kernel_loader.h"
-#include "core/execution_time.h"
-
-#include <CL/opencl.hpp>
 #include <exception>
-#include <iterator>
-#include <spdlog/spdlog.h>
-#include <string>
+#include <stdexcept>
 
-void compute_opencl_add();
-void compute_opencl_vec_add();
-void compute_opencl_addition_vector_8();
-void compute_opencl_addition_vector_16();
-
-/*
-	opencl_application_name 		- OpenCL application name
-	start_iterator_a/end_iterator_a - vector a
-	start_iterator_b/end_iterator_b - vector b
-	start_iterator_c/end_iterator_c - vector c (result)
-*/
-template<typename iterator_type>
-void compute_opencl(
-	std::string opencl_application_name,
-	iterator_type start_iterator_a,
-	iterator_type end_iterator_a,
-	iterator_type start_iterator_b,
-	iterator_type end_iterator_b,
-	iterator_type start_iterator_c,
-	iterator_type end_iterator_c)
+class compute
 {
-	typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+public:
+	compute();
+	~compute();
 
-	std::size_t size_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
-	std::size_t size_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
-	std::size_t size_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
+	void test();
 
-	if((size_a != size_b) && (size_a != size_c))
-	{
-		spdlog::error("Iterators are not equal.");
-		return;
-	}
-
-	spdlog::info("GPU task {} started.", opencl_application_name);
-
+private:
 	/* Kernel loader instance */
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
 
-	try
+	std::vector<cl::Platform> all_platforms;
+	cl::Platform default_platform;
+	std::vector<cl::Device> all_devices;
+	cl::Device default_device;
+	cl::Context context;
+	cl::Program::Sources sources;
+	std::vector<std::string> kernels;
+	cl::Program program;
+
+	template<typename iterator_type>
+	void compute_cl(
+		std::string opencl_application_name,
+		iterator_type start_iterator_a,
+		iterator_type end_iterator_a,
+		iterator_type start_iterator_b,
+		iterator_type end_iterator_b,
+		iterator_type start_iterator_c,
+		iterator_type end_iterator_c)
 	{
-		// Get all platforms (drivers)
-		std::vector<cl::Platform> all_platforms;
-		cl::Platform::get(&all_platforms);
-		if(all_platforms.size() == 0)
+		typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+
+		std::size_t size_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
+		std::size_t size_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
+		std::size_t size_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
+
+		if((size_a != size_b) && (size_a != size_c))
 		{
-			spdlog::error("No OpenCL platforms found.");
-			return;
+			throw std::logic_error("Iterators are not equal.");
 		}
-		cl::Platform default_platform = all_platforms[0];
-		spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
-
-		// Get default device of the default platform
-		std::vector<cl::Device> all_devices;
-		default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-		if(all_devices.size() == 0)
-		{
-			spdlog::error("No OpenCL devices found.");
-			return;
-		}
-		cl::Device default_device = all_devices[0];
-		spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
-
-		cl::Context context({default_device});
-
-		cl::Program::Sources sources;
-
-		std::vector<std::string> kernels = kernel_loader_instance.get();
-
-		for(auto &kern : kernels)
-		{
-			sources.push_back({kern.c_str(), kern.length()});
-		}
-
-		cl::Program program(context, sources);
-		try
-		{
-			program.build({default_device});
-		}
-		catch(cl::BuildError err)
-		{
-			spdlog::error("OpenCL build error.");
-			spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
-			return;
-		}
-		catch(cl::Error const &err)
-		{
-			spdlog::error("OpenCL error.");
-			spdlog::error(err.what());
-			spdlog::error(err.err());
-		}
-
-		const std::size_t iteration_count = 100;
 
 		/*
 			true means that this is a read-only buffer
@@ -179,6 +112,8 @@ void compute_opencl(
 		// kernel_simple_add(cl::EnqueueArgs(queue, cl::NDRange(vector_size)), vec_buffer_a, vec_buffer_b, vec_buffer_c);
 		cl::KernelFunctor<cl::Buffer, cl::Buffer, cl::Buffer> kernel_funktor_simple_add(program, opencl_application_name);
 
+		const std::size_t iteration_count = 100;
+
 		execution_time et;
 		et.start();
 
@@ -194,17 +129,6 @@ void compute_opencl(
 		spdlog::info("Time to parallel compute on gpu: {} (nanoseconds)", et.count_nanoseconds());
 		spdlog::info("Time to parallel compute on gpu: {} (milliseconds)", et.count_milliseconds());
 	}
-	catch(cl::Error &e)
-	{
-		spdlog::error("GPU error.");
-		spdlog::error(e.what());
-		spdlog::error(e.err());
-		return;
-	}
-}
+};
 
-void example_compute();
-
-
-
-#endif // COMPUTE_OPENCL_H
+#endif // COMPUTE_COMPUTE_H

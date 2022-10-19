@@ -36,9 +36,11 @@
  */
 #include "core/nyx.h"
 
+#include "compute/compute.h"
 #include "compute/cpu.h"
 #include "compute/kernel_loader.h"
 #include "compute/opencl.h"
+
 
 int main()
 {
@@ -52,5 +54,7 @@ int main()
 	// compute_opencl_vector_addition_16();
 	// compute_opencl_vector_addition_8();
 	// compute_opencl_addition_vector_16();
-	example_compute();
+	// example_compute();
+	compute c;
+	c.test();
 }
