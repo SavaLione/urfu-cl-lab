@@ -100,6 +100,15 @@ private:
 	void fill(std::vector<cl_float4> &vec_a);
 	void fill(std::vector<cl_float2> &vec_a);
 
+	void compact(std::vector<float> const &vec, std::vector<cl_float2> &v);
+	void compact(std::vector<float> const &vec, std::vector<cl_float4> &v);
+	void compact(std::vector<float> const &vec, std::vector<cl_float8> &v);
+	void compact(std::vector<float> const &vec, std::vector<cl_float16> &v);
+	void compact(std::vector<int> const &vec, std::vector<cl_int2> &v);
+	void compact(std::vector<int> const &vec, std::vector<cl_int4> &v);
+	void compact(std::vector<int> const &vec, std::vector<cl_int8> &v);
+	void compact(std::vector<int> const &vec, std::vector<cl_int16> &v);
+
 	template<typename iterator_type>
 	void _compute(
 		std::string opencl_application_name,
@@ -230,5 +239,28 @@ private:
 		spdlog::info("Time to parallel compute on gpu: {} (milliseconds)", et.count_milliseconds());
 	}
 };
+
+/*
+	OpenCL 1.2 data types:
+		OpenCL Type				API Type	Description
+		-----------				--------	-----------
+		bool					--			true (1) or false (0)
+		char 					cl_char 	8-bit signed
+		unsigned char, uchar	cl_uchar 	8-bit unsigned
+		short 					cl_short 	16-bit signed
+		unsigned short, ushort 	cl_ushort 	16-bit unsigned
+		int 					cl_int 		32-bit signed
+		unsigned int, uint 		cl_uint 	32-bit unsigned
+		long 					cl_long 	64-bit signed
+		unsigned long, ulong 	cl_ulong 	64-bit unsigned
+		float 					cl_float 	32-bit float
+		double OPTIONAL 		cl_double	64-bit. IEEE 754
+		half 					cl_half 	16-bit float (storage only)
+		size_t 					-- 			32- or 64-bit unsigned integer
+		ptrdiff_t 				-- 			32- or 64-bit signed integer
+		intptr_t 				-- 			32- or 64-bit signed integer
+		uintptr_t 				-- 			32- or 64-bit unsigned integer
+		void 					void 		void
+*/
 
 #endif // COMPUTE_COMPUTE_GPU_H

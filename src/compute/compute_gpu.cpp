@@ -430,3 +430,159 @@ void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 
 	_compute(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
 }
+
+void compute_gpu::compact(std::vector<float> const &vec, std::vector<cl_float2> &v)
+{
+	if(vec.size() / 2 != v.size())
+	{
+		throw std::length_error("Length error. Can't compact vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 2) + 0];
+		v[i].s1 = vec[(i * 2) + 1];
+	}
+}
+
+void compute_gpu::compact(std::vector<float> const &vec, std::vector<cl_float4> &v)
+{
+	if(vec.size() / 4 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 4) + 0];
+		v[i].s1 = vec[(i * 4) + 1];
+		v[i].s2 = vec[(i * 4) + 2];
+		v[i].s3 = vec[(i * 4) + 3];
+	}
+}
+
+void compute_gpu::compact(std::vector<float> const &vec, std::vector<cl_float8> &v)
+{
+	if(vec.size() / 8 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 8) + 0];
+		v[i].s1 = vec[(i * 8) + 1];
+		v[i].s2 = vec[(i * 8) + 2];
+		v[i].s3 = vec[(i * 8) + 3];
+		v[i].s4 = vec[(i * 8) + 4];
+		v[i].s5 = vec[(i * 8) + 5];
+		v[i].s6 = vec[(i * 8) + 6];
+		v[i].s7 = vec[(i * 8) + 7];
+	}
+}
+
+void compute_gpu::compact(std::vector<float> const &vec, std::vector<cl_float16> &v)
+{
+	if(vec.size() / 16 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 16) + 0];
+		v[i].s1 = vec[(i * 16) + 1];
+		v[i].s2 = vec[(i * 16) + 2];
+		v[i].s3 = vec[(i * 16) + 3];
+		v[i].s4 = vec[(i * 16) + 4];
+		v[i].s5 = vec[(i * 16) + 5];
+		v[i].s6 = vec[(i * 16) + 6];
+		v[i].s7 = vec[(i * 16) + 7];
+		v[i].s8 = vec[(i * 16) + 8];
+		v[i].s9 = vec[(i * 16) + 9];
+		v[i].sA = vec[(i * 16) + 10];
+		v[i].sB = vec[(i * 16) + 11];
+		v[i].sC = vec[(i * 16) + 12];
+		v[i].sD = vec[(i * 16) + 13];
+		v[i].sE = vec[(i * 16) + 14];
+		v[i].sF = vec[(i * 16) + 15];
+	}
+}
+
+void compute_gpu::compact(std::vector<int> const &vec, std::vector<cl_int2> &v)
+{
+	if(vec.size() / 2 != v.size())
+	{
+		throw std::length_error("Length error. Can't compact vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 2) + 0];
+		v[i].s1 = vec[(i * 2) + 1];
+	}
+}
+
+void compute_gpu::compact(std::vector<int> const &vec, std::vector<cl_int4> &v)
+{
+	if(vec.size() / 4 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 4) + 0];
+		v[i].s1 = vec[(i * 4) + 1];
+		v[i].s2 = vec[(i * 4) + 2];
+		v[i].s3 = vec[(i * 4) + 3];
+	}
+}
+
+void compute_gpu::compact(std::vector<int> const &vec, std::vector<cl_int8> &v)
+{
+	if(vec.size() / 8 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 8) + 0];
+		v[i].s1 = vec[(i * 8) + 1];
+		v[i].s2 = vec[(i * 8) + 2];
+		v[i].s3 = vec[(i * 8) + 3];
+		v[i].s4 = vec[(i * 8) + 4];
+		v[i].s5 = vec[(i * 8) + 5];
+		v[i].s6 = vec[(i * 8) + 6];
+		v[i].s7 = vec[(i * 8) + 7];
+	}
+}
+
+void compute_gpu::compact(std::vector<int> const &vec, std::vector<cl_int16> &v)
+{
+	if(vec.size() / 16 != v.size())
+	{
+		throw std::length_error("Length error. Can't fill vec to v.");
+	}
+
+	for(std::size_t i = 0; i < v.size(); i++)
+	{
+		v[i].s0 = vec[(i * 16) + 0];
+		v[i].s1 = vec[(i * 16) + 1];
+		v[i].s2 = vec[(i * 16) + 2];
+		v[i].s3 = vec[(i * 16) + 3];
+		v[i].s4 = vec[(i * 16) + 4];
+		v[i].s5 = vec[(i * 16) + 5];
+		v[i].s6 = vec[(i * 16) + 6];
+		v[i].s7 = vec[(i * 16) + 7];
+		v[i].s8 = vec[(i * 16) + 8];
+		v[i].s9 = vec[(i * 16) + 9];
+		v[i].sA = vec[(i * 16) + 10];
+		v[i].sB = vec[(i * 16) + 11];
+		v[i].sC = vec[(i * 16) + 12];
+		v[i].sD = vec[(i * 16) + 13];
+		v[i].sE = vec[(i * 16) + 14];
+		v[i].sF = vec[(i * 16) + 15];
+	}
+}
