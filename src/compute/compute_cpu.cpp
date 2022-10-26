@@ -30,60 +30,80 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief Compute on CPU
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 26 Oct 2022
  */
-#include "core/nyx.h"
-
-#include "compute/compute.h"
 #include "compute/compute_cpu.h"
-#include "compute/cpu.h"
+
 #include "compute/fill_vectors.h"
-#include "compute/kernel_loader.h"
-#include "compute/opencl.h"
 
-int main()
+compute_cpu::compute_cpu() {}
+
+compute_cpu::~compute_cpu() {}
+
+std::string compute_cpu::get_string_name(operation_name name)
 {
-	/* Kernel loader instance */
-	kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	kernel_loader_instance.load();
+	switch(name)
+	{
+		case ADDITION:
+		{
+			return "Addition";
+			break;
+		}
+		case REMOVE:
+		{
+			return "Remove";
+			break;
+		}
+		case MULTIPLE:
+		{
+			return "Multiple";
+			break;
+		}
+		case DIVIDE:
+		{
+			return "Divide";
+			break;
+		}
+		case EXPONENTIATION:
+		{
+			return "Exponentiation";
+			break;
+		}
+		case LOG:
+		{
+			return "Log";
+			break;
+		}
+		case UNKNOWN:
+		{
+			return "Unknown";
+			break;
+		}
+		default:
+		{
+			return "UNKNOWN_OPERATION";
+			break;
+		}
+	}
 
-	compute_cpu cc;
+	return "UNKNOWN_OPERATION";
+}
 
-	cc.run_all();
+void compute_cpu::run_all()
+{
+	std::vector<float> vec_a(vector_size, 0);
+	std::vector<float> vec_b(vector_size, 0);
+	std::vector<float> vec_c(vector_size, 0);
 
-	compute c;
+	fill_vectors(vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end());
 
-	c.print_info();
+	_compute(operation_name::ADDITION, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+	_compute(operation_name::REMOVE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+	_compute(operation_name::MULTIPLE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+	_compute(operation_name::DIVIDE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
 
-	c.compute_vec_16("addition_vector_16");
-	c.compute_vec_8("addition_vector_8");
-	c.compute_vec_4("addition_vector_4");
-	c.compute_vec_2("addition_vector_2");
-
-	c.compute_vec_16("divide_vector_16");
-	c.compute_vec_8("divide_vector_8");
-	c.compute_vec_4("divide_vector_4");
-	c.compute_vec_2("divide_vector_2");
-
-	c.compute_vec_16("exponentiation_vector_16");
-	c.compute_vec_8("exponentiation_vector_8");
-	c.compute_vec_4("exponentiation_vector_4");
-	c.compute_vec_2("exponentiation_vector_2");
-
-	c.compute_vec_16("multiple_vector_16");
-	c.compute_vec_8("multiple_vector_8");
-	c.compute_vec_4("multiple_vector_4");
-	c.compute_vec_2("multiple_vector_2");
-
-	c.compute_vec_16("remove_vector_16");
-	c.compute_vec_8("remove_vector_8");
-	c.compute_vec_4("remove_vector_4");
-	c.compute_vec_2("remove_vector_2");
-
-	c.compute_one_vec_16("log_vector_16");
-	c.compute_one_vec_16("log_vector_8");
-	c.compute_one_vec_16("log_vector_4");
-	c.compute_one_vec_16("log_vector_2");
+	_compute(operation_name::EXPONENTIATION, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
+	_compute(operation_name::LOG, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
 }

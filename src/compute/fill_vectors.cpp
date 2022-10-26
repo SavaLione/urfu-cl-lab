@@ -30,60 +30,9 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief Fill vectors with test data
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 26 Oct 2022
  */
-#include "core/nyx.h"
-
-#include "compute/compute.h"
-#include "compute/compute_cpu.h"
-#include "compute/cpu.h"
 #include "compute/fill_vectors.h"
-#include "compute/kernel_loader.h"
-#include "compute/opencl.h"
 
-int main()
-{
-	/* Kernel loader instance */
-	kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	kernel_loader_instance.load();
-
-	compute_cpu cc;
-
-	cc.run_all();
-
-	compute c;
-
-	c.print_info();
-
-	c.compute_vec_16("addition_vector_16");
-	c.compute_vec_8("addition_vector_8");
-	c.compute_vec_4("addition_vector_4");
-	c.compute_vec_2("addition_vector_2");
-
-	c.compute_vec_16("divide_vector_16");
-	c.compute_vec_8("divide_vector_8");
-	c.compute_vec_4("divide_vector_4");
-	c.compute_vec_2("divide_vector_2");
-
-	c.compute_vec_16("exponentiation_vector_16");
-	c.compute_vec_8("exponentiation_vector_8");
-	c.compute_vec_4("exponentiation_vector_4");
-	c.compute_vec_2("exponentiation_vector_2");
-
-	c.compute_vec_16("multiple_vector_16");
-	c.compute_vec_8("multiple_vector_8");
-	c.compute_vec_4("multiple_vector_4");
-	c.compute_vec_2("multiple_vector_2");
-
-	c.compute_vec_16("remove_vector_16");
-	c.compute_vec_8("remove_vector_8");
-	c.compute_vec_4("remove_vector_4");
-	c.compute_vec_2("remove_vector_2");
-
-	c.compute_one_vec_16("log_vector_16");
-	c.compute_one_vec_16("log_vector_8");
-	c.compute_one_vec_16("log_vector_4");
-	c.compute_one_vec_16("log_vector_2");
-}

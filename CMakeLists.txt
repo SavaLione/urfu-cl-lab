@@ -111,10 +111,14 @@ set(NYX_COMPUTE_KERNELS_SRC
 
 # OpenCL and CPU source files
 set(NYX_COMPUTE_SRC
+    src/compute/compute_cpu.h
+    src/compute/compute_cpu.cpp
     src/compute/compute.h
     src/compute/compute.cpp
     src/compute/cpu.h
     src/compute/cpu.cpp
+    src/compute/fill_vectors.h
+    src/compute/fill_vectors.cpp
     src/compute/kernel_loader.h
     src/compute/kernel_loader.cpp
     src/compute/opencl.h
