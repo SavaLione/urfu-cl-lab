@@ -39,8 +39,10 @@
 
 #include "core/execution_time.h"
 
+#include <exception>
 #include <iterator>
 #include <spdlog/spdlog.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -97,51 +99,60 @@ private:
 		execution_time et;
 		et.start();
 
-		if(name == ADDITION)
+		switch(name)
 		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case ADDITION:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = start_iterator_a[i] + start_iterator_b[i];
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = start_iterator_a[i] + start_iterator_b[i];
+					}
 				}
+				break;
 			}
-		}
-
-		if(name == REMOVE)
-		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case REMOVE:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = start_iterator_a[i] - start_iterator_b[i];
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = start_iterator_a[i] - start_iterator_b[i];
+					}
 				}
+				break;
 			}
-		}
-
-		if(name == MULTIPLE)
-		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case MULTIPLE:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = start_iterator_a[i] * start_iterator_b[i];
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = start_iterator_a[i] * start_iterator_b[i];
+					}
 				}
+				break;
 			}
-		}
-
-		if(name == DIVIDE)
-		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case DIVIDE:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = start_iterator_a[i] / start_iterator_b[i];
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = start_iterator_a[i] / start_iterator_b[i];
+					}
 				}
+				break;
+			}
+			default:
+			{
+				throw std::invalid_argument("Operation name type not found.");
+				break;
 			}
 		}
 
@@ -178,27 +189,36 @@ private:
 		execution_time et;
 		et.start();
 
-		if(name == EXPONENTIATION)
+		switch(name)
 		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case EXPONENTIATION:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = start_iterator_a[i] * start_iterator_a[i];
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = start_iterator_a[i] * start_iterator_a[i];
+					}
 				}
+				break;
 			}
-		}
-
-		if(name == LOG)
-		{
-#pragma omp parallel for
-			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			case LOG:
 			{
-				for(std::size_t i = 0; i < size_c; i++)
+#pragma omp parallel for
+				for(std::size_t ic = 0; ic < iteration_count; ic++)
 				{
-					start_iterator_c[i] = log(start_iterator_a[i]);
+					for(std::size_t i = 0; i < size_c; i++)
+					{
+						start_iterator_c[i] = log(start_iterator_a[i]);
+					}
 				}
+				break;
+			}
+			default:
+			{
+				throw std::invalid_argument("Operation name type not found.");
+				break;
 			}
 		}
 

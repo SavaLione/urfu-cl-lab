@@ -59,7 +59,6 @@
 #include <stdexcept>
 #include <string>
 
-
 class compute
 {
 public:
