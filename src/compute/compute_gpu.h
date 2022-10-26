@@ -30,12 +30,12 @@
  */
 /**
  * @file
- * @brief Compute
+ * @brief Compute data on GPU
  * @author Saveliy Pototskiy (SavaLione)
  * @date 19 Oct 2022
  */
-#ifndef COMPUTE_COMPUTE_H
-#define COMPUTE_COMPUTE_H
+#ifndef COMPUTE_COMPUTE_GPU_H
+#define COMPUTE_COMPUTE_GPU_H
 
 // clang-format off
 #define CL_HPP_ENABLE_EXCEPTIONS
@@ -59,11 +59,11 @@
 #include <stdexcept>
 #include <string>
 
-class compute
+class compute_gpu
 {
 public:
-	compute();
-	~compute();
+	compute_gpu();
+	~compute_gpu();
 
 	void print_info();
 
@@ -101,7 +101,7 @@ private:
 	void fill(std::vector<cl_float2> &vec_a);
 
 	template<typename iterator_type>
-	void compute_cl(
+	void _compute(
 		std::string opencl_application_name,
 		iterator_type start_iterator_a,
 		iterator_type end_iterator_a,
@@ -168,7 +168,7 @@ private:
 	}
 
 	template<typename iterator_type>
-	void compute_cl(
+	void _compute(
 		std::string opencl_application_name,
 		iterator_type start_iterator_a,
 		iterator_type end_iterator_a,
@@ -231,4 +231,4 @@ private:
 	}
 };
 
-#endif // COMPUTE_COMPUTE_H
+#endif // COMPUTE_COMPUTE_GPU_H

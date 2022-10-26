@@ -34,13 +34,13 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 19 Oct 2022
  */
-#include "compute/compute.h"
+#include "compute/compute_gpu.h"
 
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
 #include <string>
 
-compute::compute()
+compute_gpu::compute_gpu()
 {
 	try
 	{
@@ -103,9 +103,9 @@ compute::compute()
 	}
 }
 
-compute::~compute() {}
+compute_gpu::~compute_gpu() {}
 
-void compute::print_info()
+void compute_gpu::print_info()
 {
 	try
 	{
@@ -138,7 +138,7 @@ void compute::print_info()
 	}
 }
 
-void compute::fill(std::vector<cl_float16> &vec_a, std::vector<cl_float16> &vec_b)
+void compute_gpu::fill(std::vector<cl_float16> &vec_a, std::vector<cl_float16> &vec_b)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -185,7 +185,7 @@ void compute::fill(std::vector<cl_float16> &vec_a, std::vector<cl_float16> &vec_
 	}
 }
 
-void compute::fill(std::vector<cl_float8> &vec_a, std::vector<cl_float8> &vec_b)
+void compute_gpu::fill(std::vector<cl_float8> &vec_a, std::vector<cl_float8> &vec_b)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -216,7 +216,7 @@ void compute::fill(std::vector<cl_float8> &vec_a, std::vector<cl_float8> &vec_b)
 	}
 }
 
-void compute::fill(std::vector<cl_float4> &vec_a, std::vector<cl_float4> &vec_b)
+void compute_gpu::fill(std::vector<cl_float4> &vec_a, std::vector<cl_float4> &vec_b)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -231,7 +231,7 @@ void compute::fill(std::vector<cl_float4> &vec_a, std::vector<cl_float4> &vec_b)
 	}
 }
 
-void compute::fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b)
+void compute_gpu::fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -246,7 +246,7 @@ void compute::fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b)
 	}
 }
 
-void compute::fill(std::vector<cl_float16> &vec_a)
+void compute_gpu::fill(std::vector<cl_float16> &vec_a)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -271,7 +271,7 @@ void compute::fill(std::vector<cl_float16> &vec_a)
 	}
 }
 
-void compute::fill(std::vector<cl_float8> &vec_a)
+void compute_gpu::fill(std::vector<cl_float8> &vec_a)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -288,7 +288,7 @@ void compute::fill(std::vector<cl_float8> &vec_a)
 	}
 }
 
-void compute::fill(std::vector<cl_float4> &vec_a)
+void compute_gpu::fill(std::vector<cl_float4> &vec_a)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -297,7 +297,7 @@ void compute::fill(std::vector<cl_float4> &vec_a)
 	}
 }
 
-void compute::fill(std::vector<cl_float2> &vec_a)
+void compute_gpu::fill(std::vector<cl_float2> &vec_a)
 {
 #pragma omp parallel for
 	for(std::size_t i = 0; i < vec_a.size(); i++)
@@ -306,7 +306,7 @@ void compute::fill(std::vector<cl_float2> &vec_a)
 	}
 }
 
-void compute::compute_vec_16(std::string opencl_kernel_name)
+void compute_gpu::compute_vec_16(std::string opencl_kernel_name)
 {
 	std::vector<cl_float16> vec_a_float_16(
 		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -318,7 +318,7 @@ void compute::compute_vec_16(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_16, vec_b_float_16);
 
-	compute_cl(
+	_compute(
 		opencl_kernel_name,
 		vec_a_float_16.begin(),
 		vec_a_float_16.end(),
@@ -328,7 +328,7 @@ void compute::compute_vec_16(std::string opencl_kernel_name)
 		vec_c_float_16.end());
 }
 
-void compute::compute_vec_8(std::string opencl_kernel_name)
+void compute_gpu::compute_vec_8(std::string opencl_kernel_name)
 {
 	std::vector<cl_float8> vec_a_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 	std::vector<cl_float8> vec_b_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -337,7 +337,7 @@ void compute::compute_vec_8(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_8, vec_b_float_8);
 
-	compute_cl(
+	_compute(
 		opencl_kernel_name,
 		vec_a_float_8.begin(),
 		vec_a_float_8.end(),
@@ -347,7 +347,7 @@ void compute::compute_vec_8(std::string opencl_kernel_name)
 		vec_c_float_8.end());
 }
 
-void compute::compute_vec_4(std::string opencl_kernel_name)
+void compute_gpu::compute_vec_4(std::string opencl_kernel_name)
 {
 	std::vector<cl_float4> vec_a_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
 	std::vector<cl_float4> vec_b_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
@@ -356,7 +356,7 @@ void compute::compute_vec_4(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_4, vec_b_float_4);
 
-	compute_cl(
+	_compute(
 		opencl_kernel_name,
 		vec_a_float_4.begin(),
 		vec_a_float_4.end(),
@@ -366,7 +366,7 @@ void compute::compute_vec_4(std::string opencl_kernel_name)
 		vec_c_float_4.end());
 }
 
-void compute::compute_vec_2(std::string opencl_kernel_name)
+void compute_gpu::compute_vec_2(std::string opencl_kernel_name)
 {
 	std::vector<cl_float2> vec_a_float_2(vector_size / 2, {0.0, 0.0});
 	std::vector<cl_float2> vec_b_float_2(vector_size / 2, {0.0, 0.0});
@@ -375,7 +375,7 @@ void compute::compute_vec_2(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_2, vec_b_float_2);
 
-	compute_cl(
+	_compute(
 		opencl_kernel_name,
 		vec_a_float_2.begin(),
 		vec_a_float_2.end(),
@@ -385,7 +385,7 @@ void compute::compute_vec_2(std::string opencl_kernel_name)
 		vec_c_float_2.end());
 }
 
-void compute::compute_one_vec_16(std::string opencl_kernel_name)
+void compute_gpu::compute_one_vec_16(std::string opencl_kernel_name)
 {
 	std::vector<cl_float16> vec_a_float_16(
 		vector_size / 16, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -395,10 +395,10 @@ void compute::compute_one_vec_16(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_16);
 
-	compute_cl(opencl_kernel_name, vec_a_float_16.begin(), vec_a_float_16.end(), vec_c_float_16.begin(), vec_c_float_16.end());
+	_compute(opencl_kernel_name, vec_a_float_16.begin(), vec_a_float_16.end(), vec_c_float_16.begin(), vec_c_float_16.end());
 }
 
-void compute::compute_one_vec_8(std::string opencl_kernel_name)
+void compute_gpu::compute_one_vec_8(std::string opencl_kernel_name)
 {
 	std::vector<cl_float8> vec_a_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
 	std::vector<cl_float8> vec_c_float_8(vector_size / 8, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -406,10 +406,10 @@ void compute::compute_one_vec_8(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_8);
 
-	compute_cl(opencl_kernel_name, vec_a_float_8.begin(), vec_a_float_8.end(), vec_c_float_8.begin(), vec_c_float_8.end());
+	_compute(opencl_kernel_name, vec_a_float_8.begin(), vec_a_float_8.end(), vec_c_float_8.begin(), vec_c_float_8.end());
 }
 
-void compute::compute_one_vec_4(std::string opencl_kernel_name)
+void compute_gpu::compute_one_vec_4(std::string opencl_kernel_name)
 {
 	std::vector<cl_float4> vec_a_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
 	std::vector<cl_float4> vec_c_float_4(vector_size / 4, {0.0, 0.0, 0.0, 0.0});
@@ -417,10 +417,10 @@ void compute::compute_one_vec_4(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_4);
 
-	compute_cl(opencl_kernel_name, vec_a_float_4.begin(), vec_a_float_4.end(), vec_c_float_4.begin(), vec_c_float_4.end());
+	_compute(opencl_kernel_name, vec_a_float_4.begin(), vec_a_float_4.end(), vec_c_float_4.begin(), vec_c_float_4.end());
 }
 
-void compute::compute_one_vec_2(std::string opencl_kernel_name)
+void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 {
 	std::vector<cl_float2> vec_a_float_2(vector_size / 2, {0.0, 0.0});
 	std::vector<cl_float2> vec_c_float_2(vector_size / 2, {0.0, 0.0});
@@ -428,5 +428,5 @@ void compute::compute_one_vec_2(std::string opencl_kernel_name)
 	/* Fill vectors */
 	fill(vec_a_float_2);
 
-	compute_cl(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
+	_compute(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
 }
