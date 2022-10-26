@@ -37,11 +37,28 @@
 #ifndef COMPUTE_COMPUTE_H
 #define COMPUTE_COMPUTE_H
 
-#include "compute/opencl.h"
-#include "spdlog/spdlog.h"
+// clang-format off
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_TARGET_OPENCL_VERSION  120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
 
+#if defined(__APPLE__) || defined(__MACOSX)
+	#include <OpenCL/cl.hpp>
+#else
+	#include <CL/cl.h>
+#endif
+// clang-format on
+
+#include "compute/kernel_loader.h"
+#include "core/execution_time.h"
+
+#include <CL/opencl.hpp>
 #include <exception>
+#include <iterator>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <string>
+
 
 class compute
 {

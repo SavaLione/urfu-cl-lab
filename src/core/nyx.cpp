@@ -38,10 +38,7 @@
 
 #include "compute/compute.h"
 #include "compute/compute_cpu.h"
-#include "compute/cpu.h"
-#include "compute/fill_vectors.h"
-#include "compute/kernel_loader.h"
-#include "compute/opencl.h"
+
 
 int main()
 {
