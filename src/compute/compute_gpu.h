@@ -108,6 +108,10 @@ private:
 	void compact(std::vector<int> const &vec, std::vector<cl_int4> &v);
 	void compact(std::vector<int> const &vec, std::vector<cl_int8> &v);
 	void compact(std::vector<int> const &vec, std::vector<cl_int16> &v);
+	void compact(std::vector<double> const &vec, std::vector<cl_double2> &v);
+	void compact(std::vector<double> const &vec, std::vector<cl_double4> &v);
+	void compact(std::vector<double> const &vec, std::vector<cl_double8> &v);
+	void compact(std::vector<double> const &vec, std::vector<cl_double16> &v);
 
 	template<typename iterator_type>
 	void _compute(
