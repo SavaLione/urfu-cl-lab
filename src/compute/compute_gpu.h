@@ -67,6 +67,8 @@ public:
 
 	void print_info();
 
+	void run_all();
+
 	void compute_vec_16(std::string opencl_kernel_name);
 	void compute_vec_8(std::string opencl_kernel_name);
 	void compute_vec_4(std::string opencl_kernel_name);

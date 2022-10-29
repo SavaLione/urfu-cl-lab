@@ -65,9 +65,9 @@ public:
 		UNKNOWN
 	};
 
+private:
 	std::string get_string_name(operation_name name);
 
-private:
 	template<typename iterator_type>
 	void _compute(
 		operation_name name,

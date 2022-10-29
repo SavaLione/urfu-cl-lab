@@ -262,3 +262,36 @@ void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 
 	_compute(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
 }
+
+void compute_gpu::run_all()
+{
+	compute_vec_16("addition_vector_16");
+	compute_vec_8("addition_vector_8");
+	compute_vec_4("addition_vector_4");
+	compute_vec_2("addition_vector_2");
+
+	compute_vec_16("divide_vector_16");
+	compute_vec_8("divide_vector_8");
+	compute_vec_4("divide_vector_4");
+	compute_vec_2("divide_vector_2");
+
+	compute_vec_16("exponentiation_vector_16");
+	compute_vec_8("exponentiation_vector_8");
+	compute_vec_4("exponentiation_vector_4");
+	compute_vec_2("exponentiation_vector_2");
+
+	compute_vec_16("multiple_vector_16");
+	compute_vec_8("multiple_vector_8");
+	compute_vec_4("multiple_vector_4");
+	compute_vec_2("multiple_vector_2");
+
+	compute_vec_16("remove_vector_16");
+	compute_vec_8("remove_vector_8");
+	compute_vec_4("remove_vector_4");
+	compute_vec_2("remove_vector_2");
+
+	compute_one_vec_16("log_vector_16");
+	compute_one_vec_16("log_vector_8");
+	compute_one_vec_16("log_vector_4");
+	compute_one_vec_16("log_vector_2");
+}
