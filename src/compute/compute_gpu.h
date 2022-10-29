@@ -91,27 +91,97 @@ private:
 	const std::size_t vector_size	  = 102400000;
 	const std::size_t iteration_count = 100;
 
-	void fill(std::vector<cl_float16> &vec_a, std::vector<cl_float16> &vec_b);
-	void fill(std::vector<cl_float8> &vec_a, std::vector<cl_float8> &vec_b);
-	void fill(std::vector<cl_float4> &vec_a, std::vector<cl_float4> &vec_b);
-	void fill(std::vector<cl_float2> &vec_a, std::vector<cl_float2> &vec_b);
-	void fill(std::vector<cl_float16> &vec_a);
-	void fill(std::vector<cl_float8> &vec_a);
-	void fill(std::vector<cl_float4> &vec_a);
-	void fill(std::vector<cl_float2> &vec_a);
+	/*
+		Function for fill vector with the test data
+		It allows only std::vector of OpenCL Vector Data Types
+	*/
+	template<typename cl_type>
+	void fill(std::vector<cl_type> &vec_a)
+	{
+		std::size_t cl_type_arr_size = (sizeof(vec_a[0].s) / sizeof(vec_a[0].s[0]));
 
-	void compact(std::vector<float> const &vec, std::vector<cl_float2> &v);
-	void compact(std::vector<float> const &vec, std::vector<cl_float4> &v);
-	void compact(std::vector<float> const &vec, std::vector<cl_float8> &v);
-	void compact(std::vector<float> const &vec, std::vector<cl_float16> &v);
-	void compact(std::vector<int> const &vec, std::vector<cl_int2> &v);
-	void compact(std::vector<int> const &vec, std::vector<cl_int4> &v);
-	void compact(std::vector<int> const &vec, std::vector<cl_int8> &v);
-	void compact(std::vector<int> const &vec, std::vector<cl_int16> &v);
-	void compact(std::vector<double> const &vec, std::vector<cl_double2> &v);
-	void compact(std::vector<double> const &vec, std::vector<cl_double4> &v);
-	void compact(std::vector<double> const &vec, std::vector<cl_double8> &v);
-	void compact(std::vector<double> const &vec, std::vector<cl_double16> &v);
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_a.size(); i++)
+		{
+			for(std::size_t n = 0; n < cl_type_arr_size; n++)
+			{
+				vec_a[i].s[n] = (float)(i + n) / 2;
+			}
+		}
+	}
+
+	/*
+		Function for fill vectors with the test data
+		It allows only std::vector of OpenCL Vector Data Types
+	*/
+	template<typename cl_type>
+	void fill(std::vector<cl_type> &vec_a, std::vector<cl_type> &vec_b)
+	{
+		if(vec_a.size() != vec_b.size())
+		{
+			throw std::length_error("Length error. Vector vec_a is not equal to vec_b");
+		}
+
+		std::size_t cl_type_arr_size = (sizeof(vec_a[0].s) / sizeof(vec_a[0].s[0]));
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_a.size(); i++)
+		{
+			for(std::size_t n = 0; n < cl_type_arr_size; n++)
+			{
+				vec_a[i].s[n] = (float)(i + n) / 2;
+			}
+		}
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < vec_b.size(); i++)
+		{
+			for(std::size_t n = 0; n < cl_type_arr_size; n++)
+			{
+				vec_b[i].s[n] = (float)(i + n) * 3;
+			}
+		}
+	}
+
+	/*
+		Function for compact long vector of type into vector of OpenCL vector
+
+		vec - std::vector<type>, where type is C++ type
+
+		v - std::vector<type>, where type is OpenCL vector type
+		Specially aligned types are allowed
+
+		OpenCL Vector Data Types:
+			cl_charn
+			cl_ucharn
+			cl_shortn
+			cl_ushortn
+			cl_intn
+			cl_uintn
+			cl_longn
+			cl_ulongn
+			cl_floatn
+			cl_doublen (OPTIONAL)
+	*/
+	template<typename vec_type, typename cl_type>
+	void compact(std::vector<vec_type> const &vec, std::vector<cl_type> &v)
+	{
+		std::size_t cl_type_arr_size = (sizeof(v[0].s) / sizeof(v[0].s[0]));
+
+		if((vec.size() / cl_type_arr_size) != v.size())
+		{
+			throw std::length_error("Length error. Can't compact vec to v.");
+		}
+
+#pragma omp parallel for
+		for(std::size_t i = 0; i < v.size(); i++)
+		{
+			for(std::size_t n = 0; n < cl_type_arr_size; n++)
+			{
+				v[i].s[n] = vec[(i * cl_type_arr_size) + n];
+			}
+		}
+	}
 
 	template<typename iterator_type>
 	void _compute(
