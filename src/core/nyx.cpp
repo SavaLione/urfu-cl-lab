@@ -38,9 +38,22 @@
 
 #include "compute/compute_cpu.h"
 #include "compute/compute_gpu.h"
+#include "spdlog/spdlog.h"
+
+#include <cstdlib>
+#include <signal.h>
+
+void signal_callback(int signum)
+{
+	spdlog::info("Signal: {}", signum);
+	exit(signum);
+}
 
 int main()
 {
+	/* Signal handler */
+	signal(SIGINT, signal_callback);
+
 	/* Kernel loader instance */
 	kernel_loader &kernel_loader_instance = kernel_loader::instance();
 	kernel_loader_instance.load();
@@ -56,4 +69,6 @@ int main()
 	cg.print_info();
 
 	cg.run_all();
+
+	return EXIT_SUCCESS;
 }

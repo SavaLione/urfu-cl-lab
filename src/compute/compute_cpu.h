@@ -39,6 +39,7 @@
 
 #include "core/execution_time.h"
 
+#include <cmath>
 #include <exception>
 #include <iterator>
 #include <spdlog/spdlog.h>
@@ -76,91 +77,7 @@ private:
 		iterator_type start_iterator_b,
 		iterator_type end_iterator_b,
 		iterator_type start_iterator_c,
-		iterator_type end_iterator_c)
-	{
-		typedef typename std::iterator_traits<iterator_type>::value_type data_type;
-		typedef typename std::iterator_traits<iterator_type> data_size;
-
-		std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
-		std::size_t size_of_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
-		std::size_t size_of_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
-
-		std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
-		std::size_t size_b = sizeof(data_size) * (end_iterator_b - start_iterator_b);
-		std::size_t size_c = sizeof(data_size) * (end_iterator_c - start_iterator_c);
-
-		if((size_of_a != size_of_b) && (size_of_a != size_of_c))
-		{
-			throw std::logic_error("Iterators are not equal.");
-		}
-
-		spdlog::info("Compute CPU application: {}", get_string_name(name));
-
-		execution_time et;
-		et.start();
-
-		switch(name)
-		{
-			case ADDITION:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = start_iterator_a[i] + start_iterator_b[i];
-					}
-				}
-				break;
-			}
-			case REMOVE:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = start_iterator_a[i] - start_iterator_b[i];
-					}
-				}
-				break;
-			}
-			case MULTIPLE:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = start_iterator_a[i] * start_iterator_b[i];
-					}
-				}
-				break;
-			}
-			case DIVIDE:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = start_iterator_a[i] / start_iterator_b[i];
-					}
-				}
-				break;
-			}
-			default:
-			{
-				throw std::invalid_argument("Operation name type not found.");
-				break;
-			}
-		}
-
-		et.stop();
-
-		spdlog::info("Time to parallel compute on cpu: {} (nanoseconds)", et.count_nanoseconds());
-		spdlog::info("Time to parallel compute on cpu: {} (milliseconds)", et.count_milliseconds());
-	}
+		iterator_type end_iterator_c);
 
 	template<typename iterator_type>
 	void _compute(
@@ -168,68 +85,172 @@ private:
 		iterator_type start_iterator_a,
 		iterator_type end_iterator_a,
 		iterator_type start_iterator_c,
-		iterator_type end_iterator_c)
-	{
-		typedef typename std::iterator_traits<iterator_type>::value_type data_type;
-		typedef typename std::iterator_traits<iterator_type> data_size;
-
-		std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
-		std::size_t size_of_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
-
-		std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
-		std::size_t size_c = sizeof(data_size) * (end_iterator_c - start_iterator_c);
-
-		if(size_of_a != size_of_c)
-		{
-			throw std::logic_error("Iterators are not equal.");
-		}
-
-		spdlog::info("Compute CPU application: {}", get_string_name(name));
-
-		execution_time et;
-		et.start();
-
-		switch(name)
-		{
-			case EXPONENTIATION:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = start_iterator_a[i] * start_iterator_a[i];
-					}
-				}
-				break;
-			}
-			case LOG:
-			{
-#pragma omp parallel for
-				for(std::size_t ic = 0; ic < iteration_count; ic++)
-				{
-					for(std::size_t i = 0; i < size_c; i++)
-					{
-						start_iterator_c[i] = log(start_iterator_a[i]);
-					}
-				}
-				break;
-			}
-			default:
-			{
-				throw std::invalid_argument("Operation name type not found.");
-				break;
-			}
-		}
-
-		et.stop();
-
-		spdlog::info("Time to parallel compute on cpu: {} (nanoseconds)", et.count_nanoseconds());
-		spdlog::info("Time to parallel compute on cpu: {} (milliseconds)", et.count_milliseconds());
-	}
+		iterator_type end_iterator_c);
 
 	const std::size_t vector_size	  = 102400000;
 	const std::size_t iteration_count = 100;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+template<typename iterator_type>
+void compute_cpu::_compute(
+	operation_name name,
+	iterator_type start_iterator_a,
+	iterator_type end_iterator_a,
+	iterator_type start_iterator_b,
+	iterator_type end_iterator_b,
+	iterator_type start_iterator_c,
+	iterator_type end_iterator_c)
+{
+	typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+	typedef typename std::iterator_traits<iterator_type> data_size;
+
+	std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
+	std::size_t size_of_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
+	std::size_t size_of_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
+
+	std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
+	std::size_t size_b = sizeof(data_size) * (end_iterator_b - start_iterator_b);
+	std::size_t size_c = sizeof(data_size) * (end_iterator_c - start_iterator_c);
+
+	if((size_of_a != size_of_b) && (size_of_a != size_of_c))
+	{
+		throw std::logic_error("Iterators are not equal.");
+	}
+
+	spdlog::info("Compute CPU application: {}", get_string_name(name));
+
+	execution_time et;
+	et.start();
+
+	switch(name)
+	{
+		case ADDITION:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = start_iterator_a[i] + start_iterator_b[i];
+				}
+			}
+			break;
+		}
+		case REMOVE:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = start_iterator_a[i] - start_iterator_b[i];
+				}
+			}
+			break;
+		}
+		case MULTIPLE:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = start_iterator_a[i] * start_iterator_b[i];
+				}
+			}
+			break;
+		}
+		case DIVIDE:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = start_iterator_a[i] / start_iterator_b[i];
+				}
+			}
+			break;
+		}
+		default:
+		{
+			throw std::invalid_argument("Operation name type not found.");
+			break;
+		}
+	}
+
+	et.stop();
+
+	spdlog::info("Time to parallel compute on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	spdlog::info("Time to parallel compute on cpu: {} (milliseconds)", et.count_milliseconds());
+}
+
+template<typename iterator_type>
+void compute_cpu::_compute(
+	operation_name name,
+	iterator_type start_iterator_a,
+	iterator_type end_iterator_a,
+	iterator_type start_iterator_c,
+	iterator_type end_iterator_c)
+{
+	typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+	typedef typename std::iterator_traits<iterator_type> data_size;
+
+	std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
+	std::size_t size_of_c = sizeof(data_type) * (end_iterator_c - start_iterator_c);
+
+	std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
+	std::size_t size_c = sizeof(data_size) * (end_iterator_c - start_iterator_c);
+
+	if(size_of_a != size_of_c)
+	{
+		throw std::logic_error("Iterators are not equal.");
+	}
+
+	spdlog::info("Compute CPU application: {}", get_string_name(name));
+
+	execution_time et;
+	et.start();
+
+	switch(name)
+	{
+		case EXPONENTIATION:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = start_iterator_a[i] * start_iterator_a[i];
+				}
+			}
+			break;
+		}
+		case LOG:
+		{
+#pragma omp parallel for
+			for(std::size_t ic = 0; ic < iteration_count; ic++)
+			{
+				for(std::size_t i = 0; i < size_c; i++)
+				{
+					start_iterator_c[i] = std::log(start_iterator_a[i]);
+				}
+			}
+			break;
+		}
+		default:
+		{
+			throw std::invalid_argument("Operation name type not found.");
+			break;
+		}
+	}
+
+	et.stop();
+
+	spdlog::info("Time to parallel compute on cpu: {} (nanoseconds)", et.count_nanoseconds());
+	spdlog::info("Time to parallel compute on cpu: {} (milliseconds)", et.count_milliseconds());
+}
 
 #endif // COMPUTE_COMPUTE_CPU_H
