@@ -30,19 +30,50 @@
  */
 /**
  * @file
- * @brief Execution time
+ * @brief Application settings
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 15 Nov 2022
  */
-#include "core/execution_time.h"
+#include "core/settings.h"
 
-void execution_time::start()
+settings::settings() {}
+
+bool settings::get_gpu()
 {
-    _start = std::chrono::high_resolution_clock::now();
+	return gpu;
 }
 
-void execution_time::stop()
+bool settings::get_cpu()
 {
-    _stop = std::chrono::high_resolution_clock::now();
-    
+	return cpu;
+}
+
+std::size_t settings::get_vector_size()
+{
+	return vector_size;
+}
+
+std::size_t settings::get_iteration_count()
+{
+	return iteration_count;
+}
+
+void settings::set_gpu(bool const &gpu)
+{
+	this->gpu = gpu;
+}
+
+void settings::set_cpu(bool const &cpu)
+{
+	this->cpu = cpu;
+}
+
+void settings::set_vector_size(std::size_t const &vector_size)
+{
+	this->vector_size = vector_size;
+}
+
+void settings::set_iteration_count(std::size_t const &iteration_count)
+{
+	this->iteration_count = iteration_count;
 }

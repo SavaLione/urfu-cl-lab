@@ -30,19 +30,47 @@
  */
 /**
  * @file
- * @brief Execution time
+ * @brief Application settings
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 15 Nov 2022
  */
-#include "core/execution_time.h"
+#ifndef CORE_SETTINGS_H
+#define CORE_SETTINGS_H
 
-void execution_time::start()
-{
-    _start = std::chrono::high_resolution_clock::now();
-}
+#include <cstddef>
 
-void execution_time::stop()
+class settings
 {
-    _stop = std::chrono::high_resolution_clock::now();
-    
-}
+public:
+	/* Class */
+	static settings &instance()
+	{
+		static settings s;
+		return s;
+	}
+
+	/* Variables */
+	bool get_gpu();
+	bool get_cpu();
+	std::size_t get_vector_size();
+	std::size_t get_iteration_count();
+
+	void set_gpu(bool const &gpu);
+	void set_cpu(bool const &cpu);
+	void set_vector_size(std::size_t const &vector_size);
+	void set_iteration_count(std::size_t const &iteration_count);
+
+private:
+	/* Class */
+	settings();
+	settings(settings const &)			  = delete;
+	settings &operator=(settings const &) = delete;
+
+	/* Variables */
+	bool gpu					= true;
+	bool cpu					= true;
+	std::size_t vector_size		= 102400000;
+	std::size_t iteration_count = 100;
+};
+
+#endif // CORE_SETTINGS_H

@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "1.0.0"
+    VERSION "1.1.0"
     LANGUAGES CXX
 )
 
@@ -49,6 +49,8 @@ set(NYX_CORE_SRC
     src/core/nyx.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
+    src/core/settings.h
+    src/core/settings.cpp
 )
 
 set(NYX_COMPUTE_KERNELS_SRC

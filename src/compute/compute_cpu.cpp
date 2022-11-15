@@ -38,9 +38,11 @@
 
 #include "compute/fill_vectors.h"
 
-compute_cpu::compute_cpu() {}
-
-compute_cpu::~compute_cpu() {}
+compute_cpu::compute_cpu(std::size_t const &vector_size, std::size_t const &iteration_count)
+{
+	this->vector_size	  = vector_size;
+	this->iteration_count = iteration_count;
+}
 
 std::string compute_cpu::get_string_name(operation_name name)
 {

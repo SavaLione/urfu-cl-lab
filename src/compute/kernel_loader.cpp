@@ -45,8 +45,6 @@
 
 kernel_loader::kernel_loader() {}
 
-kernel_loader::~kernel_loader() {}
-
 void kernel_loader::load(std::string const &name)
 {
 	bool is_kernel_already_loaded = false;

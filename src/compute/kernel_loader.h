@@ -49,8 +49,6 @@ public:
 		return kl;
 	}
 
-	~kernel_loader();
-
 	void load();
 	void load(std::string const &name);
 

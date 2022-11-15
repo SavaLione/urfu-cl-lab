@@ -40,8 +40,11 @@
 #include <CL/cl_ext.h>
 #include <string>
 
-compute_gpu::compute_gpu()
+compute_gpu::compute_gpu(std::size_t const &vector_size, std::size_t const &iteration_count)
 {
+	this->vector_size	  = vector_size;
+	this->iteration_count = iteration_count;
+
 	try
 	{
 		cl::Platform::get(&all_platforms);
@@ -102,8 +105,6 @@ compute_gpu::compute_gpu()
 		spdlog::error("Unexpected exception.");
 	}
 }
-
-compute_gpu::~compute_gpu() {}
 
 void compute_gpu::print_info()
 {

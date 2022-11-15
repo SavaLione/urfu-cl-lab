@@ -62,8 +62,7 @@
 class compute_gpu
 {
 public:
-	compute_gpu();
-	~compute_gpu();
+	compute_gpu(std::size_t const &vector_size, std::size_t const &iteration_count);
 
 	void print_info();
 
@@ -90,8 +89,8 @@ private:
 	cl::Program::Sources sources;
 	std::vector<std::string> kernels;
 	cl::Program program;
-	const std::size_t vector_size	  = 102400000;
-	const std::size_t iteration_count = 100;
+	std::size_t vector_size		= 102400000;
+	std::size_t iteration_count = 100;
 
 	/*
 		Function for fill vector with the test data

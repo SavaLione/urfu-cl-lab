@@ -36,39 +36,194 @@
  */
 #include "core/nyx.h"
 
+#include "core/settings.h"
 #include "compute/compute_cpu.h"
 #include "compute/compute_gpu.h"
-#include "spdlog/spdlog.h"
 
 #include <cstdlib>
+#include <getopt.h>
 #include <signal.h>
+#include <stdexcept>
+#include <unistd.h>
+#include <spdlog/spdlog.h>
+#include <iostream>
 
-void signal_callback(int signum)
-{
-	spdlog::info("Signal: {}", signum);
-	exit(signum);
-}
-
-int main()
+int main(int argc, char *argv[])
 {
 	/* Signal handler */
 	signal(SIGINT, signal_callback);
 
+	/* Settings instance */
+	settings &settings_instance = settings::instance();
+
+	/* Options */
+	std::string const short_opts = "gcv:i:h";
+	std::array<option, 5> long_options =
+	{{
+		{"gpu-only", 			no_argument,        nullptr, 'g'},
+		{"cpu-only", 			no_argument,        nullptr, 'c'},
+		{"vector-size", 		required_argument,  nullptr, 'v'},
+		{"iteration-count", 	required_argument,  nullptr, 'i'},
+		{"help", 				no_argument,        nullptr, 'h'}
+	}};
+
+	while(true)
+	{
+		auto const opt = getopt_long(argc, argv, short_opts.c_str(), long_options.data(), nullptr);
+
+		if(opt == -1)
+		{
+			break;
+		}
+		
+		switch(opt)
+		{
+			case 'g':
+				settings_instance.set_gpu(true);
+				settings_instance.set_cpu(false);
+                spdlog::info("Perform only gpu tests");
+				break;
+			case 'c':
+				settings_instance.set_gpu(false);
+				settings_instance.set_cpu(true);
+                spdlog::info("Perform only cpu tests");
+				break;
+			case 'v':
+			{
+				int v = 0;
+                try
+                {
+                    v = std::stoi(optarg);
+                }
+                catch(std::invalid_argument const &e)
+                {
+                    spdlog::error("unexpected -v or --vector-size argument: {}\n{}", optarg, e.what());
+                    exit(EXIT_FAILURE);
+                }
+                catch(...)
+                {
+                    spdlog::error("unexpected -v or --vector-size argument: {}", optarg);
+                    exit(EXIT_FAILURE);
+                }
+
+				if(v <= 0)
+				{
+					spdlog::error("argument -v or --vector-size must be greater than zero");
+					exit(EXIT_FAILURE);
+				}
+
+				if(v < 16)
+				{
+					spdlog::error("argument -v or --vector-size must be greater than 16, because we use OpenCV sixteen component vectors");
+					exit(EXIT_FAILURE);
+				}
+
+				if((v % 16) != 0)
+				{
+					spdlog::error("argument -v or --vector-size must be multiple of 16, because we use OpenCV sixteen component vectors");
+					exit(EXIT_FAILURE);
+				}
+
+                spdlog::info("Vector of elements size: {}", v);
+
+				settings_instance.set_vector_size(v);
+				break;
+			}
+			case 'i':
+			{
+				int i = std::stoi(optarg);
+                try
+                {
+                    i = std::stoi(optarg);
+                }
+                catch(std::invalid_argument const &e)
+                {
+                    spdlog::error("unexpected -i or --iteration-count argument: {}\n{}", optarg, e.what());
+                    exit(EXIT_FAILURE);
+                }
+                catch(...)
+                {
+                    spdlog::error("unexpected -i or --iteration-count argument: {}", optarg);
+                    exit(EXIT_FAILURE);
+                }
+
+				if(i <= 0)
+				{
+					spdlog::error("argument -i or --iteration-count must be greater than zero");
+					exit(EXIT_FAILURE);
+				}
+
+                spdlog::info("Count of iterations: {}", i);
+
+				settings_instance.set_iteration_count(i);
+				break;
+			}
+			case 'h':
+			case '?':
+			default:
+				print_help();
+				break;
+		}
+	}
+
 	/* Kernel loader instance */
-	kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	kernel_loader_instance.load();
+    if(settings_instance.get_gpu())
+    {
+        kernel_loader &kernel_loader_instance = kernel_loader::instance();
+	    kernel_loader_instance.load();
+    }
 
 	/* Compute the test data on cpu */
-	compute_cpu cc;
-
-	cc.run_all();
+    if(settings_instance.get_cpu())
+    {
+	    compute_cpu cc(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+	    cc.run_all();
+    }
 
 	/* Compute the test data on gpu */
-	compute_gpu cg;
-
-	cg.print_info();
-
-	cg.run_all();
+    if(settings_instance.get_gpu())
+    {
+	    compute_gpu cg(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+	    cg.print_info();
+	    cg.run_all();
+    }
 
 	return EXIT_SUCCESS;
+}
+
+void signal_callback(int signum)
+{
+	spdlog::info("Signal: {}", signum);
+	switch(signum)
+	{
+		case 2:
+			spdlog::info("Signal SIGINT. Exiting from the application");
+			break;
+		case 3:
+			spdlog::info("Signal SIGQUIT. Exiting from the application");
+			break;
+		case 10:
+			spdlog::error("Signal SIGBUS. Bus error");
+			break;
+		case 13:
+			spdlog::error("Signal SIGPIPE. Write on a pipe with no one to read it");
+			break;
+		default:
+			spdlog::warn("Unspecified signal: {}", signum);
+			break;
+	}
+	exit(signum);
+}
+
+void print_help()
+{
+	std::cout << "Usage: nyx [OPTION]" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Options:" << std::endl;
+	std::cout << "  -g, --gpu-only                  Perform only gpu tests" << std::endl;
+	std::cout << "  -c, --cpu-only                  Perform only cpu tests" << std::endl;
+	std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
+	std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
+	std::cout << "  -h, --help                      Display this help and exit" << std::endl;
+	exit(EXIT_SUCCESS);
 }

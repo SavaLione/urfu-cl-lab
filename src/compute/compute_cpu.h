@@ -50,8 +50,7 @@
 class compute_cpu
 {
 public:
-	compute_cpu();
-	~compute_cpu();
+	compute_cpu(std::size_t const &vector_size, std::size_t const &iteration_count);
 
 	void run_all();
 
@@ -87,8 +86,8 @@ private:
 		iterator_type start_iterator_c,
 		iterator_type end_iterator_c);
 
-	const std::size_t vector_size	  = 102400000;
-	const std::size_t iteration_count = 100;
+	std::size_t vector_size		= 102400000;
+	std::size_t iteration_count = 100;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

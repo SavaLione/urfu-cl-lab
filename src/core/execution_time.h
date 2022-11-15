@@ -42,8 +42,6 @@
 class execution_time
 {
 public:
-	execution_time();
-	~execution_time();
 	void start();
 	void stop();
 
