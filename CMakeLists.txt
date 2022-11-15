@@ -54,6 +54,7 @@ set(NYX_CORE_SRC
 )
 
 set(NYX_COMPUTE_KERNELS_SRC
+    src/compute/kernels/addition_lattice_2d.cl
     src/compute/kernels/simple_add.cl
     src/compute/kernels/simple_divide.cl
     src/compute/kernels/simple_exponentiation.cl

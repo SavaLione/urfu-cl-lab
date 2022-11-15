@@ -128,6 +128,8 @@ void kernel_loader::reload()
 
 void kernel_loader::load()
 {
+	load("addition_lattice_2d");
+
 	load("simple_add");
 	load("simple_divide");
 	load("simple_exponentiation");

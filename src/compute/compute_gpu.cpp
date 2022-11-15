@@ -266,6 +266,8 @@ void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 
 void compute_gpu::run_all()
 {
+	compute_lattice_2d("addition_lattice_2d");
+
 	compute_vec_16("addition_vector_16");
 	compute_vec_8("addition_vector_8");
 	compute_vec_4("addition_vector_4");
@@ -295,4 +297,23 @@ void compute_gpu::run_all()
 	compute_one_vec_16("log_vector_8");
 	compute_one_vec_16("log_vector_4");
 	compute_one_vec_16("log_vector_2");
+}
+
+void compute_gpu::compute_lattice_2d(std::string opencl_kernel_name)
+{
+	std::vector<cl_float2> vec_a_float(vector_size, {0.0, 0.0});
+	std::vector<cl_float2> vec_b_float(vector_size, {0.0, 0.0});
+	std::vector<cl_float2> vec_c_float(vector_size, {0.0, 0.0});
+
+	/* Fill vectors */
+	fill(vec_a_float, vec_b_float);
+
+	_compute_lattice_2d(
+		opencl_kernel_name,
+		vec_a_float.begin(),
+		vec_a_float.end(),
+		vec_b_float.begin(),
+		vec_b_float.end(),
+		vec_c_float.begin(),
+		vec_c_float.end());
 }
