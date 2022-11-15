@@ -1,19 +1,9 @@
-#################################################################################
-# Copyright (c) 2022, Savely Pototsky (SavaLione)
-# All rights reserved.
-#################################################################################
-# Checking the minimum version
 cmake_minimum_required (VERSION 3.13.1)
 
-# Add module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# Project Nyx
-set(NYX_PROJECT "nyx")
-set(NYX_PROJECT_VERSION "0.0.1")
-
-project(${NYX_PROJECT}
-    VERSION ${NYX_PROJECT_VERSION}
+project(nyx
+    VERSION "1.0.0"
     LANGUAGES CXX
 )
 
@@ -36,13 +26,9 @@ endif()
 
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
-# Export commands
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-#################################################################################
-#                               Macros and functions                            #
-#################################################################################
-# Output directory
+# Output directory macro
 function(function_output_directory arg_project)
     set_target_properties(${arg_project}
         PROPERTIES
@@ -52,22 +38,12 @@ function(function_output_directory arg_project)
     )
 endfunction(function_output_directory)
 
-#################################################################################
-#                                    Libraries                                  #
-#################################################################################
-# OpenCL
+# Libraries
 find_package(OpenCL REQUIRED)
-
-# OpenMP
 find_package(OpenMP)
-
-# spdlog
 find_package(spdlog REQUIRED)
 
-#################################################################################
-#                                     Sources                                   #
-#################################################################################
-# core
+# Sources
 set(NYX_CORE_SRC
     src/core/nyx.h
     src/core/nyx.cpp
@@ -75,7 +51,6 @@ set(NYX_CORE_SRC
     src/core/execution_time.cpp
 )
 
-# OpenCL kernels
 set(NYX_COMPUTE_KERNELS_SRC
     src/compute/kernels/simple_add.cl
     src/compute/kernels/simple_divide.cl
@@ -109,7 +84,6 @@ set(NYX_COMPUTE_KERNELS_SRC
     src/compute/kernels/remove_vector_16.cl
 )
 
-# OpenCL and CPU source files
 set(NYX_COMPUTE_SRC
     src/compute/compute_cpu.h
     src/compute/compute_cpu.cpp
@@ -122,39 +96,24 @@ set(NYX_COMPUTE_SRC
     ${NYX_COMPUTE_KERNELS_SRC}
 )
 
-# Nyx application
 set(NYX_SRC
     ${NYX_CORE_SRC}
     ${NYX_COMPUTE_SRC}
 )
 
-#################################################################################
-#                                     Executable                                #
-#################################################################################
-add_executable(${NYX_PROJECT} ${NYX_SRC})
-target_include_directories(${NYX_PROJECT} PUBLIC ${PROJECT_SOURCE_DIR}/src)
+# Executable
+add_executable(${PROJECT_NAME} ${NYX_SRC})
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
-# C++ features
-target_compile_features(${NYX_PROJECT} PRIVATE cxx_auto_type)
-
-#################################################################################
-#                                Libraries include                              #
-#################################################################################
-# OpenCL
-target_link_libraries(${NYX_PROJECT} OpenCL::OpenCL)
-target_include_directories(${NYX_PROJECT} PUBLIC ${OPENCL_INCLUDE_DIR})
-
-# OpenMP
+# Libraries
+target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL)
+target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${NYX_PROJECT} OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 endif()
+target_link_libraries(${PROJECT_NAME} ${SPDLOG_LIBRARY})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
 
-# spdlog
-target_link_libraries(${NYX_PROJECT} ${SPDLOG_LIBRARY})
-target_include_directories(${NYX_PROJECT} PUBLIC ${SPDLOG_INCLUDE_DIR})
-
-#################################################################################
-#                                 Output directory                              #
-#################################################################################
-function_output_directory(${NYX_PROJECT})                       # Nyx application
-file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)  # OpenCL kernels destination directory
+# Output
+function_output_directory(${PROJECT_NAME})
+file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)
