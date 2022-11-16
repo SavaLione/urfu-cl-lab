@@ -97,3 +97,13 @@ void settings::set_verbose(bool const &verbose)
 {
     this->verbose = verbose;
 }
+
+bool settings::get_exit()
+{
+    return exit;
+}
+
+void settings::set_exit(bool const &exit)
+{
+    this->exit = exit;
+}

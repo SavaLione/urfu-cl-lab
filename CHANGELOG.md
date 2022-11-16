@@ -6,3 +6,4 @@
 - Changed ColumnLimit (was 130, now 150)
 - Changed ``kernel_loaded``. Now ``kernel_loader`` based on ``SDL_RWops``
 - Added verbose output argument ``-b`` or ``--verbose``
+- Added ``exit`` setting

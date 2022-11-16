@@ -56,6 +56,7 @@ public:
     std::size_t get_iteration_count();
     std::size_t get_laboratory_work();
     bool get_verbose();
+    bool get_exit();
 
     void set_gpu(bool const &gpu);
     void set_cpu(bool const &cpu);
@@ -63,6 +64,7 @@ public:
     void set_iteration_count(std::size_t const &iteration_count);
     void set_laboratory_work(std::size_t const &laboratory_work);
     void set_verbose(bool const &verbose);
+    void set_exit(bool const &exit);
 
 private:
     /* Class */
@@ -77,6 +79,7 @@ private:
     std::size_t iteration_count = 100;
     std::size_t laboratory_work = 1;
     bool verbose                = false;
+    bool exit                   = false;
 };
 
 #endif // CORE_SETTINGS_H
