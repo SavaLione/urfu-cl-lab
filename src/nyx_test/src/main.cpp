@@ -118,13 +118,6 @@ void image::run()
     spdlog::info("image_channels: {}", image_channels);
     spdlog::info("img size:       {}", sizeof(img));
 
-    // for(unsigned char *p = img; p != img + 10 * image_width * image_channels; p += image_channels)
-    // {
-    //     *p       = (uint8_t)0;
-    //     *(p + 1) = (uint8_t)0;
-    //     *(p + 2) = (uint8_t)0;
-    // }
-
     std::vector<uint8_t> img_out(image_width * image_height * image_channels);
 
     int index = 0;
@@ -132,61 +125,84 @@ void image::run()
     {
         for(int i = 0; i < image_width; ++i)
         {
-            // float r = (float)i / (float)image_width;
-            // float g = (float)j / (float)image_height;
-            // float b = 0.2f;
-            // int ir  = int(255.99 * r);
-            // int ig  = int(255.99 * g);
-            // int ib  = int(255.99 * b);
-
-            // img_out[index++] = ir;
-            // img_out[index++] = ig;
-            // img_out[index++] = ib;
-
-            int ind      = index++;
-            img_out[ind] = img[ind];
-            ind          = index++;
-            img_out[ind] = img[ind];
-            ind          = index++;
-            img_out[ind] = img[ind];
+            int ind_0      = index++;
+            int ind_1      = index++;
+            int ind_2      = index++;
+            img_out[ind_0] = img[ind_0];
+            img_out[ind_1] = img[ind_1];
+            img_out[ind_2] = img[ind_2];
         }
     }
 
-    // for(std::size_t w = 0; w < image_width; w++)
-    // {
-    //     for(std::size_t h = 0; h < image_height; h++)
-    //     {
-    //         // for(std::size_t c = 0; h < image_channels; c++)
-    //         if(image_width > image_height)
-    //         {
-    //             img_out[w * image_width + w + h + 0] = img[w * image_width + w + h + 0];
-    //             img_out[w * image_width + w + h + 1] = img[w * image_width + w + h + 1];
-    //             img_out[w * image_width + w + h + 2] = img[w * image_width + w + h + 2];
-    //         }
-    //         else
-    //         {
-    //             img_out[w * image_height + w + h + 0] = img[w * image_height + w + h + 0];
-    //             img_out[w * image_height + w + h + 1] = img[w * image_height + w + h + 1];
-    //             img_out[w * image_height + w + h + 2] = img[w * image_height + w + h + 2];
-    //         }
-    //     }
-    // }
-
-    //////////////////////////////////////////////
-
-    // std::vector<unsigned char> img_out(image_width * image_height);
-
-    // for(std::size_t i = 0; i < (image_width * image_height); i++)
-    // {
-    //     img_out[i] = img[i];
-    // }
-
-    // stbi_write_png("test_out.png", image_width, image_height, image_channels, img, image_width * image_channels);
     stbi_write_png("test_out.png", image_width, image_height, image_channels, img_out.data(), image_width * image_channels);
 
     stbi_image_free(img);
 
     //////////////////////////////////////////////
+
+    try
+    {
+        cl::Platform::get(&all_platforms);
+
+        if(all_platforms.size() == 0)
+        {
+            throw std::runtime_error("No OpenCL platforms found.");
+        }
+
+        default_platform = all_platforms[0];
+
+        spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
+
+        default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+
+        if(all_devices.size() == 0)
+        {
+            throw std::runtime_error("No OpenCL devices found.");
+        }
+
+        default_device = all_devices[0];
+
+        spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
+
+        context = cl::Context({default_device});
+
+        //kernels = kernel_loader_instance.get();
+
+        for(auto &kern : kernels)
+        {
+            sources.push_back({kern.c_str(), kern.length()});
+        }
+
+        program = cl::Program(context, sources);
+
+        try
+        {
+            program.build({default_device});
+        }
+        catch(cl::BuildError err)
+        {
+            spdlog::error("OpenCL build error.");
+            spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+            return;
+        }
+
+        //////////////////////////////////////////////
+
+        
+    }
+    catch(cl::Error &e)
+    {
+        spdlog::error("OpenCL error: {}", e.what());
+        spdlog::error(e.err());
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("std::exception {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("Unexpected exception.");
+    }
 }
 
 /*
