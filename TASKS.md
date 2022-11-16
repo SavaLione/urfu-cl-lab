@@ -1,0 +1,27 @@
+# Tasks
+- [x] First OpenCL lab
+    - [x] Write OpenCL kernels
+        - [x] add
+        - [x] remove
+        - [x] divide
+        - [x] exponentiation
+        - [ ] condition
+        - [x] log
+        - [ ] trig
+        - [ ] csv table
+    - [x] Run OpenCL kernel multiple times and reduce work group size each time
+        - [ ] reduce work group size
+        - [ ] save data to excel table
+        - [ ] draw chart
+    - [x] Two-dimensional lattice
+    - [x] Show information about OpenCL device
+        - [x] OpenCL version
+        - [x] Device name
+        - [x] Global memory size
+        - [x] Local memory size
+        - [x] Maximum clock frequency
+        - [ ] Maximum number of work group
+        - [ ] Maximum number of computational units
+        - [ ] Maximum OpenCL image width and height
+        - [ ] Maximum number of work group dimensions
+        - [ ] Maximum number of work group per dimension
