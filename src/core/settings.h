@@ -55,12 +55,14 @@ public:
     std::size_t get_vector_size();
     std::size_t get_iteration_count();
     std::size_t get_laboratory_work();
+    bool get_verbose();
 
     void set_gpu(bool const &gpu);
     void set_cpu(bool const &cpu);
     void set_vector_size(std::size_t const &vector_size);
     void set_iteration_count(std::size_t const &iteration_count);
     void set_laboratory_work(std::size_t const &laboratory_work);
+    void set_verbose(bool const &verbose);
 
 private:
     /* Class */
@@ -74,6 +76,7 @@ private:
     std::size_t vector_size     = 102400000;
     std::size_t iteration_count = 100;
     std::size_t laboratory_work = 1;
+    bool verbose                = false;
 };
 
 #endif // CORE_SETTINGS_H

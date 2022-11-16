@@ -87,3 +87,13 @@ void settings::set_laboratory_work(std::size_t const &laboratory_work)
 {
     this->laboratory_work = laboratory_work;
 }
+
+bool settings::get_verbose()
+{
+    return verbose;
+}
+
+void settings::set_verbose(bool const &verbose)
+{
+    this->verbose = verbose;
+}

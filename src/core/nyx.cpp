@@ -81,14 +81,15 @@ int main(int argc, char *argv[])
     settings &settings_instance = settings::instance();
 
     /* Options */
-    std::string const short_opts = "gcv:i:l:h";
+    std::string const short_opts = "gcv:i:l:bh";
 
-    std::array<option, 6> long_options = {
+    std::array<option, 7> long_options = {
         {{"gpu-only", no_argument, nullptr, 'g'},
          {"cpu-only", no_argument, nullptr, 'c'},
          {"vector-size", required_argument, nullptr, 'v'},
          {"iteration-count", required_argument, nullptr, 'i'},
          {"laboratory-work", required_argument, nullptr, 'l'},
+         {"verbose", no_argument, nullptr, 'b'},
          {"help", no_argument, nullptr, 'h'}}};
 
     while(true)
@@ -216,6 +217,12 @@ int main(int argc, char *argv[])
 
                 break;
             }
+            case 'b':
+                settings_instance.set_verbose(true);
+                spdlog::info("Verbose output set");
+                spdlog::set_level(spdlog::level::debug);
+                spdlog::debug("Verbose output example");
+                break;
             case 'h':
             case '?':
             default:
@@ -297,6 +304,7 @@ void print_help()
     std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
     std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
     std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
+    std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display this help and exit" << std::endl;
     exit(EXIT_SUCCESS);
 }
