@@ -44,8 +44,8 @@
 #include <unistd.h>
 #include <vector>
 
-std::size_t IMAGE_WIDTH = 1024;
-std::size_t IMAGE_HIGHT = 1024;
+// std::size_t IMAGE_WIDTH = 1024;
+// std::size_t IMAGE_HIGHT = 1024;
 
 std::size_t BLOCK_SIZE = 32;
 
@@ -187,8 +187,41 @@ void image::run()
         }
 
         //////////////////////////////////////////////
+        cl::CommandQueue queue(context, default_device);
+        //////////////////////////////////////////////
+
+        cl::Kernel kernel_simple_add(program, "example");
+        cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
+        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, 1024, 1024);
+        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, 1024, 1024);
+
+        cl::NDRange global(1024, 1024);
+
+        // std::array<cl::size_type, 3> origin {0, 0, 0};
+        // std::array<cl::size_type, 3> region {16, 16, 1};
+        std::array<cl::size_type, 3> origin {0, 0, 0};
+        std::array<cl::size_type, 3> region {16, 16, 1};
+
+        queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, img_out.data());
+
+        kernel_simple_add.setArg(0, img_2d_in);
+        kernel_simple_add.setArg(1, img_2d_out);
+
+        // queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(1024, 1024), cl::NullRange, NULL);
+        // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
+        // queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &img_out_new[0]);
+        std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
+        cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
+
+        kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
 
         
+
+        spdlog::info("img_out.size() {}", img_out.size());
+        spdlog::info("img_out_new.size() {}", img_out_new.size());
+
+        //////////////////////////////////////////////
+        stbi_write_png("test_out_new.png", image_width, image_height, image_channels, img_out_new.data(), image_width * image_channels);
     }
     catch(cl::Error &e)
     {
@@ -280,7 +313,7 @@ int main(int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_Window *window = SDL_CreateWindow("Laboratory work 2", 0, 0, IMAGE_WIDTH, IMAGE_HIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("Laboratory work 2", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
     {
         spdlog::error("Error: {}", SDL_GetError());
