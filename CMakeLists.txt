@@ -49,10 +49,12 @@ find_package(GLEW REQUIRED)
 
 # Sources
 set(NYX_CORE_SRC
-    src/core/nyx.h
-    src/core/nyx.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
+    src/core/image.h
+    src/core/image.cpp
+    src/core/nyx.h
+    src/core/nyx.cpp
     src/core/settings.h
     src/core/settings.cpp
 )
@@ -131,3 +133,6 @@ target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
 # Output
 function_output_directory(${PROJECT_NAME})
 file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)
+
+# Test
+add_subdirectory(src/nyx_test)

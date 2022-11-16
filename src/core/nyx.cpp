@@ -37,6 +37,7 @@
 #include "core/nyx.h"
 
 // clang-format off
+#include <CL/cl_gl.h>
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -283,6 +284,16 @@ int main(int argc, char *argv[])
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClearDepth(1.0f);
             glEnable(GL_DEPTH_TEST);
+
+            // OpenCL properties
+            // std::array<cl_context_properties, 1> opencl_properties = {
+            //     CL_GL_CONTEXT_KHR,
+            //     (cl_context_properties)context,
+            //     CL_WGL_HDC_KHR,
+            //     (cl_context_properties),
+            //     CL_CONTEXT_PLATFORM,
+            //     (cl_context_properties),
+            //     0};
 
             SDL_Event event;
             while(!settings_instance.get_exit())
