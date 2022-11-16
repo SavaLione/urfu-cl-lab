@@ -32,16 +32,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 function(function_output_directory arg_project)
     set_target_properties(${arg_project}
         PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" # lib
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" # lib
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
     )
 endfunction(function_output_directory)
 
 # Libraries
-find_package(OpenCL REQUIRED)
+find_package(Threads)
 find_package(OpenMP)
+find_package(OpenCL REQUIRED)
+find_package(OpenGL REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
 
 # Sources
 set(NYX_CORE_SRC
@@ -109,13 +113,20 @@ add_executable(${PROJECT_NAME} ${NYX_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 # Libraries
-target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL)
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
+if(Threads_FOUND)
+    target_link_libraries(${PROJECT_NAME} Threads::Threads)
+endif()
 if(OpenMP_CXX_FOUND)
     target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 endif()
+target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL)
+target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SPDLOG_LIBRARY})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
 
 # Output
 function_output_directory(${PROJECT_NAME})

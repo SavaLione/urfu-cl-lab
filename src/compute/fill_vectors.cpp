@@ -35,4 +35,3 @@
  * @date 26 Oct 2022
  */
 #include "compute/fill_vectors.h"
-

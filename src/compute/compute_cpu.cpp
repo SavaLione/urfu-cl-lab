@@ -40,72 +40,72 @@
 
 compute_cpu::compute_cpu(std::size_t const &vector_size, std::size_t const &iteration_count)
 {
-	this->vector_size	  = vector_size;
-	this->iteration_count = iteration_count;
+    this->vector_size     = vector_size;
+    this->iteration_count = iteration_count;
 }
 
 std::string compute_cpu::get_string_name(operation_name name)
 {
-	switch(name)
-	{
-		case ADDITION:
-		{
-			return "Addition";
-			break;
-		}
-		case REMOVE:
-		{
-			return "Remove";
-			break;
-		}
-		case MULTIPLE:
-		{
-			return "Multiple";
-			break;
-		}
-		case DIVIDE:
-		{
-			return "Divide";
-			break;
-		}
-		case EXPONENTIATION:
-		{
-			return "Exponentiation";
-			break;
-		}
-		case LOG:
-		{
-			return "Log";
-			break;
-		}
-		case UNKNOWN:
-		{
-			return "Unknown";
-			break;
-		}
-		default:
-		{
-			return "UNKNOWN_OPERATION";
-			break;
-		}
-	}
+    switch(name)
+    {
+        case ADDITION:
+        {
+            return "Addition";
+            break;
+        }
+        case REMOVE:
+        {
+            return "Remove";
+            break;
+        }
+        case MULTIPLE:
+        {
+            return "Multiple";
+            break;
+        }
+        case DIVIDE:
+        {
+            return "Divide";
+            break;
+        }
+        case EXPONENTIATION:
+        {
+            return "Exponentiation";
+            break;
+        }
+        case LOG:
+        {
+            return "Log";
+            break;
+        }
+        case UNKNOWN:
+        {
+            return "Unknown";
+            break;
+        }
+        default:
+        {
+            return "UNKNOWN_OPERATION";
+            break;
+        }
+    }
 
-	return "UNKNOWN_OPERATION";
+    return "UNKNOWN_OPERATION";
 }
 
 void compute_cpu::run_all()
 {
-	std::vector<float> vec_a(vector_size, 0);
-	std::vector<float> vec_b(vector_size, 0);
-	std::vector<float> vec_c(vector_size, 0);
+    std::vector<float> vec_a(vector_size, 0);
+    std::vector<float> vec_b(vector_size, 0);
+    std::vector<float> vec_c(vector_size, 0);
 
-	fill_vectors(vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end());
+    fill_vectors(vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end());
 
-	_compute(operation_name::ADDITION, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
-	_compute(operation_name::REMOVE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
-	_compute(operation_name::MULTIPLE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
-	_compute(operation_name::DIVIDE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::ADDITION, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::REMOVE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::MULTIPLE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::DIVIDE, vec_a.begin(), vec_a.end(), vec_b.begin(), vec_b.end(), vec_c.begin(), vec_c.end());
 
-	_compute(operation_name::EXPONENTIATION, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
-	_compute(operation_name::LOG, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::EXPONENTIATION, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
+    _compute(operation_name::LOG, vec_a.begin(), vec_a.end(), vec_c.begin(), vec_c.end());
 }

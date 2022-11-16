@@ -47,123 +47,123 @@ kernel_loader::kernel_loader() {}
 
 void kernel_loader::load(std::string const &name)
 {
-	bool is_kernel_already_loaded = false;
-	for(auto const &lk : _loaded_kernels)
-	{
-		if(lk == name)
-		{
-			is_kernel_already_loaded = true;
-			spdlog::warn("Kernel {} already loaded.", name);
-		}
-	}
+    bool is_kernel_already_loaded = false;
+    for(auto const &lk : _loaded_kernels)
+    {
+        if(lk == name)
+        {
+            is_kernel_already_loaded = true;
+            spdlog::warn("Kernel {} already loaded.", name);
+        }
+    }
 
-	if(!is_kernel_already_loaded)
-	{
-		try
-		{
-			std::string kernel;
-			std::string path = "kernels/";
-			path += name;
-			path += ".cl";
+    if(!is_kernel_already_loaded)
+    {
+        try
+        {
+            std::string kernel;
+            std::string path = "kernels/";
+            path += name;
+            path += ".cl";
 
-			std::ifstream f(path);
+            std::ifstream f(path);
 
-			if(f.is_open())
-			{
-			}
-			else
-			{
-				spdlog::error("Can't open: {}", path);
-				f.close();
-				return;
-			}
+            if(f.is_open())
+            {
+            }
+            else
+            {
+                spdlog::error("Can't open: {}", path);
+                f.close();
+                return;
+            }
 
-			while(!f.eof())
-			{
-				std::string line = "";
-				f >> line;
-				line += " ";
-				kernel += line;
-			}
+            while(!f.eof())
+            {
+                std::string line = "";
+                f >> line;
+                line += " ";
+                kernel += line;
+            }
 
-			f.close();
+            f.close();
 
-			_loaded_kernels.push_back(name);
-			_string_kernels.push_back(kernel);
+            _loaded_kernels.push_back(name);
+            _string_kernels.push_back(kernel);
 
-			spdlog::debug("Kernel {} loaded.", name);
-		}
-		catch(std::exception const &e)
-		{
-			spdlog::error("Error trying to load kernel from file: {}", name);
-			spdlog::error(e.what());
-		}
-		catch(std::ifstream::failure const &e)
-		{
-			spdlog::error("Error trying to load kernel from file: {}", name);
-			spdlog::error(e.what());
-		}
-	}
+            spdlog::debug("Kernel {} loaded.", name);
+        }
+        catch(std::exception const &e)
+        {
+            spdlog::error("Error trying to load kernel from file: {}", name);
+            spdlog::error(e.what());
+        }
+        catch(std::ifstream::failure const &e)
+        {
+            spdlog::error("Error trying to load kernel from file: {}", name);
+            spdlog::error(e.what());
+        }
+    }
 }
 
 void kernel_loader::print()
 {
-	for(std::size_t i = 0; (i < _loaded_kernels.size()) && (i < _string_kernels.size()); i++)
-	{
-		spdlog::info("Kernel: {} data: \n{}", _loaded_kernels[i], _string_kernels[i]);
-	}
+    for(std::size_t i = 0; (i < _loaded_kernels.size()) && (i < _string_kernels.size()); i++)
+    {
+        spdlog::info("Kernel: {} data: \n{}", _loaded_kernels[i], _string_kernels[i]);
+    }
 }
 
 void kernel_loader::reset()
 {
-	_loaded_kernels.clear();
-	_string_kernels.clear();
+    _loaded_kernels.clear();
+    _string_kernels.clear();
 }
 
 void kernel_loader::reload()
 {
-	reset();
-	load();
+    reset();
+    load();
 }
 
 void kernel_loader::load()
 {
-	load("addition_lattice_2d");
+    load("addition_lattice_2d");
 
-	load("simple_add");
-	load("simple_divide");
-	load("simple_exponentiation");
-	load("simple_multiple");
-	load("simple_remove");
-	load("simple_vec_add");
+    load("simple_add");
+    load("simple_divide");
+    load("simple_exponentiation");
+    load("simple_multiple");
+    load("simple_remove");
+    load("simple_vec_add");
 
-	load("addition_vector_16");
-	load("addition_vector_8");
-	load("addition_vector_4");
-	load("addition_vector_2");
+    load("addition_vector_16");
+    load("addition_vector_8");
+    load("addition_vector_4");
+    load("addition_vector_2");
 
-	load("divide_vector_16");
-	load("divide_vector_8");
-	load("divide_vector_4");
-	load("divide_vector_2");
+    load("divide_vector_16");
+    load("divide_vector_8");
+    load("divide_vector_4");
+    load("divide_vector_2");
 
-	load("exponentiation_vector_16");
-	load("exponentiation_vector_8");
-	load("exponentiation_vector_4");
-	load("exponentiation_vector_2");
+    load("exponentiation_vector_16");
+    load("exponentiation_vector_8");
+    load("exponentiation_vector_4");
+    load("exponentiation_vector_2");
 
-	load("multiple_vector_16");
-	load("multiple_vector_8");
-	load("multiple_vector_4");
-	load("multiple_vector_2");
+    load("multiple_vector_16");
+    load("multiple_vector_8");
+    load("multiple_vector_4");
+    load("multiple_vector_2");
 
-	load("remove_vector_16");
-	load("remove_vector_8");
-	load("remove_vector_4");
-	load("remove_vector_2");
+    load("remove_vector_16");
+    load("remove_vector_8");
+    load("remove_vector_4");
+    load("remove_vector_2");
 
-	load("log_vector_16");
-	load("log_vector_8");
-	load("log_vector_4");
-	load("log_vector_2");
+    load("log_vector_16");
+    load("log_vector_8");
+    load("log_vector_4");
+    load("log_vector_2");
 }

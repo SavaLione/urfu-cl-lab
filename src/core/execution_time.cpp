@@ -44,5 +44,4 @@ void execution_time::start()
 void execution_time::stop()
 {
     _stop = std::chrono::high_resolution_clock::now();
-    
 }

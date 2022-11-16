@@ -42,38 +42,38 @@
 class settings
 {
 public:
-	/* Class */
-	static settings &instance()
-	{
-		static settings s;
-		return s;
-	}
+    /* Class */
+    static settings &instance()
+    {
+        static settings s;
+        return s;
+    }
 
-	/* Variables */
-	bool get_gpu();
-	bool get_cpu();
-	std::size_t get_vector_size();
-	std::size_t get_iteration_count();
-	std::size_t get_laboratory_work();
+    /* Variables */
+    bool get_gpu();
+    bool get_cpu();
+    std::size_t get_vector_size();
+    std::size_t get_iteration_count();
+    std::size_t get_laboratory_work();
 
-	void set_gpu(bool const &gpu);
-	void set_cpu(bool const &cpu);
-	void set_vector_size(std::size_t const &vector_size);
-	void set_iteration_count(std::size_t const &iteration_count);
-	void set_laboratory_work(std::size_t const &laboratory_work);
+    void set_gpu(bool const &gpu);
+    void set_cpu(bool const &cpu);
+    void set_vector_size(std::size_t const &vector_size);
+    void set_iteration_count(std::size_t const &iteration_count);
+    void set_laboratory_work(std::size_t const &laboratory_work);
 
 private:
-	/* Class */
-	settings();
-	settings(settings const &)			  = delete;
-	settings &operator=(settings const &) = delete;
+    /* Class */
+    settings();
+    settings(settings const &)            = delete;
+    settings &operator=(settings const &) = delete;
 
-	/* Variables */
-	bool gpu					= true;
-	bool cpu					= true;
-	std::size_t vector_size		= 102400000;
-	std::size_t iteration_count = 100;
-	std::size_t laboratory_work = 1;
+    /* Variables */
+    bool gpu                    = true;
+    bool cpu                    = true;
+    std::size_t vector_size     = 102400000;
+    std::size_t iteration_count = 100;
+    std::size_t laboratory_work = 1;
 };
 
 #endif // CORE_SETTINGS_H

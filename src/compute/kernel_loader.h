@@ -43,32 +43,32 @@
 class kernel_loader
 {
 public:
-	static kernel_loader &instance()
-	{
-		static kernel_loader kl;
-		return kl;
-	}
+    static kernel_loader &instance()
+    {
+        static kernel_loader kl;
+        return kl;
+    }
 
-	void load();
-	void load(std::string const &name);
+    void load();
+    void load(std::string const &name);
 
-	std::vector<std::string> const &get() const
-	{
-		return _string_kernels;
-	}
+    std::vector<std::string> const &get() const
+    {
+        return _string_kernels;
+    }
 
-	void print();
+    void print();
 
-	void reset();
-	void reload();
+    void reset();
+    void reload();
 
 private:
-	kernel_loader();
-	kernel_loader(kernel_loader const &)			= delete;
-	kernel_loader &operator=(kernel_loader const &) = delete;
+    kernel_loader();
+    kernel_loader(kernel_loader const &)            = delete;
+    kernel_loader &operator=(kernel_loader const &) = delete;
 
-	std::vector<std::string> _loaded_kernels;
-	std::vector<std::string> _string_kernels;
+    std::vector<std::string> _loaded_kernels;
+    std::vector<std::string> _string_kernels;
 };
 
 #endif // COMPUTE_KERNEL_LOADER_H
