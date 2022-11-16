@@ -30,6 +30,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 set(NYX_TEST_SRC
     src/main.h
     src/main.cpp
+    src/stb_image_resize.h
+    src/stb_image_write.h
+    src/stb_image.h
 )
 
 # Executable
