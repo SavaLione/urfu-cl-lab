@@ -63,6 +63,20 @@ int main(int argc, char *argv[])
     /* Signal handler */
     signal(SIGINT, signal_callback);
 
+    /* SDL 2.0*/
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
+    {
+        spdlog::error("Error: {}", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+
+    // GL 3.0 + GLSL 130
+    const char *glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
     /* Settings instance */
     settings &settings_instance = settings::instance();
 
@@ -278,11 +292,11 @@ void print_help()
     std::cout << "Usage: nyx [OPTION]" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  -g          , --gpu-only                  Perform only gpu tests" << std::endl;
-    std::cout << "  -c          , --cpu-only                  Perform only cpu tests" << std::endl;
-    std::cout << "  -v <size>   , --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
-    std::cout << "  -i <count>  , --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
-    std::cout << "  -l <number> , --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
-    std::cout << "  -h          , --help                      Display this help and exit" << std::endl;
+    std::cout << "  -g, --gpu-only                  Perform only gpu tests" << std::endl;
+    std::cout << "  -c, --cpu-only                  Perform only cpu tests" << std::endl;
+    std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
+    std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
+    std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
+    std::cout << "  -h, --help                      Display this help and exit" << std::endl;
     exit(EXIT_SUCCESS);
 }

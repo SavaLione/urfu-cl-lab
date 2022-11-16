@@ -36,6 +36,7 @@
  */
 #include "compute/kernel_loader.h"
 
+#include <SDL2/SDL.h>
 #include <cstddef>
 #include <exception>
 #include <fstream>
@@ -62,46 +63,40 @@ void kernel_loader::load(std::string const &name)
         try
         {
             std::string kernel;
-            std::string path = "kernels/";
-            path += name;
-            path += ".cl";
+            std::string file_name = "kernels/" + name + ".cl";
 
-            std::ifstream f(path);
+            SDL_RWops *file = SDL_RWFromFile(file_name.c_str(), "rb");
+            size_t size;
 
-            if(f.is_open())
+            if(!file)
             {
-            }
-            else
-            {
-                spdlog::error("Can't open: {}", path);
-                f.close();
-                return;
+                throw std::runtime_error("Failed opening file: " + file_name);
             }
 
-            while(!f.eof())
+            void *loaded = SDL_LoadFile_RW(file, &size, 1);
+
+            if(!loaded)
             {
-                std::string line = "";
-                f >> line;
-                line += " ";
-                kernel += line;
+                throw std::runtime_error("Failed loading file: " + file_name);
             }
 
-            f.close();
+            kernel = {static_cast<char *>(loaded), size};
+
+            SDL_free(loaded);
 
             _loaded_kernels.push_back(name);
             _string_kernels.push_back(kernel);
 
-            spdlog::debug("Kernel {} loaded.", name);
+            spdlog::debug("Kernel {} loaded", name);
         }
         catch(std::exception const &e)
         {
             spdlog::error("Error trying to load kernel from file: {}", name);
             spdlog::error(e.what());
         }
-        catch(std::ifstream::failure const &e)
+        catch(...)
         {
-            spdlog::error("Error trying to load kernel from file: {}", name);
-            spdlog::error(e.what());
+            spdlog::error("Undefined error in kernel_loader");
         }
     }
 }

@@ -4,3 +4,4 @@
 - Changed application help information
 - Changed indent type (now with spaces instead of tabs)
 - Changed ColumnLimit (was 130, now 150)
+- Changed ``kernel_loaded``. Now ``kernel_loader`` based on ``SDL_RWops``

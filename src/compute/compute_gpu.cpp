@@ -261,7 +261,8 @@ void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 
 void compute_gpu::run_all()
 {
-    compute_lattice_2d("addition_lattice_2d");
+    if(false)
+        compute_lattice_2d("addition_lattice_2d");
 
     compute_vec_16("addition_vector_16");
     compute_vec_8("addition_vector_8");
