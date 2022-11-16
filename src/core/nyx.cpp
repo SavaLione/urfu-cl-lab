@@ -57,13 +57,14 @@ int main(int argc, char *argv[])
 	settings &settings_instance = settings::instance();
 
 	/* Options */
-	std::string const short_opts = "gcv:i:h";
-	std::array<option, 5> long_options =
+	std::string const short_opts = "gcv:i:l:h";
+	std::array<option, 6> long_options =
 	{{
 		{"gpu-only", 			no_argument,        nullptr, 'g'},
 		{"cpu-only", 			no_argument,        nullptr, 'c'},
 		{"vector-size", 		required_argument,  nullptr, 'v'},
 		{"iteration-count", 	required_argument,  nullptr, 'i'},
+		{"laboratory-work", 	required_argument,  nullptr, 'l'},
 		{"help", 				no_argument,        nullptr, 'h'}
 	}};
 
@@ -131,7 +132,7 @@ int main(int argc, char *argv[])
 			}
 			case 'i':
 			{
-				int i = std::stoi(optarg);
+				int i = 0;
                 try
                 {
                     i = std::stoi(optarg);
@@ -158,6 +159,40 @@ int main(int argc, char *argv[])
 				settings_instance.set_iteration_count(i);
 				break;
 			}
+			case 'l':
+			{
+				int l = 0;
+                try
+                {
+                    l = std::stoi(optarg);
+                }
+                catch(std::invalid_argument const &e)
+                {
+                    spdlog::error("unexpected -l or --laboratory-work argument: {}\n{}", optarg, e.what());
+                    exit(EXIT_FAILURE);
+                }
+                catch(...)
+                {
+                    spdlog::error("unexpected -l or --laboratory-work argument: {}", optarg);
+                    exit(EXIT_FAILURE);
+                }
+
+				switch(l)
+				{
+					case 1:
+					case 2:
+						settings_instance.set_laboratory_work(l);
+						break;
+					default:
+						spdlog::error("argument -l or --laboratory-work must be 1 or 2");
+						print_help();
+						break;
+				}
+
+				spdlog::info("Laboratory work number: {}", l);
+
+				break;
+			}
 			case 'h':
 			case '?':
 			default:
@@ -166,27 +201,42 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Kernel loader instance */
-    if(settings_instance.get_gpu())
-    {
-        kernel_loader &kernel_loader_instance = kernel_loader::instance();
-	    kernel_loader_instance.load();
-    }
+	switch(settings_instance.get_laboratory_work())
+	{
+		case 1:
+		{
+			/* Kernel loader instance */
+    		if(settings_instance.get_gpu())
+    		{
+        		kernel_loader &kernel_loader_instance = kernel_loader::instance();
+	    		kernel_loader_instance.load();
+    		}
 
-	/* Compute the test data on cpu */
-    if(settings_instance.get_cpu())
-    {
-	    compute_cpu cc(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
-	    cc.run_all();
-    }
+			/* Compute the test data on cpu */
+    		if(settings_instance.get_cpu())
+    		{
+	    		compute_cpu cc(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+	    		cc.run_all();
+    		}
 
-	/* Compute the test data on gpu */
-    if(settings_instance.get_gpu())
-    {
-	    compute_gpu cg(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
-	    cg.print_info();
-	    cg.run_all();
-    }
+			/* Compute the test data on gpu */
+    		if(settings_instance.get_gpu())
+    		{
+	    		compute_gpu cg(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+	    		cg.print_info();
+	    		cg.run_all();
+    		}
+			break;
+		}
+		case 2:
+		{
+
+			break;
+		}
+		default:
+			print_help();
+			break;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -220,10 +270,11 @@ void print_help()
 	std::cout << "Usage: nyx [OPTION]" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Options:" << std::endl;
-	std::cout << "  -g, --gpu-only                  Perform only gpu tests" << std::endl;
-	std::cout << "  -c, --cpu-only                  Perform only cpu tests" << std::endl;
-	std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
-	std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
-	std::cout << "  -h, --help                      Display this help and exit" << std::endl;
+	std::cout << "  -g          , --gpu-only                  Perform only gpu tests" << std::endl;
+	std::cout << "  -c          , --cpu-only                  Perform only cpu tests" << std::endl;
+	std::cout << "  -v <size>   , --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
+	std::cout << "  -i <count>  , --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
+	std::cout << "  -l <number> , --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
+	std::cout << "  -h          , --help                      Display this help and exit" << std::endl;
 	exit(EXIT_SUCCESS);
 }

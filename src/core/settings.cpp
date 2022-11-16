@@ -77,3 +77,13 @@ void settings::set_iteration_count(std::size_t const &iteration_count)
 {
 	this->iteration_count = iteration_count;
 }
+
+std::size_t settings::get_laboratory_work()
+{
+	return laboratory_work;
+}
+
+void settings::set_laboratory_work(std::size_t const &laboratory_work)
+{
+	this->laboratory_work = laboratory_work;
+}
