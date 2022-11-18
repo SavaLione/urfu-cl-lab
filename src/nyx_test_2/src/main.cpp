@@ -161,6 +161,8 @@ int main()
                           "    const int y = get_global_id(1);"
                           "    int2 pos = (int2)(x, y);"
                           "    uint4 pixel = read_imageui(img_in, sampler, pos);"
+                          "    pixel.x += 1;"
+                          "    pixel.y += 2;"
                           "    write_imageui(img_out, pos, pixel);"
                           "}"
                           ""
