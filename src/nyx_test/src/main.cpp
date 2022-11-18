@@ -100,8 +100,41 @@ void image::read_kernel()
     spdlog::info("Kernel {} loaded", file_name);
 }
 
+std::size_t IMAGE_SIZE_MAX = 16;
+std::vector<uint8_t> IMAGE_ORIGINAL(IMAGE_SIZE_MAX *IMAGE_SIZE_MAX * 3);
+std::vector<uint8_t> IMAGE_POSSIBLE_RESULT(IMAGE_SIZE_MAX *IMAGE_SIZE_MAX * 3);
+
 void image::run()
 {
+    for(std::size_t i = 0, fl = 0, color = 0; i < (IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3); i++, fl++, color++)
+    {
+        if(fl == 3)
+            fl = 0;
+        if(color == 256)
+            color = 0;
+
+        if(fl == 0)
+            IMAGE_ORIGINAL[i] = color;
+        if(fl == 1)
+            IMAGE_ORIGINAL[i] = color;
+        if(fl == 2)
+            IMAGE_ORIGINAL[i] = 255;
+    }
+
+    for(std::size_t i = 0, fl = 0; i < (IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3); i++, fl++)
+    {
+        if(fl == 3)
+            fl = 0;
+
+        if(fl == 0)
+            IMAGE_POSSIBLE_RESULT[i] = 128;
+        if(fl == 1)
+            IMAGE_POSSIBLE_RESULT[i] = 128;
+        if(fl == 2)
+            IMAGE_POSSIBLE_RESULT[i] = 255;
+    }
+
+    /////////////////////////////////////////
     int image_width    = 0;
     int image_height   = 0;
     int image_channels = 0;
@@ -138,6 +171,9 @@ void image::run()
 
     stbi_image_free(img);
 
+    //////////////////////////////////////////////
+    stbi_write_png("IMAGE_ORIGINAL.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, IMAGE_ORIGINAL.data(), IMAGE_SIZE_MAX * 3);
+    // stbi_write_png("IMAGE_POSSIBLE_RESULT.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, IMAGE_POSSIBLE_RESULT.data(), IMAGE_SIZE_MAX * 3);
     //////////////////////////////////////////////
 
     try
@@ -190,38 +226,75 @@ void image::run()
         cl::CommandQueue queue(context, default_device);
         //////////////////////////////////////////////
 
-        cl::Kernel kernel_simple_add(program, "example");
-        cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
-        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, 1024, 1024);
-        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, 1024, 1024);
-
-        cl::NDRange global(1024, 1024);
-
+        // cl::Kernel kernel_simple_add(program, "example");
+        // cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
+        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, 1024, 1024);
+        // cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, 1024, 1024);
+        // cl::NDRange global(1024, 1024);
+        // // std::array<cl::size_type, 3> origin {0, 0, 0};
+        // // std::array<cl::size_type, 3> region {16, 16, 1};
         // std::array<cl::size_type, 3> origin {0, 0, 0};
         // std::array<cl::size_type, 3> region {16, 16, 1};
+        // queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, img_out.data());
+        // kernel_simple_add.setArg(0, img_2d_in);
+        // kernel_simple_add.setArg(1, img_2d_out);
+        // // queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(1024, 1024), cl::NullRange, NULL);
+        // // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
+        // // queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &img_out_new[0]);
+        // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
+        // cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
+        // kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
+        // spdlog::info("img_out.size() {}", img_out.size());
+        // spdlog::info("img_out_new.size() {}", img_out_new.size());
+
+        //////////////////////////////////////////////
+        cl::Kernel kernel_simple_add(program, "example");
+        cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
+        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
+        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, &IMAGE_ORIGINAL.data()[0]);
+        // cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
+        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, NULL);
+        cl::NDRange global(IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
         std::array<cl::size_type, 3> origin {0, 0, 0};
         std::array<cl::size_type, 3> region {16, 16, 1};
-
-        queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, img_out.data());
-
+        // queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, IMAGE_ORIGINAL.data());
         kernel_simple_add.setArg(0, img_2d_in);
         kernel_simple_add.setArg(1, img_2d_out);
-
         // queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(1024, 1024), cl::NullRange, NULL);
         // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
         // queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &img_out_new[0]);
-        std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
-        cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
+        // std::vector<uint8_t> img_out_new(IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3);
+        // cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
+        // kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
+        // spdlog::info("IMAGE_ORIGINAL.size() {}", IMAGE_ORIGINAL.size());
+        // spdlog::info("img_out_new.size() {}", img_out_new.size());
+        queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, global, cl::NullRange);
+        queue.finish();
 
-        kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
+        auto tmp = new unsigned char[IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3];
+        queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, tmp);
 
-        
+        std::vector<uint8_t> img_out_new(image_width * image_height * image_channels, 0);
 
-        spdlog::info("img_out.size() {}", img_out.size());
+        for(std::size_t i = 0; i < img_out_new.size(); i++)
+        {
+            img_out_new[i] = tmp[i];
+        }
+
         spdlog::info("img_out_new.size() {}", img_out_new.size());
-
+        spdlog::info("    {}", img_out_new[0]);
+        spdlog::info("    {}", img_out_new[1]);
+        spdlog::info("    {}", img_out_new[2]);
+        spdlog::info("    {}", img_out_new[3]);
+        spdlog::info("IMAGE_ORIGINAL.size() {}", IMAGE_ORIGINAL.size());
+        spdlog::info("    {}", IMAGE_ORIGINAL[0]);
+        spdlog::info("    {}", IMAGE_ORIGINAL[1]);
+        spdlog::info("    {}", IMAGE_ORIGINAL[2]);
+        spdlog::info("    {}", IMAGE_ORIGINAL[3]);
         //////////////////////////////////////////////
-        stbi_write_png("test_out_new.png", image_width, image_height, image_channels, img_out_new.data(), image_width * image_channels);
+        // stbi_write_png("test_out_new.png", image_width, image_height, image_channels, img_out_new.data(), image_width * image_channels);
+        //////////////////////////////////////////////
+        stbi_write_png("IMAGE_POSSIBLE_RESULT.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, img_out_new.data(), IMAGE_SIZE_MAX * 3);
     }
     catch(cl::Error &e)
     {
@@ -343,6 +416,7 @@ int main(int argc, char *argv[])
     image _img;
     _img.read_kernel();
     _img.run();
+    exit(EXIT_SUCCESS);
 
     bool exit = false;
 
