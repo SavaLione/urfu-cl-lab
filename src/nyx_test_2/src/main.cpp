@@ -1,3 +1,94 @@
+// // clang-format off
+// #include <cstdint>
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "stb_image.h"
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #include "stb_image_write.h"
+// // clang-format on
+
+// #include <CL/opencl.hpp>
+// #include <cstdlib>
+// #include <exception>
+// #include <getopt.h>
+// #include <iostream>
+// #include <iterator>
+// #include <signal.h>
+// #include <spdlog/spdlog.h>
+// #include <stdexcept>
+// #include <string>
+// #include <unistd.h>
+// #include <vector>
+
+// struct pixel
+// {
+//     uint8_t r;
+//     uint8_t g;
+//     uint8_t b;
+//     uint8_t a;
+// };
+
+// class image
+// {
+// public:
+//     image(std::string const &filename)
+//     {
+//         int image_width    = 0;
+//         int image_height   = 0;
+//         int image_channels = 0;
+
+//         unsigned char *img = stbi_load(filename.c_str(), &image_width, &image_height, &image_channels, 0);
+
+//         if(img == NULL)
+//         {
+//             std::string err = "Can't load " + filename + " image";
+//             throw std::runtime_error(err);
+//         }
+
+//         _width    = image_width;
+//         _height   = image_height;
+//         _channels = image_channels;
+//         _pixels   = image_width * image_height;
+
+//         spdlog::info("channels: {}", _channels);
+
+//         if(_channels == 3)
+//             for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+//                 _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], 255});
+//         if(_channels == 4)
+//             for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+//                 _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], img[fl + 3]});
+
+//         stbi_image_free(img);
+//     }
+
+//     std::vector<uint8_t> get()
+//     {
+//         std::vector<uint8_t> ret;
+//         for(std::size_t i = 0; i < _image.size(); i++)
+//         {
+//             ret.push_back(_image[i].r);
+//             ret.push_back(_image[i].g);
+//             ret.push_back(_image[i].b);
+//         }
+//         return ret;
+//     }
+
+// private:
+//     std::vector<pixel> _image;
+//     std::size_t _width;
+//     std::size_t _height;
+//     std::size_t _channels;
+//     std::size_t _pixels;
+// };
+
+// int main()
+// {
+//     image img("test.png");
+
+//     stbi_write_png("img.png", 1024, 1024, 3, img.get().data(), 1024 * 3);
+//     return 0;
+// }
+
 #include <array>
 #include <cstdint>
 #include <cstdlib>
@@ -121,11 +212,11 @@ public:
         _pixels   = image_width * image_height;
 
         if(_channels == 3)
-            for(std::size_t i = 0; i < _pixels; i += 3)
-                _image.push_back({img[i + 0], img[i + 1], img[i + 2], 255});
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], 255});
         if(_channels == 4)
-            for(std::size_t i = 0; i < _pixels; i += 4)
-                _image.push_back({img[i + 0], img[i + 1], img[i + 2], img[i + 3]});
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], img[fl + 3]});
 
         stbi_image_free(img);
     }
@@ -337,18 +428,13 @@ int main()
         // std::vector<uint8_t> data_image_in = img.get_rgba();
         // std::vector<uint8_t> data_image_out(img.get_size_rgba());
         std::vector<uint8_t> data_image_in = img.get_rgba();
-
-        //std::vector<uint8_t> data_image_out;
-        uint8_t data_image_out[img.size() * 4];
-
-        spdlog::info("---------- data_image_in.size()  {}", data_image_in.size());
-        spdlog::info("---------- data_image_out.size() {}", img.size() * 4);
-
-        img.info();
+        std::vector<uint8_t> data_image_out;
+        data_image_out.resize(img.size() * 4);
 
         //std::copy(img.get_rgba().begin(), img.get_rgba().end(), data_image_in);
 
-        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, &data_image_in[0]);
+        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, &data_image_in[0]);
+        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, data_image_in.data());
         cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, img.get_width(), img.get_height(), 0, NULL);
 
         cl::NDRange global(img.get_width(), img.get_height());
@@ -371,7 +457,7 @@ int main()
         queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(16, 16), cl::NullRange);
         queue.finish();
 
-        queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &data_image_out[0]);
+        queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, data_image_out.data());
 
         //image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, data_image_out);
         // image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, data_image_out);
@@ -386,7 +472,8 @@ int main()
         //     &image_out.get_rgb()[0],
         //     image_out.get_width() * 3);
 
-        stbi_write_png("img.png", img.get_width(), img.get_height(), 3, img.get_rgb().data(), img.get_width() * 3);
+        stbi_write_png("img_supertest.png", img.get_width(), img.get_height(), 3, img.get_rgb().data(), img.get_width() * 3);
+        stbi_write_png("out.png", image_out.get_width(), image_out.get_height(), 3, image_out.get_rgb().data(), image_out.get_width() * 3);
     }
     catch(cl::Error &e)
     {
