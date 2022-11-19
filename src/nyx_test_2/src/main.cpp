@@ -37,12 +37,6 @@
 #include <unistd.h>
 #include <vector>
 
-std::size_t const IMAGE_SIZE_MAX         = 16;
-std::size_t const IMAGE_PIXELS           = IMAGE_SIZE_MAX * IMAGE_SIZE_MAX;
-std::size_t const IMAGE_VECTOR_SIZE_RGB  = IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3;
-std::size_t const IMAGE_VECTOR_SIZE_RGBA = IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 4;
-std::vector<uint8_t> IMAGE_ORIGINAL(IMAGE_VECTOR_SIZE_RGB);
-
 /* Define alignment keys */
 #if defined(__GNUC__) || defined(__INTEGRITY)
     #define _ALIGNED(_x) __attribute__((aligned(_x)))
@@ -72,68 +66,191 @@ std::vector<uint8_t> IMAGE_ORIGINAL(IMAGE_VECTOR_SIZE_RGB);
     #define _ANON_STRUCT__
 #endif
 
-typedef union
-{
-    uint8_t _ALIGNED(4) s[4];
+// typedef union
+// {
+//     uint8_t _ALIGNED(4) s[4];
 
-    __ANON_STRUCT__ struct
+//     __ANON_STRUCT__ struct
+//     {
+//         uint8_t r, g, b, a;
+//     };
+//     __ANON_STRUCT__ struct
+//     {
+//         uint8_t s0, s1, s2, s3;
+//     };
+//     __ANON_STRUCT__ struct
+//     {
+//         uint8_t x, y, z, w;
+//     };
+// } pixel;
+
+struct pixel
+{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+};
+
+class image
+{
+public:
+    enum IMAGE_TYPE
     {
-        uint8_t r, g, b, a;
+        RGB,
+        RGBA
     };
-    __ANON_STRUCT__ struct
-    {
-        uint8_t s0, s1, s2, s3;
-    };
-    __ANON_STRUCT__ struct
-    {
-        uint8_t x, y, z, w;
-    };
-} pixel;
 
-std::vector<uint8_t> pixels_to_rgb(std::vector<pixel> const &pixels)
-{
-    std::vector<uint8_t> ret;
-    for(std::size_t i = 0; i < pixels.size(); i++)
+    image(std::string const &filename)
     {
-        ret.push_back(pixels[i].r);
-        ret.push_back(pixels[i].g);
-        ret.push_back(pixels[i].b);
-    }
-    return ret;
-}
+        int image_width    = 0;
+        int image_height   = 0;
+        int image_channels = 0;
 
-std::vector<uint8_t> pixels_to_rgba(std::vector<pixel> const &pixels)
-{
-    std::vector<uint8_t> ret;
-    for(std::size_t i = 0; i < pixels.size(); i++)
-    {
-        ret.push_back(pixels[i].r);
-        ret.push_back(pixels[i].g);
-        ret.push_back(pixels[i].b);
-        ret.push_back(pixels[i].a);
-    }
-    return ret;
-}
+        unsigned char *img = stbi_load(filename.c_str(), &image_width, &image_height, &image_channels, 0);
 
-std::vector<pixel> rgba_to_pixels(std::vector<uint8_t> const &rgba)
-{
-    std::vector<pixel> ret;
-    for(std::size_t i = 0; i < rgba.size(); i += 4)
-    {
-        ret.push_back({rgba[i + 0], rgba[i + 1], rgba[i + 2], rgba[i + 3]});
-    }
-    return ret;
-}
+        if(img == NULL)
+        {
+            std::string err = "Can't load " + filename + " image";
+            throw std::runtime_error(err);
+        }
 
-std::vector<pixel> rgb_to_pixels(std::vector<uint8_t> const &rgb)
-{
-    std::vector<pixel> ret;
-    for(std::size_t i = 0; i < rgb.size(); i += 3)
-    {
-        ret.push_back({rgb[i + 0], rgb[i + 1], rgb[i + 2], 255});
+        _width    = image_width;
+        _height   = image_height;
+        _channels = image_channels;
+        _pixels   = image_width * image_height;
+
+        if(_channels == 3)
+            for(std::size_t i = 0; i < _pixels; i += 3)
+                _image.push_back({img[i + 0], img[i + 1], img[i + 2], 255});
+        if(_channels == 4)
+            for(std::size_t i = 0; i < _pixels; i += 4)
+                _image.push_back({img[i + 0], img[i + 1], img[i + 2], img[i + 3]});
+
+        stbi_image_free(img);
     }
-    return ret;
-}
+
+    image(std::size_t const &width, std::size_t const &height, std::size_t const &channels, IMAGE_TYPE const &image_type, uint8_t const *image)
+    {
+        _width      = width;
+        _height     = height;
+        _channels   = channels;
+        _pixels     = width * height;
+        _image_type = image_type;
+
+        if(image_type == IMAGE_TYPE::RGB)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], 255});
+        if(image_type == IMAGE_TYPE::RGBA)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
+    }
+
+    image(
+        std::size_t const &width,
+        std::size_t const &height,
+        std::size_t const &channels,
+        IMAGE_TYPE const &image_type,
+        std::vector<uint8_t> const &image)
+    {
+        _width      = width;
+        _height     = height;
+        _channels   = channels;
+        _pixels     = width * height;
+        _image_type = image_type;
+
+        if(image_type == IMAGE_TYPE::RGB)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], 255});
+        if(image_type == IMAGE_TYPE::RGBA)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
+    }
+
+    std::size_t get_width()
+    {
+        return _width;
+    }
+
+    std::size_t get_height()
+    {
+        return _height;
+    }
+
+    std::size_t get_channels()
+    {
+        return _channels;
+    }
+
+    std::size_t get_pixels()
+    {
+        return _height * _width;
+    }
+
+    std::size_t size()
+    {
+        return _image.size();
+    }
+
+    std::vector<uint8_t> get_rgb()
+    {
+        std::vector<uint8_t> ret;
+        // for(std::size_t i = 0; i < _image.size(); i++)
+        // {
+        //     ret.push_back(_image[i].r);
+        //     ret.push_back(_image[i].g);
+        //     ret.push_back(_image[i].b);
+        // }
+        for(std::size_t i = 0; i < _height * _width; i++)
+        {
+            ret.push_back(_image[i].r);
+            ret.push_back(_image[i].g);
+            ret.push_back(_image[i].b);
+        }
+        return ret;
+    }
+
+    std::vector<uint8_t> get_rgba()
+    {
+        std::vector<uint8_t> ret;
+        for(std::size_t i = 0; i < _height * _width; i++)
+        {
+            ret.push_back(_image[i].r);
+            ret.push_back(_image[i].g);
+            ret.push_back(_image[i].b);
+            ret.push_back(_image[i].a);
+        }
+        return ret;
+    }
+
+    std::vector<pixel> const &get() const
+    {
+        return _image;
+    }
+
+    void info()
+    {
+        spdlog::info("_width:               {}", _width);
+        spdlog::info("_height:              {}", _height);
+        spdlog::info("_channels:            {}", _channels);
+        spdlog::info("_pixels:              {}", _pixels);
+        // spdlog::info("get_size_rgb():       {}", get_size_rgb());
+        // spdlog::info("get_size_rgba():      {}", get_size_rgba());
+        spdlog::info("rgb():                {}", size() * 3);
+        spdlog::info("rgba():               {}", size() * 4);
+        spdlog::info("_image.size():        {}", _image.size());
+        spdlog::info("get_rgb().size():     {}", get_rgb().size());
+        spdlog::info("get_rgba().size():    {}", get_rgba().size());
+    }
+
+private:
+    std::size_t _width;
+    std::size_t _height;
+    std::size_t _channels;
+    std::size_t _pixels;
+    IMAGE_TYPE _image_type;
+    std::vector<pixel> _image;
+};
 
 int main()
 {
@@ -163,23 +280,11 @@ int main()
 
     kernels.push_back(kernel);
 
-    for(std::size_t i = 0, fl = 0, color = 0; i < (IMAGE_VECTOR_SIZE_RGB); i++, fl++, color++)
-    {
-        if(fl == 3)
-            fl = 0;
-        if(color == 256)
-            color = 0;
-
-        if(fl == 0)
-            IMAGE_ORIGINAL[i] = color;
-        if(fl == 1)
-            IMAGE_ORIGINAL[i] = color;
-        if(fl == 2)
-            IMAGE_ORIGINAL[i] = 255;
-    }
-
     try
     {
+        image img("test.png");
+        img.info();
+
         cl::Platform::get(&all_platforms);
 
         if(all_platforms.size() == 0)
@@ -204,8 +309,6 @@ int main()
 
         context = cl::Context({default_device});
 
-        //kernels = kernel_loader_instance.get();
-
         for(auto &kern : kernels)
         {
             sources.push_back({kern.c_str(), kern.length()});
@@ -229,31 +332,26 @@ int main()
         cl::Kernel kernel_simple_add(program, "example");
         cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
 
-        uint8_t data_image[IMAGE_VECTOR_SIZE_RGBA];
-        uint8_t data_image_out[IMAGE_VECTOR_SIZE_RGBA];
+        // uint8_t data_image_in[img.get_size_rgba()];
+        // uint8_t data_image_out[img.get_size_rgba()];
+        // std::vector<uint8_t> data_image_in = img.get_rgba();
+        // std::vector<uint8_t> data_image_out(img.get_size_rgba());
+        std::vector<uint8_t> data_image_in = img.get_rgba();
 
-        // for(std::size_t i = 0; i < IMAGE_PIXELS; i += 4)
-        // {
-        //     data_image[i + 0] = IMAGE_ORIGINAL[i + 0];
-        //     data_image[i + 1] = IMAGE_ORIGINAL[i + 1];
-        //     data_image[i + 2] = IMAGE_ORIGINAL[i + 2];
-        //     data_image[i + 3] = 255;
-        // }
-        // for(std::size_t i = 0; i < IMAGE_VECTOR_SIZE_RGBA; i++)
-        // {
-        //     if(i == 255)
-        //         i = 0;
-        //     data_image[i] = i;
-        // }
-        for(std::size_t i = 0; i < IMAGE_VECTOR_SIZE_RGBA; i++)
-        {
-            data_image[i] = 128;
-        }
+        //std::vector<uint8_t> data_image_out;
+        uint8_t data_image_out[img.size() * 4];
 
-        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, &data_image[0]);
-        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, NULL);
+        spdlog::info("---------- data_image_in.size()  {}", data_image_in.size());
+        spdlog::info("---------- data_image_out.size() {}", img.size() * 4);
 
-        cl::NDRange global(IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
+        img.info();
+
+        //std::copy(img.get_rgba().begin(), img.get_rgba().end(), data_image_in);
+
+        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, &data_image_in[0]);
+        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, img.get_width(), img.get_height(), 0, NULL);
+
+        cl::NDRange global(img.get_width(), img.get_height());
         // std::array<cl::size_type, 3> origin {0, 0, 0};
         // std::array<cl::size_type, 3> region {16, 16, 1};
         std::array<cl::size_type, 3> origin;
@@ -273,39 +371,22 @@ int main()
         queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(16, 16), cl::NullRange);
         queue.finish();
 
-        // auto data_image_out = new unsigned char[IMAGE_VECTOR_SIZE_RGBA];
-
         queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &data_image_out[0]);
 
-        std::vector<uint8_t> img_out_new(IMAGE_PIXELS);
-        // for(std::size_t i = 0; i < IMAGE_PIXELS; i += 4)
-        // {
-        //     img_out_new.push_back(data_image_out[i + 0]);
-        //     img_out_new.push_back(data_image_out[i + 1]);
-        //     img_out_new.push_back(data_image_out[i + 2]);
-        // }
+        //image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, data_image_out);
+        // image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, data_image_out);
+        image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, data_image_in);
+        image_out.info();
 
-        spdlog::info("data_image");
-        spdlog::info("    {}", data_image[0]);
-        spdlog::info("    {}", data_image[1]);
-        spdlog::info("    {}", data_image[2]);
-        spdlog::info("    {}", data_image[3]);
-        spdlog::info("    {}", data_image[4]);
-        spdlog::info("    {}", data_image[5]);
-        spdlog::info("    {}", data_image[6]);
-        spdlog::info("    {}", data_image[7]);
-        spdlog::info("data_image_out");
-        spdlog::info("    {}", data_image_out[0]);
-        spdlog::info("    {}", data_image_out[1]);
-        spdlog::info("    {}", data_image_out[2]);
-        spdlog::info("    {}", data_image_out[3]);
-        spdlog::info("    {}", data_image_out[4]);
-        spdlog::info("    {}", data_image_out[5]);
-        spdlog::info("    {}", data_image_out[6]);
-        spdlog::info("    {}", data_image_out[7]);
+        // stbi_write_png(
+        //     "image_out.png",
+        //     image_out.get_width(),
+        //     image_out.get_height(),
+        //     3,
+        //     &image_out.get_rgb()[0],
+        //     image_out.get_width() * 3);
 
-        // stbi_write_png("IMAGE_POSSIBLE_RESULT.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, img_out_new.data(), IMAGE_SIZE_MAX * 3);
-        // stbi_write_png("IMAGE_ORIGINAL.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, IMAGE_ORIGINAL.data(), IMAGE_SIZE_MAX * 3);
+        stbi_write_png("img.png", img.get_width(), img.get_height(), 3, img.get_rgb().data(), img.get_width() * 3);
     }
     catch(cl::Error &e)
     {
