@@ -1,4 +1,5 @@
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 // clang-format off
@@ -37,13 +38,65 @@
 #include <unistd.h>
 #include <vector>
 
-struct pixel
+/* Define alignment keys */
+#if defined(__GNUC__) || defined(__INTEGRITY)
+    #define _ALIGNED(_x) __attribute__((aligned(_x)))
+#elif defined(_WIN32) && (_MSC_VER)
+    /* Alignment keys neutered on windows because MSVC can't swallow function arguments with alignment requirements		*/
+    /* http://msdn.microsoft.com/en-us/library/373ak2y1%28VS.71%29.aspx                                                 */
+    /* #include <crtdefs.h>                                                                                             */
+    /* #define _ALIGNED(_x)          _CRT_ALIGN(_x)                                                                   	*/
+    #define _ALIGNED(_x)
+#else
+    #warning Need to implement some method to align data here
+    #define _ALIGNED(_x)
+#endif
+
+/* Define capabilities for anonymous struct members. */
+#if !defined(__cplusplus) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__
+#elif defined(_WIN32) && defined(_MSC_VER) && !defined(__STDC__)
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__
+#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__     __extension__
+#else
+    #define _HAS_ANON_STRUCT__ 0
+    #define _ANON_STRUCT__
+#endif
+
+/* Define alignment sizes */
+#if defined(__GNUC__)
+    #if __x86_64__ || __ppc64__
+        #define _SYSTEM_64_BIT
+    #else
+        #define _SYSTEM_32_BIT
+    #endif
+#elif defined(_WIN32) && (_MSC_VER)
+    #if _WIN64
+        #define _SYSTEM_64_BIT
+    #else
+        #define _SYSTEM_32_BIT
+    #endif
+#endif
+
+#if defined(_SYSTEM_64_BIT)
+    #define __SIZE_T_SIZE__ 64
+#elif defined(_SYSTEM_32_BIT)
+    #define __SIZE_T_SIZE__ 32
+#endif
+
+// clang-format off
+typedef union
 {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-    uint8_t a;
-};
+    uint8_t _ALIGNED(4) s[4];
+    __ANON_STRUCT__ struct{uint8_t r, g, b, a;};
+    __ANON_STRUCT__ struct{uint8_t s0, s1, s2, s3;};
+    __ANON_STRUCT__ struct{uint8_t x, y, z, w;};
+} pixel;
+// clang-format on
 
 class image
 {
@@ -266,18 +319,13 @@ int main()
         cl::Kernel kernel_simple_add(program, "example");
         cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
 
-        // uint8_t data_image_in[img.size() * 4];
-        // uint8_t data_image_out[img.size() * 4];
-        auto data_image_in  = new uint8_t[img.size() * 4];
-        auto data_image_out = new uint8_t[img.size() * 4];
-        // std::vector<uint8_t> data_image_in = img.get_rgba();
-        // std::vector<uint8_t> data_image_out(img.get_size_rgba());
-        // std::vector<uint8_t> data_image_in = img.get_rgba();
-        // std::vector<uint8_t> data_image_out;
-        // data_image_out.resize(img.size() * 4);
+        // auto data_image_in  = new uint8_t[img.size() * 4];
+        // auto data_image_out = new uint8_t[img.size() * 4];
+        std::vector<uint8_t> data_image_in(img.size() * 4);
+        std::vector<uint8_t> data_image_out(img.size() * 4);
 
         //std::copy(img.get_rgba().begin(), img.get_rgba().end(), data_image_in);
-        for(std::size_t i = 0, fl = 0; i < img.size(); i++, fl +=4)
+        for(std::size_t i = 0, fl = 0; i < img.size(); i++, fl += 4)
         {
             data_image_in[fl + 0] = img.get()[i].r;
             data_image_in[fl + 1] = img.get()[i].g;
@@ -289,21 +337,9 @@ int main()
         cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, img.get_width(), img.get_height(), 0, NULL);
 
         cl::NDRange global(img.get_width(), img.get_height());
-        // std::array<cl::size_type, 3> origin {0, 0, 0};
-        // std::array<cl::size_type, 3> region {16, 16, 1};
-        std::array<cl::size_type, 3> origin;
-        origin[0] = 0;
-        origin[1] = 0;
-        origin[2] = 0;
-        std::array<cl::size_type, 3> region;
-        // region[0] = 16;
-        // region[1] = 16;
-        // region[2] = 1;
-        region[0] = img.get_width();
-        region[1] = img.get_height();
-        region[2] = 1;
-        // cl::size_type origin[3] = {0, 0, 0};
-        // cl::size_type region[3] = {16, 16, 1};
+
+        std::array<cl::size_type, 3> origin {0, 0, 0};
+        std::array<cl::size_type, 3> region {img.get_width(), img.get_height(), 1};
 
         kernel_simple_add.setArg(0, img_2d_in);
         kernel_simple_add.setArg(1, img_2d_out);
@@ -314,8 +350,6 @@ int main()
         queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &data_image_out[0]);
 
         image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, &data_image_out[0]);
-
-        //stbi_write_png("img_supertest.png", img.get_width(), img.get_height(), 3, img.get_rgb().data(), img.get_width() * 3);
         stbi_write_png("out.png", image_out.get_width(), image_out.get_height(), 3, image_out.get_rgb().data(), image_out.get_width() * 3);
     }
     catch(cl::Error &e)
