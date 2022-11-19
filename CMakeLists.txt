@@ -136,4 +136,3 @@ file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)
 
 # Test
 add_subdirectory(src/nyx_test)
-add_subdirectory(src/nyx_test_2)

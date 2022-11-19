@@ -44,18 +44,312 @@
 #include <unistd.h>
 #include <vector>
 
-// std::size_t IMAGE_WIDTH = 1024;
-// std::size_t IMAGE_HIGHT = 1024;
-
-std::size_t BLOCK_SIZE = 32;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/* Define alignment keys */
+#if defined(__GNUC__) || defined(__INTEGRITY)
+    #define _ALIGNED(_x) __attribute__((aligned(_x)))
+#elif defined(_WIN32) && (_MSC_VER)
+    /* Alignment keys neutered on windows because MSVC can't swallow function arguments with alignment requirements		*/
+    /* http://msdn.microsoft.com/en-us/library/373ak2y1%28VS.71%29.aspx                                                 */
+    /* #include <crtdefs.h>                                                                                             */
+    /* #define _ALIGNED(_x)          _CRT_ALIGN(_x)                                                                   	*/
+    #define _ALIGNED(_x)
+#else
+    #warning Need to implement some method to align data here
+    #define _ALIGNED(_x)
+#endif
+
+/* Define capabilities for anonymous struct members. */
+#if !defined(__cplusplus) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__
+#elif defined(_WIN32) && defined(_MSC_VER) && !defined(__STDC__)
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__
+#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
+    #define __HAS_ANON_STRUCT__ 1
+    #define __ANON_STRUCT__     __extension__
+#else
+    #define _HAS_ANON_STRUCT__ 0
+    #define _ANON_STRUCT__
+#endif
+
+/* Define alignment sizes */
+#if defined(__GNUC__)
+    #if __x86_64__ || __ppc64__
+        #define _SYSTEM_64_BIT
+    #else
+        #define _SYSTEM_32_BIT
+    #endif
+#elif defined(_WIN32) && (_MSC_VER)
+    #if _WIN64
+        #define _SYSTEM_64_BIT
+    #else
+        #define _SYSTEM_32_BIT
+    #endif
+#endif
+
+#if defined(_SYSTEM_64_BIT)
+    #define __SIZE_T_SIZE__ 64
+#elif defined(_SYSTEM_32_BIT)
+    #define __SIZE_T_SIZE__ 32
+#endif
+
+// clang-format off
+typedef union
+{
+    uint8_t _ALIGNED(4) s[4];
+    __ANON_STRUCT__ struct{uint8_t r, g, b, a;};
+    __ANON_STRUCT__ struct{uint8_t s0, s1, s2, s3;};
+    __ANON_STRUCT__ struct{uint8_t x, y, z, w;};
+} pixel;
+// clang-format on
 
 class image
 {
 public:
+    enum IMAGE_TYPE
+    {
+        RGB,
+        RGBA
+    };
+
+    image(std::string const &filename)
+    {
+        int image_width    = 0;
+        int image_height   = 0;
+        int image_channels = 0;
+
+        unsigned char *img = stbi_load(filename.c_str(), &image_width, &image_height, &image_channels, 0);
+
+        if(img == NULL)
+        {
+            std::string err = "Can't load " + filename + " image";
+            throw std::runtime_error(err);
+        }
+
+        _width    = image_width;
+        _height   = image_height;
+        _channels = image_channels;
+        _pixels   = image_width * image_height;
+
+        if(_channels == 3)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], 255});
+        if(_channels == 4)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({img[fl + 0], img[fl + 1], img[fl + 2], img[fl + 3]});
+
+        stbi_image_free(img);
+    }
+
+    image(std::size_t const &width, std::size_t const &height, std::size_t const &channels, IMAGE_TYPE const &image_type, uint8_t const *image)
+    {
+        _width      = width;
+        _height     = height;
+        _channels   = channels;
+        _pixels     = width * height;
+        _image_type = image_type;
+
+        if(image_type == IMAGE_TYPE::RGB)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], 255});
+        if(image_type == IMAGE_TYPE::RGBA)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
+    }
+
+    image(
+        std::size_t const &width,
+        std::size_t const &height,
+        std::size_t const &channels,
+        IMAGE_TYPE const &image_type,
+        std::vector<uint8_t> const &image)
+    {
+        _width      = width;
+        _height     = height;
+        _channels   = channels;
+        _pixels     = width * height;
+        _image_type = image_type;
+
+        if(image_type == IMAGE_TYPE::RGB)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 3)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], 255});
+        if(image_type == IMAGE_TYPE::RGBA)
+            for(std::size_t i = 0, fl = 0; i < _pixels; i++, fl += 4)
+                _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
+    }
+
+    std::size_t get_width()
+    {
+        return _width;
+    }
+
+    std::size_t get_height()
+    {
+        return _height;
+    }
+
+    std::size_t get_channels()
+    {
+        return _channels;
+    }
+
+    std::size_t get_pixels()
+    {
+        return _image.size();
+    }
+
+    std::size_t size()
+    {
+        return _image.size();
+    }
+
+    std::vector<uint8_t> get_rgb()
+    {
+        std::vector<uint8_t> ret;
+        for(std::size_t i = 0; i < _image.size(); i++)
+        {
+            ret.push_back(_image[i].r);
+            ret.push_back(_image[i].g);
+            ret.push_back(_image[i].b);
+        }
+        return ret;
+    }
+
+    std::vector<uint8_t> get_rgba()
+    {
+        std::vector<uint8_t> ret;
+        for(std::size_t i = 0; i < _image.size(); i++)
+        {
+            ret.push_back(_image[i].r);
+            ret.push_back(_image[i].g);
+            ret.push_back(_image[i].b);
+            ret.push_back(_image[i].a);
+        }
+        return ret;
+    }
+
+    std::vector<pixel> const &get() const
+    {
+        return _image;
+    }
+
+private:
+    std::size_t _width;
+    std::size_t _height;
+    std::size_t _channels;
+    std::size_t _pixels;
+    IMAGE_TYPE _image_type;
+    std::vector<pixel> _image;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class gpu
+{
+public:
+    gpu()
+    {
+        kernels.push_back(kernel);
+
+        try
+        {
+            image img("test.png");
+
+            cl::Platform::get(&all_platforms);
+
+            if(all_platforms.size() == 0)
+            {
+                throw std::runtime_error("No OpenCL platforms found.");
+            }
+
+            default_platform = all_platforms[0];
+
+            spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
+
+            default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+
+            if(all_devices.size() == 0)
+            {
+                throw std::runtime_error("No OpenCL devices found.");
+            }
+
+            default_device = all_devices[0];
+
+            spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
+
+            context = cl::Context({default_device});
+
+            for(auto &kern : kernels)
+            {
+                sources.push_back({kern.c_str(), kern.length()});
+            }
+
+            program = cl::Program(context, sources);
+
+            try
+            {
+                program.build({default_device});
+            }
+            catch(cl::BuildError err)
+            {
+                spdlog::error("OpenCL build error.");
+                spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
+                exit(EXIT_FAILURE);
+            }
+
+            cl::CommandQueue queue(context, default_device, 0, NULL);
+
+            cl::Kernel kernel_simple_add(program, "example");
+            cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
+
+            std::vector<uint8_t> data_image_in(img.size() * 4);
+            std::vector<uint8_t> data_image_out(img.size() * 4);
+
+            //std::copy(img.get_rgba().begin(), img.get_rgba().end(), data_image_in);
+            for(std::size_t i = 0, fl = 0; i < img.size(); i++, fl += 4)
+            {
+                data_image_in[fl + 0] = img.get()[i].r;
+                data_image_in[fl + 1] = img.get()[i].g;
+                data_image_in[fl + 2] = img.get()[i].b;
+                data_image_in[fl + 3] = img.get()[i].a;
+            }
+
+            cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, &data_image_in[0]);
+            cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, img.get_width(), img.get_height(), 0, NULL);
+
+            cl::NDRange global(img.get_width(), img.get_height());
+
+            std::array<cl::size_type, 3> origin {0, 0, 0};
+            std::array<cl::size_type, 3> region {img.get_width(), img.get_height(), 1};
+
+            kernel_simple_add.setArg(0, img_2d_in);
+            kernel_simple_add.setArg(1, img_2d_out);
+
+            queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, global, cl::NullRange);
+            queue.finish();
+
+            queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &data_image_out[0]);
+
+            // image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, &data_image_out[0]);
+        }
+        catch(cl::Error &e)
+        {
+            spdlog::error("OpenCL error: {}", e.what());
+            spdlog::error(e.err());
+        }
+        catch(std::exception const &e)
+        {
+            spdlog::error("std::exception {}", e.what());
+        }
+        catch(...)
+        {
+            spdlog::error("Unexpected exception.");
+        }
+    }
+
 private:
     std::vector<cl::Platform> all_platforms;
     cl::Platform default_platform;
@@ -66,304 +360,24 @@ private:
     std::vector<std::string> kernels;
     cl::Program program;
 
-public:
-    void read_kernel();
-    void run();
+    std::string kernel = {"__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;"
+                          ""
+                          "__kernel void example("
+                          "    __read_only image2d_t img_in,"
+                          "    __write_only image2d_t img_out)"
+                          "{"
+                          "    const int x = get_global_id(0);"
+                          "    const int y = get_global_id(1);"
+                          "    int2 pos = (int2)(x, y);"
+                          "    uint4 pixel = read_imageui(img_in, sampler, pos);"
+                          "    pixel.x += 50;"
+                          "    pixel.y += 50;"
+                          "    pixel.z += 50;"
+                          "    write_imageui(img_out, pos, pixel);"
+                          "}"
+                          ""
+                          ""};
 };
-
-void image::read_kernel()
-{
-    std::string kernel;
-    std::string file_name = "example.cl";
-
-    SDL_RWops *file = SDL_RWFromFile(file_name.c_str(), "rb");
-    size_t size;
-
-    if(!file)
-    {
-        throw std::runtime_error("Failed opening file: " + file_name);
-    }
-
-    void *loaded = SDL_LoadFile_RW(file, &size, 1);
-
-    if(!loaded)
-    {
-        throw std::runtime_error("Failed loading file: " + file_name);
-    }
-
-    kernel = {static_cast<char *>(loaded), size};
-
-    SDL_free(loaded);
-
-    kernels.push_back(kernel);
-
-    spdlog::info("Kernel {} loaded", file_name);
-}
-
-std::size_t IMAGE_SIZE_MAX = 16;
-std::vector<uint8_t> IMAGE_ORIGINAL(IMAGE_SIZE_MAX *IMAGE_SIZE_MAX * 3);
-std::vector<uint8_t> IMAGE_POSSIBLE_RESULT(IMAGE_SIZE_MAX *IMAGE_SIZE_MAX * 3);
-
-void image::run()
-{
-    for(std::size_t i = 0, fl = 0, color = 0; i < (IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3); i++, fl++, color++)
-    {
-        if(fl == 3)
-            fl = 0;
-        if(color == 256)
-            color = 0;
-
-        if(fl == 0)
-            IMAGE_ORIGINAL[i] = color;
-        if(fl == 1)
-            IMAGE_ORIGINAL[i] = color;
-        if(fl == 2)
-            IMAGE_ORIGINAL[i] = 255;
-    }
-
-    for(std::size_t i = 0, fl = 0; i < (IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3); i++, fl++)
-    {
-        if(fl == 3)
-            fl = 0;
-
-        if(fl == 0)
-            IMAGE_POSSIBLE_RESULT[i] = 128;
-        if(fl == 1)
-            IMAGE_POSSIBLE_RESULT[i] = 128;
-        if(fl == 2)
-            IMAGE_POSSIBLE_RESULT[i] = 255;
-    }
-
-    /////////////////////////////////////////
-    int image_width    = 0;
-    int image_height   = 0;
-    int image_channels = 0;
-    unsigned char *img = stbi_load("test.png", &image_width, &image_height, &image_channels, 0);
-
-    if(img == NULL)
-    {
-        spdlog::error("Can't load test.png image");
-        exit(EXIT_FAILURE);
-    }
-
-    spdlog::info("image_width:    {}", image_width);
-    spdlog::info("image_height:   {}", image_height);
-    spdlog::info("image_channels: {}", image_channels);
-    spdlog::info("img size:       {}", sizeof(img));
-
-    std::vector<uint8_t> img_out(image_width * image_height * image_channels);
-
-    int index = 0;
-    for(int j = image_height - 1; j >= 0; --j)
-    {
-        for(int i = 0; i < image_width; ++i)
-        {
-            int ind_0      = index++;
-            int ind_1      = index++;
-            int ind_2      = index++;
-            img_out[ind_0] = img[ind_0];
-            img_out[ind_1] = img[ind_1];
-            img_out[ind_2] = img[ind_2];
-        }
-    }
-
-    stbi_write_png("test_out.png", image_width, image_height, image_channels, img_out.data(), image_width * image_channels);
-
-    stbi_image_free(img);
-
-    //////////////////////////////////////////////
-    stbi_write_png("IMAGE_ORIGINAL.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, IMAGE_ORIGINAL.data(), IMAGE_SIZE_MAX * 3);
-    // stbi_write_png("IMAGE_POSSIBLE_RESULT.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, IMAGE_POSSIBLE_RESULT.data(), IMAGE_SIZE_MAX * 3);
-    //////////////////////////////////////////////
-
-    try
-    {
-        cl::Platform::get(&all_platforms);
-
-        if(all_platforms.size() == 0)
-        {
-            throw std::runtime_error("No OpenCL platforms found.");
-        }
-
-        default_platform = all_platforms[0];
-
-        spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
-
-        default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-
-        if(all_devices.size() == 0)
-        {
-            throw std::runtime_error("No OpenCL devices found.");
-        }
-
-        default_device = all_devices[0];
-
-        spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
-
-        context = cl::Context({default_device});
-
-        //kernels = kernel_loader_instance.get();
-
-        for(auto &kern : kernels)
-        {
-            sources.push_back({kern.c_str(), kern.length()});
-        }
-
-        program = cl::Program(context, sources);
-
-        try
-        {
-            program.build({default_device});
-        }
-        catch(cl::BuildError err)
-        {
-            spdlog::error("OpenCL build error.");
-            spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
-            return;
-        }
-
-        //////////////////////////////////////////////
-        cl::CommandQueue queue(context, default_device);
-        //////////////////////////////////////////////
-
-        // cl::Kernel kernel_simple_add(program, "example");
-        // cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
-        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, 1024, 1024);
-        // cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, 1024, 1024);
-        // cl::NDRange global(1024, 1024);
-        // // std::array<cl::size_type, 3> origin {0, 0, 0};
-        // // std::array<cl::size_type, 3> region {16, 16, 1};
-        // std::array<cl::size_type, 3> origin {0, 0, 0};
-        // std::array<cl::size_type, 3> region {16, 16, 1};
-        // queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, img_out.data());
-        // kernel_simple_add.setArg(0, img_2d_in);
-        // kernel_simple_add.setArg(1, img_2d_out);
-        // // queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(1024, 1024), cl::NullRange, NULL);
-        // // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
-        // // queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &img_out_new[0]);
-        // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
-        // cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
-        // kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
-        // spdlog::info("img_out.size() {}", img_out.size());
-        // spdlog::info("img_out_new.size() {}", img_out_new.size());
-
-        //////////////////////////////////////////////
-        cl::Kernel kernel_simple_add(program, "example");
-        cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
-        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
-        cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, &IMAGE_ORIGINAL.data()[0]);
-        // cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
-        cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 0, NULL);
-        cl::NDRange global(IMAGE_SIZE_MAX, IMAGE_SIZE_MAX);
-        std::array<cl::size_type, 3> origin {0, 0, 0};
-        std::array<cl::size_type, 3> region {16, 16, 1};
-        // queue.enqueueWriteImage(img_2d_in, CL_TRUE, origin, region, 0, 0, IMAGE_ORIGINAL.data());
-        kernel_simple_add.setArg(0, img_2d_in);
-        kernel_simple_add.setArg(1, img_2d_out);
-        // queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, cl::NDRange(1024, 1024), cl::NullRange, NULL);
-        // std::vector<uint8_t> img_out_new(image_width * image_height * image_channels);
-        // queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &img_out_new[0]);
-        // std::vector<uint8_t> img_out_new(IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3);
-        // cl::KernelFunctor<cl::Image2D, cl::Image2D> kernel_funktor_simple_add(program, "example");
-        // kernel_funktor_simple_add(cl::EnqueueArgs(queue, global), img_2d_in, img_2d_out).wait();
-        // spdlog::info("IMAGE_ORIGINAL.size() {}", IMAGE_ORIGINAL.size());
-        // spdlog::info("img_out_new.size() {}", img_out_new.size());
-        queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, global, cl::NullRange);
-        queue.finish();
-
-        auto tmp = new unsigned char[IMAGE_SIZE_MAX * IMAGE_SIZE_MAX * 3];
-        queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, tmp);
-
-        std::vector<uint8_t> img_out_new(image_width * image_height * image_channels, 0);
-
-        for(std::size_t i = 0; i < img_out_new.size(); i++)
-        {
-            img_out_new[i] = tmp[i];
-        }
-
-        spdlog::info("img_out_new.size() {}", img_out_new.size());
-        spdlog::info("    {}", img_out_new[0]);
-        spdlog::info("    {}", img_out_new[1]);
-        spdlog::info("    {}", img_out_new[2]);
-        spdlog::info("    {}", img_out_new[3]);
-        spdlog::info("IMAGE_ORIGINAL.size() {}", IMAGE_ORIGINAL.size());
-        spdlog::info("    {}", IMAGE_ORIGINAL[0]);
-        spdlog::info("    {}", IMAGE_ORIGINAL[1]);
-        spdlog::info("    {}", IMAGE_ORIGINAL[2]);
-        spdlog::info("    {}", IMAGE_ORIGINAL[3]);
-        //////////////////////////////////////////////
-        // stbi_write_png("test_out_new.png", image_width, image_height, image_channels, img_out_new.data(), image_width * image_channels);
-        //////////////////////////////////////////////
-        stbi_write_png("IMAGE_POSSIBLE_RESULT.png", IMAGE_SIZE_MAX, IMAGE_SIZE_MAX, 3, img_out_new.data(), IMAGE_SIZE_MAX * 3);
-    }
-    catch(cl::Error &e)
-    {
-        spdlog::error("OpenCL error: {}", e.what());
-        spdlog::error(e.err());
-    }
-    catch(std::exception const &e)
-    {
-        spdlog::error("std::exception {}", e.what());
-    }
-    catch(...)
-    {
-        spdlog::error("Unexpected exception.");
-    }
-}
-
-/*
-    We create (1024*1024) kernels
-*/
-
-struct pixel_direction
-{
-    /* int x; */               /* OpenCL kernel defined const */
-    /* int y; */               /* OpenCL kernel defined const */
-    /* unsigned char speed; */ /* OpenCL kernel source const */
-    unsigned char power;
-    unsigned char direction;
-    /*
-        Direction 0-8 (9)
-            | | | |
-            | |x| |
-            | | | |
-        
-            |0|1|2|
-            |3|4|5|
-            |6|7|8|
-
-            4 - unused  
-    */
-};
-
-/*
-const uchar SPEED = 1;
-
-__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
-
-__kernel void example(
-    __read_only image2d_t img_in,
-    __global __constant uchar* power,
-    __global __constant uchar* direction,
-    __write_only image2d_t img_out)
-{
-    int2 pos = {get_global_id(0), get_global_id(1)};
-
-    uint4 pixel = read_imageui(img_in, sampler, pos);
-
-    uint4 pixel_rdy = (int4)(0.0f);
-    if((pos.x % 2) == 0)
-    {
-        pixel_rdy = pixel;
-    }
-
-    write_imagef (img_out, (int2)(pos.x, pos.y), pixel_rdy);
-}
-*/
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -411,12 +425,6 @@ int main(int argc, char *argv[])
 
     /* This */
     glEnable(GL_DEPTH_TEST);
-
-    /* OpenCL */
-    image _img;
-    _img.read_kernel();
-    _img.run();
-    exit(EXIT_SUCCESS);
 
     bool exit = false;
 
