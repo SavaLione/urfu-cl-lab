@@ -181,32 +181,32 @@ public:
                 _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
     }
 
-    std::size_t get_width()
+    std::size_t const get_width() const
     {
         return _width;
     }
 
-    std::size_t get_height()
+    std::size_t const get_height() const
     {
         return _height;
     }
 
-    std::size_t get_channels()
+    std::size_t const get_channels() const
     {
         return _channels;
     }
 
-    std::size_t get_pixels()
+    std::size_t const get_pixels() const
     {
         return _image.size();
     }
 
-    std::size_t size()
+    std::size_t const size() const
     {
         return _image.size();
     }
 
-    std::vector<uint8_t> get_rgb()
+    std::vector<uint8_t> const get_rgb() const
     {
         std::vector<uint8_t> ret;
         for(std::size_t i = 0; i < _image.size(); i++)
@@ -218,7 +218,7 @@ public:
         return ret;
     }
 
-    std::vector<uint8_t> get_rgba()
+    std::vector<uint8_t> const get_rgba() const
     {
         std::vector<uint8_t> ret;
         for(std::size_t i = 0; i < _image.size(); i++)
@@ -247,136 +247,151 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define BOOST_COMPUTE_CL_VERSION_1_2
+
+#include <boost/compute/algorithm/copy.hpp>
+#include <boost/compute/async/future.hpp>
+#include <boost/compute/container/vector.hpp>
+#include <boost/compute/event.hpp>
+#include <boost/compute/system.hpp>
+#include <boost/compute/utility/dim.hpp>
+
+namespace compute = boost::compute;
+
+void copy_custom_image_to_image(image const &img, compute::image2d &img_ret, compute::command_queue &queue = compute::system::default_queue())
+{
+    std::vector<uint8_t> image_vec = img.get_rgba();
+
+    queue.enqueue_write_image(img_ret, img_ret.origin(), img_ret.size(), image_vec.data());
+}
+
+/* Create image */
+compute::image2d custom_image_create_image2d(image const &img, cl_mem_flags flags, compute::command_queue &queue = compute::system::default_queue())
+{
+    compute::context const &context = queue.get_context();
+    compute::image_format format(CL_RGBA, CL_UNSIGNED_INT8);
+
+    compute::image2d image_ret(context, img.get_width(), img.get_height(), format, flags);
+
+    copy_custom_image_to_image(img, image_ret, queue);
+
+    return image_ret;
+}
+
+/* Copy image from device to image */
+void copy_image_from_device_to_image(compute::image2d const &img, image &image_ret, compute::command_queue &queue)
+{
+    // queue.enqueue_read_image(img,)
+}
+
 class gpu
 {
 public:
-    gpu()
+    void run()
     {
-        kernels.push_back(kernel);
+        /* Image */
+        image image_from_file("test.png");
 
-        try
+        /* Buffers */
+        std::vector<uint8_t> data_image_in(image_from_file.size() * 4);
+        std::vector<uint8_t> data_image_out(image_from_file.size() * 4);
+
+        /* Fill buffer data_image_in with image */
+        for(std::size_t i = 0, fl = 0; i < image_from_file.size(); i++, fl += 4)
         {
-            image img("test.png");
-
-            cl::Platform::get(&all_platforms);
-
-            if(all_platforms.size() == 0)
-            {
-                throw std::runtime_error("No OpenCL platforms found.");
-            }
-
-            default_platform = all_platforms[0];
-
-            spdlog::info("Using OpenCL platform: {}", default_platform.getInfo<CL_PLATFORM_NAME>());
-
-            default_platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
-
-            if(all_devices.size() == 0)
-            {
-                throw std::runtime_error("No OpenCL devices found.");
-            }
-
-            default_device = all_devices[0];
-
-            spdlog::info("Using OpenCL device: {}", default_device.getInfo<CL_DEVICE_NAME>());
-
-            context = cl::Context({default_device});
-
-            for(auto &kern : kernels)
-            {
-                sources.push_back({kern.c_str(), kern.length()});
-            }
-
-            program = cl::Program(context, sources);
-
-            try
-            {
-                program.build({default_device});
-            }
-            catch(cl::BuildError err)
-            {
-                spdlog::error("OpenCL build error.");
-                spdlog::error("Error OpenCL building: {}", program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(default_device));
-                exit(EXIT_FAILURE);
-            }
-
-            cl::CommandQueue queue(context, default_device, 0, NULL);
-
-            cl::Kernel kernel_simple_add(program, "example");
-            cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
-
-            std::vector<uint8_t> data_image_in(img.size() * 4);
-            std::vector<uint8_t> data_image_out(img.size() * 4);
-
-            //std::copy(img.get_rgba().begin(), img.get_rgba().end(), data_image_in);
-            for(std::size_t i = 0, fl = 0; i < img.size(); i++, fl += 4)
-            {
-                data_image_in[fl + 0] = img.get()[i].r;
-                data_image_in[fl + 1] = img.get()[i].g;
-                data_image_in[fl + 2] = img.get()[i].b;
-                data_image_in[fl + 3] = img.get()[i].a;
-            }
-
-            cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, img.get_width(), img.get_height(), 0, &data_image_in[0]);
-            cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, img.get_width(), img.get_height(), 0, NULL);
-
-            cl::NDRange global(img.get_width(), img.get_height());
-
-            std::array<cl::size_type, 3> origin {0, 0, 0};
-            std::array<cl::size_type, 3> region {img.get_width(), img.get_height(), 1};
-
-            kernel_simple_add.setArg(0, img_2d_in);
-            kernel_simple_add.setArg(1, img_2d_out);
-
-            queue.enqueueNDRangeKernel(kernel_simple_add, cl::NullRange, global, cl::NullRange);
-            queue.finish();
-
-            queue.enqueueReadImage(img_2d_out, CL_TRUE, origin, region, 0, 0, &data_image_out[0]);
-
-            // image image_out(img.get_width(), img.get_height(), img.get_channels(), image::IMAGE_TYPE::RGBA, &data_image_out[0]);
+            data_image_in[fl + 0] = image_from_file.get()[i].r;
+            data_image_in[fl + 1] = image_from_file.get()[i].g;
+            data_image_in[fl + 2] = image_from_file.get()[i].b;
+            data_image_in[fl + 3] = image_from_file.get()[i].a;
         }
-        catch(cl::Error &e)
-        {
-            spdlog::error("OpenCL error: {}", e.what());
-            spdlog::error(e.err());
-        }
-        catch(std::exception const &e)
-        {
-            spdlog::error("std::exception {}", e.what());
-        }
-        catch(...)
-        {
-            spdlog::error("Unexpected exception.");
-        }
+
+        // std::string kernel_source =
+        //     BOOST_COMPUTE_STRINGIZE_SOURCE(__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+
+        //                                    __kernel void example(__read_only image2d_t img_in, __write_only image2d_t img_out) {
+        //                                        const int x = get_global_id(0);
+        //                                        const int y = get_global_id(1);
+        //                                        int2 pos    = (int2)(x, y);
+        //                                        uint4 pixel = read_imageui(img_in, sampler, pos);
+        //                                        pixel.x += 50;
+        //                                        pixel.y += 50;
+        //                                        pixel.z += 50;
+        //                                        write_imageui(img_out, pos, pixel);
+        //                                    });
+        std::string kernel_source = {"__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;"
+                                     ""
+                                     "__kernel void example("
+                                     "    __read_only image2d_t img_in,"
+                                     "    __write_only image2d_t img_out)"
+                                     "{"
+                                     "    const int x = get_global_id(0);"
+                                     "    const int y = get_global_id(1);"
+                                     "    int2 pos = (int2)(x, y);"
+                                     "    uint4 pixel = read_imageui(img_in, sampler, pos);"
+                                     "    pixel.x += 50;"
+                                     "    pixel.y += 50;"
+                                     "    pixel.z += 50;"
+                                     "    write_imageui(img_out, pos, pixel);"
+                                     "}"
+                                     ""
+                                     ""};
+
+        // get the default device
+        compute::device gpu = compute::system::default_device();
+
+        // create context for default device
+        compute::context context(gpu);
+
+        // create command queue
+        compute::command_queue queue(context, gpu);
+
+        // build program
+        compute::program program = compute::program::create_with_source(kernel_source, context);
+        program.build();
+
+        /* Create image types */
+        // cl::ImageFormat format(CL_RGBA, CL_UNSIGNED_INT8);
+        // cl::Image2D img_2d_in(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, format, image_from_file.get_width(), image_from_file.get_height(), 0, &data_image_in[0]);
+        // cl::Image2D img_2d_out(context, CL_MEM_WRITE_ONLY, format, image_from_file.get_width(), image_from_file.get_height(), 0, NULL);
+        compute::image_format format(CL_RGBA, CL_UNSIGNED_INT8);
+
+        // compute::image2d img_2d_in(context, );
+        compute::image2d img_2d_in = custom_image_create_image2d(image_from_file, compute::image2d::read_only, queue);
+        compute::image2d img_2d_out(context, image_from_file.get_width(), image_from_file.get_height(), format, compute::image2d::write_only);
+
+        // setup tesselate_sphere kernel
+        compute::kernel kernel(program, "example");
+
+        kernel.set_arg<compute::image2d>(0, img_2d_in);
+        kernel.set_arg<compute::image2d>(1, img_2d_out);
+
+        // std::array<cl::size_type, 3> origin {0, 0, 0};
+        // std::array<cl::size_type, 3> region {image_from_file.get_width(), image_from_file.get_height(), 1};
+        std::size_t origin[3] = {0, 0, 0};
+        std::size_t region[3] = {image_from_file.get_width(), image_from_file.get_height(), 1};
+
+        // queue.enqueue_nd_range_kernel(kernel, 2, origin, region, 0);
+        queue.enqueue_nd_range_kernel(kernel, 2, origin, region, 0);
+
+        /* Is it necessary? */
+        queue.finish();
+
+        /* Enqueue? */
+
+        /* Get image from buffer */
+        // queue.enqueue_read_image(img_2d_out, origin, region, data_image_out.size(), data_image_out.data());
+        // queue.enqueue_read_image(img_2d_out, origin, region, image_from_file.get_width(), image_from_file.get_height(), data_image_out.data());
+        queue.enqueue_read_image(img_2d_out, origin, region, 0, 0, data_image_out.data());
+
+        /* Create output image */
+        image image_out(
+            image_from_file.get_width(), image_from_file.get_height(), image_from_file.get_channels(), image::IMAGE_TYPE::RGBA, &data_image_out[0]);
+        stbi_write_png("out.png", image_out.get_width(), image_out.get_height(), 3, image_out.get_rgb().data(), image_out.get_width() * 3);
     }
 
 private:
-    std::vector<cl::Platform> all_platforms;
-    cl::Platform default_platform;
-    std::vector<cl::Device> all_devices;
-    cl::Device default_device;
-    cl::Context context;
-    cl::Program::Sources sources;
-    std::vector<std::string> kernels;
-    cl::Program program;
-
-    std::string kernel = {"__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;"
-                          ""
-                          "__kernel void example("
-                          "    __read_only image2d_t img_in,"
-                          "    __write_only image2d_t img_out)"
-                          "{"
-                          "    const int x = get_global_id(0);"
-                          "    const int y = get_global_id(1);"
-                          "    int2 pos = (int2)(x, y);"
-                          "    uint4 pixel = read_imageui(img_in, sampler, pos);"
-                          "    pixel.x += 50;"
-                          "    pixel.y += 50;"
-                          "    pixel.z += 50;"
-                          "    write_imageui(img_out, pos, pixel);"
-                          "}"
-                          ""
-                          ""};
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -432,6 +447,11 @@ int main(int argc, char *argv[])
 
     /* Image */
     image image_from_file("test.png");
+
+    gpu g;
+    g.run();
+    spdlog::info("Exit");
+    return EXIT_SUCCESS;
 
     SDL_Event event;
     while(!exit)
