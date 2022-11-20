@@ -759,6 +759,29 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+std::string vertex_shader =
+    R"glsl(
+#version 330 core
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+
+void main()
+{
+    gl_Position.xyz = vertexPosition_modelspace;
+    gl_Position.w = 1.0;
+}
+)glsl";
+
+std::string fragment_shader =
+    R"glsl(
+    #version 330 core
+    out vec3 color;
+    void main()
+    {
+      color = vec3(1,0,0);
+    }
+)glsl";
+
 class gl_image
 {
 public:
@@ -775,6 +798,9 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
 
         glBufferData(GL_ARRAY_BUFFER, sizeof(_triangle), _triangle.data(), GL_STATIC_DRAW);
+
+        /* Create program */
+        _program = create_program(vertex_shader, fragment_shader);
     }
 
     void draw()
@@ -787,6 +813,8 @@ public:
         /* Draw triangle */
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glDisableVertexAttribArray(0);
+
+        glUseProgram(_program);
     }
 
     struct vec3
@@ -804,6 +832,8 @@ public:
 private:
     GLuint _vao;
     GLuint _vertex_buffer;
+    GLuint _program;
+
     // clang-format off
     std::array<vec3, 3> _triangle = 
     {
