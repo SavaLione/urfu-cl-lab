@@ -93,9 +93,26 @@ public:
         return _image.data();
     }
 
-    std::vector<uint8_t> &get()
+    uint8_t const *const_data() const
     {
-        return _image;
+        return _image.data();
+    }
+
+    void print()
+    {
+        spdlog::info("_width:        {}", _width);
+        spdlog::info("_height:       {}", _height);
+        spdlog::info("_depth:        {}", _depth);
+        spdlog::info("_image.size(): {}", _image.size());
+        spdlog::info("width:         {}", width());
+        spdlog::info("height:        {}", height());
+        spdlog::info("depth:         {}", depth());
+        spdlog::info("size:          {}", size());
+
+        std::string elements = "Elements: ";
+        for(std::size_t i = 0; i < 8; i++)
+            elements += std::to_string(_image[i]) + " ";
+        spdlog::info(elements);
     }
 
 private:
@@ -174,6 +191,86 @@ const GLchar *fragment_shader = R"glsl(
         outColor = texture(texKitten, Texcoord);
     }
 )glsl";
+
+std::string opencl_kernel = R"opencl_kernel(
+__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+
+__kernel void example(
+    __read_only image2d_t img_in,
+    __write_only image2d_t img_out)
+{
+    const int x = get_global_id(0);
+    const int y = get_global_id(1);
+    int2 pos = (int2)(x, y);
+    uint4 pixel = read_imageui(img_in, sampler, pos);
+    pixel.x += 100;
+    pixel.y += 100;
+    pixel.z += 100;
+    write_imageui(img_out, pos, pixel);
+}
+)opencl_kernel";
+
+inline void box_filter_image(const compute::image2d &input, compute::image2d &output, compute::uint_ box_height, compute::uint_ box_width, compute::command_queue &queue)
+{
+    using compute::dim;
+
+    const compute::context &context = queue.get_context();
+
+    // simple box filter kernel source
+    const char source[] = BOOST_COMPUTE_STRINGIZE_SOURCE(__kernel void box_filter(__read_only image2d_t input, __write_only image2d_t output, uint box_height, uint box_width) {
+        int x = get_global_id(0);
+        int y = get_global_id(1);
+        int h = get_image_height(input);
+        int w = get_image_width(input);
+        int k = box_width;
+        int l = box_height;
+
+        if(x < k / 2 || y < l / 2 || x >= w - (k / 2) || y >= h - (l / 2))
+        {
+            write_imagef(output, (int2)(x, y), (float4)(0, 0, 0, 1));
+        }
+        else
+        {
+            const sampler_t sampler = CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
+
+            float4 sum = {0, 0, 0, 0};
+            for(int i = 0; i < k; i++)
+            {
+                for(int j = 0; j < l; j++)
+                {
+                    sum += read_imagef(input, sampler, (int2)(x + i - k, y + j - l));
+                }
+            }
+            sum /= (float)k * l;
+            float4 value = (float4)(sum.x, sum.y, sum.z, 1.f);
+            write_imagef(output, (int2)(x, y), value);
+        }
+    });
+
+    // build box filter program
+    compute::program program = compute::program::create_with_source(source, context);
+    program.build();
+
+    // setup box filter kernel
+    compute::kernel kernel(program, "box_filter");
+    kernel.set_arg(0, input);
+    kernel.set_arg(1, output);
+    kernel.set_arg(2, box_height);
+    kernel.set_arg(3, box_width);
+
+    // execute the box filter kernel
+    queue.enqueue_nd_range_kernel(kernel, dim(0, 0), input.size(), dim(1, 1));
+}
+
+void copy_image_buffer_to_image2d(image_representation const &img, compute::image2d &img_ret, compute::command_queue &queue = compute::system::default_queue())
+{
+    queue.enqueue_write_image(img_ret, img_ret.origin(), img_ret.size(), img.const_data());
+}
+
+void copy_image2d_to_image_buffer(compute::image2d &img2d, image_representation &img, compute::command_queue &queue)
+{
+    queue.enqueue_read_image(img2d, compute::dim(0, 0), compute::dim(img.width(), img.height()), img.data());
+}
 
 int main(int argc, char *argv[])
 {
@@ -293,37 +390,83 @@ int main(int argc, char *argv[])
     glGenTextures(1, textures.data());
 
     image_representation ir(window_width, window_height, 4);
-    for(std::size_t i = 0, color = 0, rgba = 0; i < ir.get().size(); i++, color++, rgba++)
+    for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
     {
-        if(rgba == 4)
-            rgba = 0;
-        if(color == 255)
-            color = 0;
-        if(rgba == 3)
-            ir.get().data()[i] = 255;
-        if(rgba == 2)
-            ir.get().data()[i] = 255;
-        if(rgba == 1)
-            ir.get().data()[i] = 0;
-        if(rgba == 0)
-            ir.get().data()[i] = 255;
+        switch(rgb)
+        {
+            case 0:
+                ir.data()[i] = 0;
+                break;
+            case 1:
+                ir.data()[i] = 255;
+                break;
+            case 2:
+                ir.data()[i] = 239;
+                break;
+            case 3:
+                ir.data()[i] = 255;
+                break;
+            default:
+                rgb = 0;
+                break;
+        }
     }
-
-    spdlog::info("{} {} {} {}", ir.data()[0], ir.data()[1], ir.data()[2], ir.data()[3]);
-    spdlog::info("{}", ir.size());
-    spdlog::info("{}", ir.width());
-    spdlog::info("{}", ir.height());
-    spdlog::info("{}", ir.get().size());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.get().data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+    //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ir.width(), ir.height(), GL_RGB8, GL_UNSIGNED_BYTE, ir.data());
     glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /* OpenCL */
+
+    // get the default device
+    compute::device gpu_cl = compute::system::default_device();
+    spdlog::info("OpenCL device: {}", gpu_cl.name());
+
+    // create context for default device
+    compute::context context_cl(gpu_cl);
+
+    // create command queue
+    compute::command_queue queue_cl(context_cl, gpu_cl);
+
+    // build program
+    compute::program program_cl = compute::program::create_with_source(opencl_kernel, context_cl);
+    program_cl.build();
+
+    // image2d format
+    compute::image_format format_cl(CL_RGBA, CL_UNSIGNED_INT8);
+
+    // create input and output images on the gpu
+    compute::image2d img_2d_in(context_cl, ir.width(), ir.height(), format_cl, compute::image2d::read_only);
+    compute::image2d img_2d_out(context_cl, ir.width(), ir.height(), format_cl, compute::image2d::write_only);
+
+    // fill buffer
+    queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
+
+    // setup tesselate_sphere kernel
+    compute::kernel kernel_cl(program_cl, "example");
+
+    // set args
+    kernel_cl.set_arg<compute::image2d>(0, img_2d_in);
+    kernel_cl.set_arg<compute::image2d>(1, img_2d_out);
+
+    // regions
+    std::size_t origin[3] = {0, 0, 0};
+    // std::size_t region[3] = {ir.width(), ir.height(), 1};
+    std::size_t region[3] = {ir.width(), ir.height(), 1};
+
+    // compute
+    queue_cl.enqueue_nd_range_kernel(kernel_cl, 2, origin, region, 0);
+    queue_cl.finish();
+
+    // read data from device
+    queue_cl.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir.data());
 
     /* Main loop */
     bool exit = false;
@@ -354,12 +497,21 @@ int main(int argc, char *argv[])
                     break;
             }
         }
+
+        /* Update texture */
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         SDL_GL_SwapWindow(window);
     }
+    /* OpenGL */
+    glDeleteBuffers(1, &_ebo);
+    glDeleteBuffers(1, &_vbo);
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteTextures(1, textures.data());
 
     /* SDL */
     SDL_GL_DeleteContext(context);
