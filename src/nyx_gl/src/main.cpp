@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 // clang-format off
@@ -758,144 +759,59 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class engine
+class gl_image
 {
 public:
-    engine()
+    gl_image()
     {
-        _init_sdl();
-        _set_glsl_version();
-        _init_glew();
-        _init_window();
+        /* Set Vertex Array Object */
+        glGenVertexArrays(1, &_vao);
+        glBindVertexArray(_vao);
 
-        // Set some OpenGL settings
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClearDepth(1.0f);
-        glEnable(GL_DEPTH_TEST);
+        /* Generate 1 buffer, put the resulting identifier in _vertex_buffer */
+        glGenBuffers(1, &_vertex_buffer);
+
+        /* Bind buffer */
+        glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
+
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_triangle), _triangle.data(), GL_STATIC_DRAW);
     }
 
-    ~engine()
+    void draw()
     {
-        SDL_GL_DeleteContext(_context);
-        SDL_DestroyWindow(_window);
-        SDL_Quit();
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+        /* Draw triangle */
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDisableVertexAttribArray(0);
     }
 
-    class render
+    struct vec3
     {
-    public:
-        render(engine &e) : _e(e)
-        {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        }
-
-        ~render()
-        {
-            SDL_GL_SwapWindow(_e._window);
-        }
-
-    private:
-        engine &_e;
+        float x;
+        float y;
+        float z;
     };
 
-    bool const &get_exit() const
+    void position(vec3 const &top_left, vec3 const &top_right, vec3 const &bottom_right, vec3 const &bottom_left)
     {
-        return _exit;
+        //
     }
 
 private:
-    SDL_Window *_window;
-    SDL_GLContext _context;
-    bool _exit               = false;
-    std::size_t _width       = 1024;
-    std::size_t _height      = 1024;
-    std::string _window_name = "Laboratory work 2";
-
-    void _init_sdl()
+    GLuint _vao;
+    GLuint _vertex_buffer;
+    // clang-format off
+    std::array<vec3, 3> _triangle = 
     {
-        /* SDL 2.0*/
-        if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-        {
-            std::string _error_message = "SDL2 initialize error: ";
-            _error_message += SDL_GetError();
-            throw std::runtime_error(_error_message);
-        }
-    }
-
-    void _set_glsl_version()
-    {
-        // GL 3.0 + GLSL 130
-        const char *glsl_version = "#version 130";
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    }
-
-    void _init_window()
-    {
-        _window = SDL_CreateWindow(_window_name.c_str(), 0, 0, _width, _height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-        if(!_window)
-        {
-            std::string _error_message = "SDL2 initialize window error: ";
-            _error_message += SDL_GetError();
-            throw std::runtime_error(_error_message);
-        }
-    }
-
-    void _init_context()
-    {
-        _context = SDL_GL_CreateContext(_window);
-        if(!_context)
-        {
-            std::string _error_message = "SDL2 initialize context error: ";
-            _error_message += SDL_GetError();
-            throw std::runtime_error(_error_message);
-        }
-    }
-
-    void _init_glew()
-    {
-        // Enable glew experimental, this enables some more OpenGL extensions.
-        glewExperimental   = GL_TRUE;
-        GLenum _glew_error = glewInit();
-        if(_glew_error != GLEW_OK)
-        {
-            std::string _error_message = "Failed to initialize GLEW: ";
-            _error_message += (char *)glewGetErrorString(_glew_error);
-            throw std::runtime_error(_error_message);
-        }
-    }
-
-    void _event_handling()
-    {
-        SDL_Event event;
-
-        while(SDL_PollEvent(&event))
-        {
-            switch(event.type)
-            {
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym)
-                    {
-                        case SDLK_ESCAPE:
-                            _exit = true;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-                    break;
-                case SDL_QUIT:
-                    _exit = true;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+        vec3{-1.0f, -1.0f, 0.0f},
+        vec3{1.0f, -1.0f, 0.0f},
+        vec3{0.0f,  1.0f, 0.0f}
+    };
+    // clang-format on
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -905,120 +821,98 @@ int main(int argc, char *argv[])
     /* Signal handler */
     signal(SIGINT, signal_callback);
 
-    try
+    /* SDL 2.0*/
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
     {
-        engine e;
-        while(!e.get_exit())
+        spdlog::error("Error: {}", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+
+    // GL 3.0 + GLSL 130
+    const char *glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    SDL_Window *window = SDL_CreateWindow("Laboratory work 2", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    if(!window)
+    {
+        spdlog::error("Error: {}", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+    if(!context)
+    {
+        spdlog::error("Error: {}", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+
+    // Enable glew experimental, this enables some more OpenGL extensions.
+    glewExperimental = GL_TRUE;
+    if(glewInit() != GLEW_OK)
+    {
+        spdlog::error("Failed to initialize GLEW");
+        return EXIT_FAILURE;
+    }
+
+    // Set some OpenGL settings
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearDepth(1.0f);
+
+    /* This */
+    glEnable(GL_DEPTH_TEST);
+
+    bool exit = false;
+
+    /* Image */
+    // image image_from_file("test.png");
+    // gl_render glr;
+    // glr.initialize();
+
+    /* OpenGL */
+    gl_image gl_img;
+
+    SDL_Event event;
+    while(!exit)
+    {
+        while(SDL_PollEvent(&event))
         {
-            engine::render(*e);
+            switch(event.type)
+            {
+                case SDL_KEYDOWN:
+                    switch(event.key.keysym.sym)
+                    {
+                        case SDLK_ESCAPE:
+                            exit = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
+                    break;
+                case SDL_QUIT:
+                    exit = true;
+                    break;
+                default:
+                    break;
+            }
         }
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        gl_img.draw();
+
+        SDL_GL_SwapWindow(window);
     }
-    catch(std::exception const &e)
-    {
-        spdlog::error(e.what());
-    }
-    catch(...)
-    {
-        spdlog::error("Unexpected error");
-    }
+
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return EXIT_SUCCESS;
 }
-
-// int main(int argc, char *argv[])
-// {
-//     /* Signal handler */
-//     signal(SIGINT, signal_callback);
-
-//     /* SDL 2.0*/
-//     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-//     {
-//         spdlog::error("Error: {}", SDL_GetError());
-//         return EXIT_FAILURE;
-//     }
-
-//     // GL 3.0 + GLSL 130
-//     const char *glsl_version = "#version 130";
-//     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-//     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-//     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-//     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-//     SDL_Window *window = SDL_CreateWindow("Laboratory work 2", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-//     if(!window)
-//     {
-//         spdlog::error("Error: {}", SDL_GetError());
-//         return EXIT_FAILURE;
-//     }
-//     SDL_GLContext context = SDL_GL_CreateContext(window);
-//     if(!context)
-//     {
-//         spdlog::error("Error: {}", SDL_GetError());
-//         return EXIT_FAILURE;
-//     }
-
-//     // Enable glew experimental, this enables some more OpenGL extensions.
-//     glewExperimental = GL_TRUE;
-//     if(glewInit() != GLEW_OK)
-//     {
-//         spdlog::error("Failed to initialize GLEW");
-//         return EXIT_FAILURE;
-//     }
-
-//     // Set some OpenGL settings
-//     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-//     glClearDepth(1.0f);
-
-//     /* This */
-//     glEnable(GL_DEPTH_TEST);
-
-//     bool exit = false;
-
-//     /* Image */
-//     // image image_from_file("test.png");
-//     gl_render glr;
-//     glr.initialize();
-
-//     SDL_Event event;
-//     while(!exit)
-//     {
-//         while(SDL_PollEvent(&event))
-//         {
-//             switch(event.type)
-//             {
-//                 case SDL_KEYDOWN:
-//                     switch(event.key.keysym.sym)
-//                     {
-//                         case SDLK_ESCAPE:
-//                             exit = true;
-//                             break;
-//                         default:
-//                             break;
-//                     }
-//                     break;
-//                 case SDL_MOUSEBUTTONDOWN:
-//                     spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-//                     break;
-//                 case SDL_QUIT:
-//                     exit = true;
-//                     break;
-//                 default:
-//                     break;
-//             }
-//         }
-//         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//         glr.render();
-
-//         SDL_GL_SwapWindow(window);
-//     }
-
-//     SDL_GL_DeleteContext(context);
-//     SDL_DestroyWindow(window);
-//     SDL_Quit();
-
-//     return EXIT_SUCCESS;
-// }
 
 void signal_callback(int signum)
 {
