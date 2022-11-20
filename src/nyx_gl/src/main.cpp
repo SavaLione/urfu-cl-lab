@@ -1,8 +1,12 @@
 #include "main.h"
 
+#include "SDL2/SDL_video.h"
+#include "glm/fwd.hpp"
+
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+
 // clang-format off
 #include <CL/cl_gl.h>
 #include <GL/glew.h>
@@ -37,6 +41,7 @@
 #include <cstdlib>
 #include <exception>
 #include <getopt.h>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <iterator>
 #include <signal.h>
@@ -45,6 +50,22 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+
+#define BOOST_COMPUTE_CL_VERSION_1_2
+
+#include <boost/compute/algorithm/copy.hpp>
+#include <boost/compute/async/future.hpp>
+#include <boost/compute/command_queue.hpp>
+#include <boost/compute/container/vector.hpp>
+#include <boost/compute/event.hpp>
+#include <boost/compute/interop/opengl.hpp>
+#include <boost/compute/kernel.hpp>
+#include <boost/compute/program.hpp>
+#include <boost/compute/system.hpp>
+#include <boost/compute/utility/dim.hpp>
+#include <boost/compute/utility/source.hpp>
+
+namespace compute = boost::compute;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -383,77 +404,6 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// // // clang-format off
-// // typedef union
-// // {
-// //     GLfloat _ALIGNED(12) s[3];
-// //     __ANON_STRUCT__ struct{uint8_t r, g, b, a;};
-// //     __ANON_STRUCT__ struct{uint8_t s0, s1, s2, s3;};
-// //     __ANON_STRUCT__ struct{uint8_t x, y, z, w;};
-// // } triangle;
-// // // clang-format on
-
-// // clang-format off
-// typedef union
-// {
-//     GLfloat _ALIGNED(8) s[2];
-//     __ANON_STRUCT__ struct{GLfloat s0, s1;};
-//     __ANON_STRUCT__ struct{GLfloat x, y;};
-// } coordinate;
-// // clang-format on
-
-// struct triangle
-// {
-//     coordinate s0;
-//     coordinate s1;
-//     coordinate s2;
-// };
-
-// // clang-format off
-// typedef union
-// {
-//     coordinate _ALIGNED(32) s[4];
-//     __ANON_STRUCT__ struct{coordinate s0, s1, s2, s3;};
-//     __ANON_STRUCT__ struct{coordinate x, y, z, w;};
-// } square;
-// // clang-format on
-
-// class gl_image
-// {
-// public:
-// private:
-
-// };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::string frag_shader = {""
-                           "#version 150"
-                           "in vec2 texture_coord_from_vshader;"
-                           "out vec4 out_color;"
-                           ""
-                           "uniform sampler2D texture_sampler;"
-                           ""
-                           "void main()"
-                           "{"
-                           "    out_color = texture(texture_sampler, texture_coord_from_vshader);"
-                           "}"
-                           ""};
-
-std::string vert_shader = {""
-                           "#version 150"
-                           ""
-                           "in vec4 position;"
-                           "in vec2 texture_coord;"
-                           "out vec2 texture_coord_from_vshader;"
-                           ""
-                           "void main()"
-                           "{"
-                           "    gl_Position = position;"
-                           "    texture_coord_from_vshader = texture_coord;"
-                           "}"
-                           ""};
-
 GLuint compile_shader(unsigned int type, const std::string &source)
 {
     unsigned int id = glCreateShader(type);
@@ -495,18 +445,6 @@ GLuint create_program(const std::string &vertex_shader, const std::string &fragm
     return program;
 }
 
-// Render scene
-void display(GLuint &vao)
-{
-    // glClear(GL_COLOR_BUFFER_BIT);
-
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    // // Swap front and back buffers
-    // glfwSwapBuffers();
-}
-
 void load_image(std::string const &img)
 {
     image image_from_file(img);
@@ -528,88 +466,8 @@ void load_image(std::string const &img)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-// void initialize(GLuint &vao)
-// {
-//     // Use a Vertex Array Object
-//     glGenVertexArrays(1, &vao);
-//     glBindVertexArray(vao);
-
-//     // 1 square (made by 2 triangles) to be rendered
-//     GLfloat vertices_position[8] = {
-//         -0.5,
-//         -0.5,
-//         0.5,
-//         -0.5,
-//         0.5,
-//         0.5,
-//         -0.5,
-//         0.5,
-//     };
-
-//     GLfloat texture_coord[8] = {
-//         0.0,
-//         0.0,
-//         1.0,
-//         0.0,
-//         1.0,
-//         1.0,
-//         0.0,
-//         1.0,
-//     };
-
-//     GLuint indices[6] = {0, 1, 2, 2, 3, 0};
-
-//     // Create a Vector Buffer Object that will store the vertices on video memory
-//     GLuint vbo;
-//     glGenBuffers(1, &vbo);
-
-//     // Allocate space for vertex positions and texture coordinates
-//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-//     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_position) + sizeof(texture_coord), NULL, GL_STATIC_DRAW);
-
-//     // Transfer the vertex positions:
-//     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices_position), vertices_position);
-
-//     // Transfer the texture coordinates:
-//     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices_position), sizeof(texture_coord), texture_coord);
-
-//     // Create an Element Array Buffer that will store the indices array:
-//     GLuint eab;
-//     glGenBuffers(1, &eab);
-
-//     // Transfer the data from indices to eab
-//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
-//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-//     // Create a texture
-//     GLuint texture;
-//     glGenTextures(1, &texture);
-
-//     // Specify that we work with a 2D texture
-//     glBindTexture(GL_TEXTURE_2D, texture);
-
-//     load_image("test.png");
-
-//     //GLuint shaderProgram = create_program("shaders/vert.shader", "shaders/frag.shader");
-//     GLuint shaderProgram = create_program(vert_shader, frag_shader);
-
-//     // Get the location of the attributes that enters in the vertex shader
-//     GLint position_attribute = glGetAttribLocation(shaderProgram, "position");
-
-//     // Specify how the data for position can be accessed
-//     glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-//     // Enable the attribute
-//     glEnableVertexAttribArray(position_attribute);
-
-//     // Texture coord attribute
-//     GLint texture_coord_attribute = glGetAttribLocation(shaderProgram, "texture_coord");
-//     glVertexAttribPointer(texture_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid *)sizeof(vertices_position));
-//     glEnableVertexAttribArray(texture_coord_attribute);
-// }
-
 // Shader sources
-const GLchar *vertexSource = R"glsl(
+const GLchar *vertex_shader = R"glsl(
     #version 150 core
     in vec2 position;
     in vec3 color;
@@ -624,227 +482,138 @@ const GLchar *vertexSource = R"glsl(
     }
 )glsl";
 
-const GLchar *fragmentSource = R"glsl(
+const GLchar *fragment_shader = R"glsl(
     #version 150 core
     in vec3 Color;
     in vec2 Texcoord;
     out vec4 outColor;
     uniform sampler2D texKitten;
-    uniform sampler2D texPuppy;
     void main()
     {
-        outColor = mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.5);
+        outColor = texture(texKitten, Texcoord);
     }
 )glsl";
 
-class gl_render
-{
-public:
-    gl_render()
+// std::string kernel_source = {"__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;"
+//                              ""
+//                              "__kernel void example("
+//                              "    __read_only image2d_t img_in,"
+//                              "    __write_only image2d_t img_out)"
+//                              "{"
+//                              "    const int x = get_global_id(0);"
+//                              "    const int y = get_global_id(1);"
+//                              "    int2 pos = (int2)(x, y);"
+//                              "    uint4 pixel = read_imageui(img_in, sampler, pos);"
+//                              "    pixel.x += 50;"
+//                              "    pixel.y += 50;"
+//                              "    pixel.z += 50;"
+//                              "    write_imageui(img_out, pos, pixel);"
+//                              "}"
+//                              ""
+//                              ""};
+
+// std::string const opencl_kernel = R"opencl_kernel(
+// __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;"
+
+// __kernel void example(
+//     __read_only image2d_t img_in,
+//     __write_only image2d_t img_out)
+// {
+//     const int x = get_global_id(0);
+//     const int y = get_global_id(1);
+//     int2 pos = (int2)(x, y);
+//     uint4 pixel = read_imageui(img_in, sampler, pos);
+//     pixel.x += 50;
+//     pixel.y += 50;
+//     pixel.z += 50;
+//     write_imageui(img_out, pos, pixel);
+// }
+// )opencl_kernel";
+
+/* Original kernel */
+// std::string const opencl_kernel = R"opencl_kernel(
+//     // map value to color
+//     float4 color(uint i)
+//     {
+//         uchar c = i;
+//         uchar x = 35;
+//         uchar y = 25;
+//         uchar z = 15;
+//         uchar max = 255;
+
+//         if(i == 256)
+//             return (float4)(0, 0, 0, 255);
+//         else
+//             return (float4)(max-x*i, max-y*i, max-z*i, max) / 255.f;
+//     }
+
+//     __kernel void mandelbrot(__write_only image2d_t image)
+//     {
+//         const uint x_coord = get_global_id(0);
+//         const uint y_coord = get_global_id(1);
+//         const uint width = get_global_size(0);
+//         const uint height = get_global_size(1);
+
+//         float x_origin = ((float) x_coord / width) * 3.25f - 2.0f;
+//         float y_origin = ((float) y_coord / height) * 2.5f - 1.25f;
+
+//         float x = 0.0f;
+//         float y = 0.0f;
+
+//         uint i = 0;
+//         while(x*x + y*y <= 4.f && i < 256){
+//             float tmp = x*x - y*y + x_origin;
+//             y = 2*x*y + y_origin;
+//             x = tmp;
+//             i++;
+//         }
+
+//         int2 coord = { x_coord, y_coord };
+//         write_imagef(image, coord, color(i));
+//     };
+// )opencl_kernel";
+
+std::string const opencl_kernel = R"opencl_kernel(
+    // map value to color
+    uint4 color(uint i)
     {
-        _vao = 0;
-        _vbo = 0;
+        uint c = i;
+        uint x = 35;
+        uint y = 25;
+        uint z = 15;
+        uint max = 255;
+
+        if(i == 256)
+            return (uint4)(0, 0, 0, 255);
+        else
+            return (uint4)(max-x*i, max-y*i, max-z*i, max) / 255;
     }
 
-    void initialize()
+    __kernel void mandelbrot(__write_only image2d_t image)
     {
-        // Create Vertex Array Object
-        glGenVertexArrays(1, &_vao);
-        glBindVertexArray(_vao);
+        const uint x_coord = get_global_id(0);
+        const uint y_coord = get_global_id(1);
+        const uint width = get_global_size(0);
+        const uint height = get_global_size(1);
 
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        glGenBuffers(1, &_vbo);
+        uint x_origin = (x_coord / width) * 3 - 2;
+        uint y_origin = (y_coord / height) * 2 - 1;
 
-        GLfloat vertices[] = {
-            //  Position      Color             Texcoords
-            -0.5f, 0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-            -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
-        };
+        uint x = 0;
+        uint y = 0;
 
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        uint i = 0;
+        while(x*x + y*y <= 4 && i < 256){
+            uint tmp = x*x - y*y + x_origin;
+            y = 2*x*y + y_origin;
+            x = tmp;
+            i++;
+        }
 
-        // Create an element array
-        glGenBuffers(1, &_ebo);
-
-        GLuint elements[] = {0, 1, 2, 2, 3, 0};
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
-
-        // Create and compile the vertex shader
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexSource, NULL);
-        glCompileShader(vertexShader);
-
-        // Create and compile the fragment shader
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-        glCompileShader(fragmentShader);
-
-        // Link the vertex and fragment shader into a shader program
-        GLuint shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glBindFragDataLocation(shaderProgram, 0, "outColor");
-        glLinkProgram(shaderProgram);
-        glUseProgram(shaderProgram);
-
-        // Specify the layout of the vertex data
-        GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-        glEnableVertexAttribArray(posAttrib);
-        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
-
-        GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-        glEnableVertexAttribArray(colAttrib);
-        glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
-
-        GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-        glEnableVertexAttribArray(texAttrib);
-        glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(5 * sizeof(GLfloat)));
-
-        // Load textures
-        GLuint textures[2];
-        glGenTextures(2, textures);
-
-        image img_from_file("test.png");
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures[0]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_from_file.get_width(), img_from_file.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img_from_file.data());
-        glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, textures[1]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_from_file.get_width(), img_from_file.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img_from_file.data());
-        glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-
-    void render()
-    {
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    }
-
-    ~gl_render()
-    {
-        // glDeleteTextures(2, textures);
-
-        // glDeleteProgram(shaderProgram);
-        // glDeleteShader(fragmentShader);
-        // glDeleteShader(vertexShader);
-
-        glDeleteBuffers(1, &_ebo);
-        glDeleteBuffers(1, &_vbo);
-
-        glDeleteVertexArrays(1, &_vao);
-    }
-
-private:
-    GLuint _vao;
-    GLuint _vbo;
-    GLuint _ebo;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::string vertex_shader =
-    R"glsl(
-#version 330 core
-
-layout(location = 0) in vec3 vertexPosition_modelspace;
-
-void main()
-{
-    gl_Position.xyz = vertexPosition_modelspace;
-    gl_Position.w = 1.0;
-}
-)glsl";
-
-std::string fragment_shader =
-    R"glsl(
-    #version 330 core
-    out vec3 color;
-    void main()
-    {
-      color = vec3(1,0,0);
-    }
-)glsl";
-
-class gl_image
-{
-public:
-    gl_image()
-    {
-        /* Set Vertex Array Object */
-        glGenVertexArrays(1, &_vao);
-        glBindVertexArray(_vao);
-
-        /* Generate 1 buffer, put the resulting identifier in _vertex_buffer */
-        glGenBuffers(1, &_vertex_buffer);
-
-        /* Bind buffer */
-        glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-
-        glBufferData(GL_ARRAY_BUFFER, sizeof(_triangle), _triangle.data(), GL_STATIC_DRAW);
-
-        /* Create program */
-        _program = create_program(vertex_shader, fragment_shader);
-    }
-
-    void draw()
-    {
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, _vertex_buffer);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-        /* Draw triangle */
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDisableVertexAttribArray(0);
-
-        glUseProgram(_program);
-    }
-
-    struct vec3
-    {
-        float x;
-        float y;
-        float z;
+        int2 coord = { x_coord, y_coord };
+        write_imageui(image, coord, color(i));
     };
-
-    void position(vec3 const &top_left, vec3 const &top_right, vec3 const &bottom_right, vec3 const &bottom_left)
-    {
-        //
-    }
-
-private:
-    GLuint _vao;
-    GLuint _vertex_buffer;
-    GLuint _program;
-
-    // clang-format off
-    std::array<vec3, 3> _triangle = 
-    {
-        vec3{-1.0f, -1.0f, 0.0f},
-        vec3{1.0f, -1.0f, 0.0f},
-        vec3{0.0f,  1.0f, 0.0f}
-    };
-    // clang-format on
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+)opencl_kernel";
 
 int main(int argc, char *argv[])
 {
@@ -890,19 +659,162 @@ int main(int argc, char *argv[])
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
 
-    /* This */
     glEnable(GL_DEPTH_TEST);
 
-    bool exit = false;
+    /* Setup OpenGL (for OpenCL) */
+    glDisable(GL_LIGHTING);
 
-    /* Image */
-    // image image_from_file("test.png");
-    // gl_render glr;
-    // glr.initialize();
+    /* OpenCL */
+
+    // default OpenCL device
+    // compute::device gpu = compute::system::default_device();
+
+    // create context for default device
+    // compute::context context_cl(gpu);
+    compute::context context_cl = compute::opengl_create_shared_context();
+
+    /* default OpenCL device */
+    compute::device gpu = context_cl.get_device();
+
+    spdlog::info("OpenCL/OpenGL device: {}", gpu.name());
+
+    // create command queue
+    compute::command_queue queue(context_cl, gpu);
+
+    // build program
+    compute::program program_cl = compute::program::create_with_source(opencl_kernel, context_cl);
+    program_cl.build();
 
     /* OpenGL */
-    gl_image gl_img;
+    GLuint _vao = 0;
+    GLuint _vbo = 0;
+    GLuint _ebo = 0;
 
+    // Create Vertex Array Object
+    glGenVertexArrays(1, &_vao);
+    glBindVertexArray(_vao);
+
+    // Create a Vertex Buffer Object and copy the vertex data to it
+    glGenBuffers(1, &_vbo);
+
+    GLfloat vertices[] = {
+        //  Position      Color             Texcoords
+        -1.0f, 1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+        1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+        1.0f,  -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+        -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Create an element array
+    glGenBuffers(1, &_ebo);
+
+    GLuint elements[] = {0, 1, 2, 2, 3, 0};
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+
+    // Create and compile the vertex shader
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertex_shader, NULL);
+    glCompileShader(vertexShader);
+
+    // Create and compile the fragment shader
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
+    glCompileShader(fragmentShader);
+
+    // Link the vertex and fragment shader into a shader program
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glBindFragDataLocation(shaderProgram, 0, "outColor");
+    glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
+
+    // Specify the layout of the vertex data
+    GLint pos_attribute = glGetAttribLocation(shaderProgram, "position");
+    glEnableVertexAttribArray(pos_attribute);
+    glVertexAttribPointer(pos_attribute, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
+
+    GLint col_attribute = glGetAttribLocation(shaderProgram, "color");
+    glEnableVertexAttribArray(col_attribute);
+    glVertexAttribPointer(col_attribute, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
+
+    GLint tex_attribute = glGetAttribLocation(shaderProgram, "texcoord");
+    glEnableVertexAttribArray(tex_attribute);
+    glVertexAttribPointer(tex_attribute, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(5 * sizeof(GLfloat)));
+
+    // Load textures
+    std::array<GLuint, 1> textures;
+    glGenTextures(1, textures.data());
+
+    image img_from_file("test.png");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_from_file.get_width(), img_from_file.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img_from_file.data());
+    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /* OpenCL */
+    compute::opengl_texture cl_texture_;
+    GLuint gl_texture_;
+
+    using compute::dim;
+
+    int window_width  = 0;
+    int window_height = 0;
+
+    SDL_GetWindowSize(window, &window_width, &window_height);
+
+    spdlog::info("SDL window size width: {} height: {}", window_width, window_height);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, window_width, 0.0, window_height, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // setup the mandelbrot kernel
+    compute::kernel kernel(program_cl, "mandelbrot");
+    kernel.set_arg(0, cl_texture_);
+
+    // acquire the opengl texture so it can be used in opencl
+    compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue);
+
+    // execute the mandelbrot kernel
+    queue.enqueue_nd_range_kernel(kernel, dim(0, 0), dim(window_width, window_height), dim(1, 1));
+
+    // release the opengl texture so it can be used by opengl
+    compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue);
+
+    // ensure opencl is finished before rendering in opengl
+    queue.finish();
+
+    // draw a single quad with the mandelbrot image texture
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, gl_texture_);
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2f(0, 0);
+    glTexCoord2f(0, 1);
+    glVertex2f(0, window_height);
+    glTexCoord2f(1, 1);
+    glVertex2f(window_width, window_height);
+    glTexCoord2f(1, 0);
+    glVertex2f(window_width, 0);
+    glEnd();
+
+    /* Main loop */
+    bool exit = false;
     SDL_Event event;
     while(!exit)
     {
@@ -932,11 +844,17 @@ int main(int argc, char *argv[])
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        gl_img.draw();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         SDL_GL_SwapWindow(window);
     }
 
+    /* OpenGL */
+    glDeleteBuffers(1, &_ebo);
+    glDeleteBuffers(1, &_vbo);
+    glDeleteVertexArrays(1, &_vao);
+
+    /* SDL */
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
