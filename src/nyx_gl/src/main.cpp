@@ -217,6 +217,40 @@ __kernel void example(
 }
 )opencl_kernel";
 
+std::string opencl_kernel_click_mak = R"opencl_kernel(
+__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+
+__kernel void click_map(
+    __read_only image2d_t img_in,
+    __write_only image2d_t img_out,
+    __global const int2* clicks,
+    const int clicks_size)
+{
+    const int x = get_global_id(0);
+    const int y = get_global_id(1);
+    int2 pos = (int2)(x, y);
+
+    for(int i = 0; i < clicks_size; i++)
+    {
+        if(all(clicks[i] == pos))
+        {
+            uint4 pixel = {255, 0, 255, 255};
+            write_imageui(img_out, pos, pixel);
+
+            // Area around the pixel
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel);
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y + 0), pixel);
+            write_imageui(img_out, (int2)(pos.x + 0, pos.y + 1), pixel);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y + 0), pixel);
+            write_imageui(img_out, (int2)(pos.x + 0, pos.y - 1), pixel);
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y - 1), pixel);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y + 1), pixel);
+        }
+    }
+}
+)opencl_kernel";
+
 int main(int argc, char *argv[])
 {
     /* Signal handler */
@@ -360,7 +394,6 @@ int main(int argc, char *argv[])
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
-    //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, ir.width(), ir.height(), GL_RGB8, GL_UNSIGNED_BYTE, ir.data());
     glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -404,6 +437,25 @@ int main(int argc, char *argv[])
     // regions
     std::size_t origin[3] = {0, 0, 0};
     std::size_t region[3] = {ir.width(), ir.height(), 1};
+
+    /*                                                      OpenCL click map                                        */
+
+    // build program
+    compute::program program_cl_cm = compute::program::create_with_source(opencl_kernel_click_mak, context_cl);
+
+    try
+    {
+        program_cl_cm.build();
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL build error: {}", e.what());
+        spdlog::error("OpenCL build log: \n{}", program_cl_cm.build_log());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected build error");
+    }
 
     /* Main loop */
     bool exit = false;
