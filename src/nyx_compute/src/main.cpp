@@ -396,6 +396,275 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/compute/command_queue.hpp>
+#include <boost/compute/interop/opengl.hpp>
+#include <boost/compute/kernel.hpp>
+#include <boost/compute/program.hpp>
+#include <boost/compute/system.hpp>
+#include <boost/compute/utility/dim.hpp>
+#include <boost/compute/utility/source.hpp>
+
+// opencl source code
+const char source[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
+    // map value to color
+    float4 color(uint i) {
+        uchar c   = i;
+        uchar x   = 35;
+        uchar y   = 25;
+        uchar z   = 15;
+        uchar max = 255;
+
+        if(i == 256)
+            return (float4)(0, 0, 0, 255);
+        else
+            return (float4)(max - x * i, max - y * i, max - z * i, max) / 255.f;
+    }
+
+    __kernel void mandelbrot(__write_only image2d_t image) {
+        const uint x_coord = get_global_id(0);
+        const uint y_coord = get_global_id(1);
+        const uint width   = get_global_size(0);
+        const uint height  = get_global_size(1);
+
+        float x_origin = ((float)x_coord / width) * 3.25f - 2.0f;
+        float y_origin = ((float)y_coord / height) * 2.5f - 1.25f;
+
+        float x = 0.0f;
+        float y = 0.0f;
+
+        uint i = 0;
+        while(x * x + y * y <= 4.f && i < 256)
+        {
+            float tmp = x * x - y * y + x_origin;
+            y         = 2 * x * y + y_origin;
+            x         = tmp;
+            i++;
+        }
+
+        int2 coord = {x_coord, y_coord};
+        write_imagef(image, coord, color(i));
+    };);
+
+float width()
+{
+    return 200;
+}
+
+float height()
+{
+    return 200;
+}
+
+class mandelbrot
+{
+public:
+    mandelbrot()
+    {
+        _gl_texture = 0;
+    }
+
+    void initialize_gl()
+    {
+        // setup opengl
+        glDisable(GL_LIGHTING);
+
+        // create the OpenGL/OpenCL shared context
+        _context = compute::opengl_create_shared_context();
+
+        // get gpu device
+        compute::device gpu = _context.get_device();
+        spdlog::info("device: {}", gpu.name());
+
+        // setup command queue
+        _queue = compute::command_queue(_context, gpu);
+
+        // build mandelbrot program
+        _program = compute::program::create_with_source(source, _context);
+        _program.build();
+    }
+
+    void resize_gl(std::size_t width, std::size_t height)
+    {
+        // resize viewport
+        glViewport(0, 0, width, height);
+
+        // delete old texture
+        if(_gl_texture)
+        {
+            glDeleteTextures(1, &_gl_texture);
+            _gl_texture = 0;
+        }
+
+        // generate new texture
+        glGenTextures(1, &_gl_texture);
+        glBindTexture(GL_TEXTURE_2D, _gl_texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+        // create opencl object for the texture
+        _cl_texture = compute::opengl_texture(_context, GL_TEXTURE_2D, 0, _gl_texture, CL_MEM_WRITE_ONLY);
+    }
+
+    void paint_gl()
+    {
+        using compute::dim;
+
+        float w = width();
+        float h = height();
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, w, 0.0, h, -1.0, 1.0);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        // setup the mandelbrot kernel
+        compute::kernel kernel(_program, "mandelbrot");
+        kernel.set_arg(0, _cl_texture);
+
+        // acquire the opengl texture so it can be used in opencl
+        compute::opengl_enqueue_acquire_gl_objects(1, &_cl_texture.get(), _queue);
+
+        // execute the mandelbrot kernel
+        _queue.enqueue_nd_range_kernel(kernel, dim(0, 0), dim(width(), height()), dim(1, 1));
+
+        // release the opengl texture so it can be used by opengl
+        compute::opengl_enqueue_release_gl_objects(1, &_cl_texture.get(), _queue);
+
+        // ensure opencl is finished before rendering in opengl
+        _queue.finish();
+
+        // draw a single quad with the mandelbrot image texture
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, _gl_texture);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0);
+        glVertex2f(0, 0);
+        glTexCoord2f(0, 1);
+        glVertex2f(0, h);
+        glTexCoord2f(1, 1);
+        glVertex2f(w, h);
+        glTexCoord2f(1, 0);
+        glVertex2f(w, 0);
+        glEnd();
+    }
+
+    GLuint const &get_texture() const
+    {
+        return _gl_texture;
+    }
+
+    // Side : res[0] = width; res[1] = height;
+    float *get_scale_normalized()
+    {
+        float *res = (float *)malloc(2 * sizeof(float));
+        if(width() > height())
+        {
+            res[0] = 1;
+            res[1] = (float)height() / (float)width();
+        }
+        else
+        {
+            res[1] = 1;
+            res[0] = (float)width() / (float)height();
+        }
+        return res;
+    }
+
+    void nothing() {}
+
+private:
+    compute::context _context;
+    compute::command_queue _queue;
+    compute::program _program;
+    GLuint _gl_texture;
+    compute::opengl_texture _cl_texture;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+GLuint compile_shader(unsigned int type, const std::string &source);
+GLuint create_program(const std::string &vertex_shader, const std::string &fragment_shader);
+
+GLuint compile_shader(unsigned int type, const std::string &source)
+{
+    unsigned int id = glCreateShader(type);
+    const char *src = source.c_str();
+    glShaderSource(id, 1, &src, nullptr);
+    glCompileShader(id);
+
+    int result;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    if(result == GL_FALSE)
+    {
+        int length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        char *message = (char *)malloc(length);
+        glGetShaderInfoLog(id, length, &length, message);
+        throw std::runtime_error("Compile shader error");
+        glDeleteShader(id);
+        return 0;
+    }
+    return id;
+}
+
+GLuint create_program(const std::string &vertex_shader, const std::string &fragment_shader)
+{
+    unsigned int program = glCreateProgram();
+    unsigned int vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+    unsigned int fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
+
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+    glLinkProgram(program);
+    glValidateProgram(program);
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return program;
+}
+
+// helper to check and display for shader compiler errors
+bool check_shader_compile_status(GLuint obj)
+{
+    GLint status;
+    glGetShaderiv(obj, GL_COMPILE_STATUS, &status);
+    if(status == GL_FALSE)
+    {
+        GLint length;
+        glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &length);
+        std::vector<char> log(length);
+        glGetShaderInfoLog(obj, length, &length, &log[0]);
+        spdlog::error("{}", &log[0]);
+        return false;
+    }
+    return true;
+}
+
+// helper to check and display for shader linker error
+bool check_program_link_status(GLuint obj)
+{
+    GLint status;
+    glGetProgramiv(obj, GL_LINK_STATUS, &status);
+    if(status == GL_FALSE)
+    {
+        GLint length;
+        glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &length);
+        std::vector<char> log(length);
+        glGetProgramInfoLog(obj, length, &length, &log[0]);
+        spdlog::error("{}", &log[0]);
+        return false;
+    }
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char *argv[])
 {
     /* Signal handler */
@@ -421,6 +690,10 @@ int main(int argc, char *argv[])
         spdlog::error("Error: {}", SDL_GetError());
         return EXIT_FAILURE;
     }
+
+    mandelbrot m;
+    m.initialize_gl();
+
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if(!context)
     {
@@ -446,12 +719,106 @@ int main(int argc, char *argv[])
     bool exit = false;
 
     /* Image */
-    image image_from_file("test.png");
+    // image image_from_file("test.png");
 
-    gpu g;
-    g.run();
-    spdlog::info("Exit");
-    return EXIT_SUCCESS;
+    // gpu g;
+    // g.run();
+
+    /* OpenGL */
+    // Shaders
+    std::string vert_shader = "#version 330 core\n"
+                              "\n"
+                              "layout(location = 0) in vec4 position;\n"
+                              "layout(location = 1) in vec2 texCoord;\n"
+                              "\n"
+                              "out vec2 v_TexCoord;\n"
+                              "uniform mat4 u_MVP;\n"
+                              "\n"
+                              "void main() {\n"
+                              "	v_TexCoord = texCoord;\n"
+                              "	gl_Position = position;\n"
+                              "}\n";
+
+    std::string frag_shader = "#version 330 core\n"
+                              "\n"
+                              "layout(location = 0) out vec4 color;\n"
+                              "\n"
+                              "in vec2 v_TexCoord;\n"
+                              "\n"
+                              "uniform sampler2D u_Texture;\n"
+                              "\n"
+                              "void main()\n"
+                              "{\n"
+                              "	color = texture(u_Texture, v_TexCoord);\n"
+                              "}\n";
+
+    GLuint texture_shader;
+    try
+    {
+        texture_shader = create_program(vert_shader, frag_shader);
+    }
+    catch(std::exception &e)
+    {
+        spdlog::error("Error with creating program: {}", e.what());
+    }
+    glUseProgram(texture_shader);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // texture texture("test.png");
+    // texture.bind();
+    // bind
+    //glActiveTexture(GL_TEXTURE0 + slot);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, m.get_texture());
+    // unbind
+    // glBindTexture(GL_TEXTURE_2D, 0);
+
+    glUniform1i(glGetUniformLocation(texture_shader, "u_Texture"), 0); // glUseProgram(redP_shader);
+
+    //Scaling the Verts:
+    float *scale = m.get_scale_normalized();
+
+    // Verts
+    float h = scale[1], w = scale[0];
+    float positions[] = {
+        -w,
+        -h,
+        0.0,
+        0.0,
+        -w,
+        h,
+        0.0,
+        1.0,
+        w,
+        -h,
+        1.0,
+        0.0,
+        //
+        w,
+        h,
+        1.0,
+        1.0};
+
+    GLuint indices[] {0, 1, 2, 1, 2, 3};
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(float), positions, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (char *)0 + 0 * sizeof(GLfloat));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (char *)0 + 2 * sizeof(GLfloat));
+
+    GLuint ibo;
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
     SDL_Event event;
     while(!exit)
@@ -482,6 +849,8 @@ int main(int argc, char *argv[])
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
         SDL_GL_SwapWindow(window);
     }
 
@@ -489,6 +858,7 @@ int main(int argc, char *argv[])
     SDL_DestroyWindow(window);
     SDL_Quit();
 
+    spdlog::info("Exit");
     return EXIT_SUCCESS;
 }
 
