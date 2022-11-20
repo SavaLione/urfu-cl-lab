@@ -160,12 +160,7 @@ public:
                 _image.push_back({image[fl + 0], image[fl + 1], image[fl + 2], image[fl + 3]});
     }
 
-    image(
-        std::size_t const &width,
-        std::size_t const &height,
-        std::size_t const &channels,
-        IMAGE_TYPE const &image_type,
-        std::vector<uint8_t> const &image)
+    image(std::size_t const &width, std::size_t const &height, std::size_t const &channels, IMAGE_TYPE const &image_type, std::vector<uint8_t> const &image)
     {
         _width      = width;
         _height     = height;
@@ -525,100 +520,240 @@ void load_image(std::string const &img)
     //     GL_UNSIGNED_BYTE,
     //     (GLvoid *)image_from_file.data());
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA,
-        image_from_file.get_width(),
-        image_from_file.get_height(),
-        0,
-        GL_BGRA,
-        GL_UNSIGNED_BYTE,
-        (GLvoid *)image_from_file.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_from_file.get_width(), image_from_file.get_height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid *)image_from_file.data());
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void initialize(GLuint &vao)
+// void initialize(GLuint &vao)
+// {
+//     // Use a Vertex Array Object
+//     glGenVertexArrays(1, &vao);
+//     glBindVertexArray(vao);
+
+//     // 1 square (made by 2 triangles) to be rendered
+//     GLfloat vertices_position[8] = {
+//         -0.5,
+//         -0.5,
+//         0.5,
+//         -0.5,
+//         0.5,
+//         0.5,
+//         -0.5,
+//         0.5,
+//     };
+
+//     GLfloat texture_coord[8] = {
+//         0.0,
+//         0.0,
+//         1.0,
+//         0.0,
+//         1.0,
+//         1.0,
+//         0.0,
+//         1.0,
+//     };
+
+//     GLuint indices[6] = {0, 1, 2, 2, 3, 0};
+
+//     // Create a Vector Buffer Object that will store the vertices on video memory
+//     GLuint vbo;
+//     glGenBuffers(1, &vbo);
+
+//     // Allocate space for vertex positions and texture coordinates
+//     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_position) + sizeof(texture_coord), NULL, GL_STATIC_DRAW);
+
+//     // Transfer the vertex positions:
+//     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices_position), vertices_position);
+
+//     // Transfer the texture coordinates:
+//     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices_position), sizeof(texture_coord), texture_coord);
+
+//     // Create an Element Array Buffer that will store the indices array:
+//     GLuint eab;
+//     glGenBuffers(1, &eab);
+
+//     // Transfer the data from indices to eab
+//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
+//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+//     // Create a texture
+//     GLuint texture;
+//     glGenTextures(1, &texture);
+
+//     // Specify that we work with a 2D texture
+//     glBindTexture(GL_TEXTURE_2D, texture);
+
+//     load_image("test.png");
+
+//     //GLuint shaderProgram = create_program("shaders/vert.shader", "shaders/frag.shader");
+//     GLuint shaderProgram = create_program(vert_shader, frag_shader);
+
+//     // Get the location of the attributes that enters in the vertex shader
+//     GLint position_attribute = glGetAttribLocation(shaderProgram, "position");
+
+//     // Specify how the data for position can be accessed
+//     glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+//     // Enable the attribute
+//     glEnableVertexAttribArray(position_attribute);
+
+//     // Texture coord attribute
+//     GLint texture_coord_attribute = glGetAttribLocation(shaderProgram, "texture_coord");
+//     glVertexAttribPointer(texture_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid *)sizeof(vertices_position));
+//     glEnableVertexAttribArray(texture_coord_attribute);
+// }
+
+// Shader sources
+const GLchar *vertexSource = R"glsl(
+    #version 150 core
+    in vec2 position;
+    in vec3 color;
+    in vec2 texcoord;
+    out vec3 Color;
+    out vec2 Texcoord;
+    void main()
+    {
+        Color = color;
+        Texcoord = texcoord;
+        gl_Position = vec4(position, 0.0, 1.0);
+    }
+)glsl";
+
+const GLchar *fragmentSource = R"glsl(
+    #version 150 core
+    in vec3 Color;
+    in vec2 Texcoord;
+    out vec4 outColor;
+    uniform sampler2D texKitten;
+    uniform sampler2D texPuppy;
+    void main()
+    {
+        outColor = mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.5);
+    }
+)glsl";
+
+class gl_render
 {
-    // Use a Vertex Array Object
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+public:
+    gl_render()
+    {
+        _vao = 0;
+        _vbo = 0;
+    }
 
-    // 1 square (made by 2 triangles) to be rendered
-    GLfloat vertices_position[8] = {
-        -0.5,
-        -0.5,
-        0.5,
-        -0.5,
-        0.5,
-        0.5,
-        -0.5,
-        0.5,
-    };
+    void initialize()
+    {
+        // Create Vertex Array Object
+        glGenVertexArrays(1, &_vao);
+        glBindVertexArray(_vao);
 
-    GLfloat texture_coord[8] = {
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        1.0,
-        1.0,
-        0.0,
-        1.0,
-    };
+        // Create a Vertex Buffer Object and copy the vertex data to it
+        glGenBuffers(1, &_vbo);
 
-    GLuint indices[6] = {0, 1, 2, 2, 3, 0};
+        GLfloat vertices[] = {
+            //  Position      Color             Texcoords
+            -0.5f, 0.5f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+            0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+            0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+            -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+        };
 
-    // Create a Vector Buffer Object that will store the vertices on video memory
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Allocate space for vertex positions and texture coordinates
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_position) + sizeof(texture_coord), NULL, GL_STATIC_DRAW);
+        // Create an element array
+        glGenBuffers(1, &_ebo);
 
-    // Transfer the vertex positions:
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices_position), vertices_position);
+        GLuint elements[] = {0, 1, 2, 2, 3, 0};
 
-    // Transfer the texture coordinates:
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices_position), sizeof(texture_coord), texture_coord);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
-    // Create an Element Array Buffer that will store the indices array:
-    GLuint eab;
-    glGenBuffers(1, &eab);
+        // Create and compile the vertex shader
+        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, 1, &vertexSource, NULL);
+        glCompileShader(vertexShader);
 
-    // Transfer the data from indices to eab
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        // Create and compile the fragment shader
+        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+        glCompileShader(fragmentShader);
 
-    // Create a texture
-    GLuint texture;
-    glGenTextures(1, &texture);
+        // Link the vertex and fragment shader into a shader program
+        GLuint shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+        glBindFragDataLocation(shaderProgram, 0, "outColor");
+        glLinkProgram(shaderProgram);
+        glUseProgram(shaderProgram);
 
-    // Specify that we work with a 2D texture
-    glBindTexture(GL_TEXTURE_2D, texture);
+        // Specify the layout of the vertex data
+        GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+        glEnableVertexAttribArray(posAttrib);
+        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
 
-    load_image("test.png");
+        GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+        glEnableVertexAttribArray(colAttrib);
+        glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
-    //GLuint shaderProgram = create_program("shaders/vert.shader", "shaders/frag.shader");
-    GLuint shaderProgram = create_program(vert_shader, frag_shader);
+        GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+        glEnableVertexAttribArray(texAttrib);
+        glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(5 * sizeof(GLfloat)));
 
-    // Get the location of the attributes that enters in the vertex shader
-    GLint position_attribute = glGetAttribLocation(shaderProgram, "position");
+        // Load textures
+        GLuint textures[2];
+        glGenTextures(2, textures);
 
-    // Specify how the data for position can be accessed
-    glVertexAttribPointer(position_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        image img_from_file("test.png");
 
-    // Enable the attribute
-    glEnableVertexAttribArray(position_attribute);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textures[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_from_file.get_width(), img_from_file.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img_from_file.data());
+        glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
-    // Texture coord attribute
-    GLint texture_coord_attribute = glGetAttribLocation(shaderProgram, "texture_coord");
-    glVertexAttribPointer(texture_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid *)sizeof(vertices_position));
-    glEnableVertexAttribArray(texture_coord_attribute);
-}
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textures[1]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img_from_file.get_width(), img_from_file.get_height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img_from_file.data());
+        glUniform1i(glGetUniformLocation(shaderProgram, "texPuppy"), 1);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    void render()
+    {
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+
+    ~gl_render()
+    {
+        // glDeleteTextures(2, textures);
+
+        // glDeleteProgram(shaderProgram);
+        // glDeleteShader(fragmentShader);
+        // glDeleteShader(vertexShader);
+
+        glDeleteBuffers(1, &_ebo);
+        glDeleteBuffers(1, &_vbo);
+
+        glDeleteVertexArrays(1, &_vao);
+    }
+
+private:
+    GLuint _vao;
+    GLuint _vbo;
+    GLuint _ebo;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -673,12 +808,8 @@ int main(int argc, char *argv[])
 
     /* Image */
     // image image_from_file("test.png");
-
-    /* OpenGL */
-    GLuint vao;
-
-    // Initialize the data to be rendered
-    initialize(vao);
+    gl_render glr;
+    glr.initialize();
 
     SDL_Event event;
     while(!exit)
@@ -709,7 +840,7 @@ int main(int argc, char *argv[])
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        display(vao);
+        glr.render();
 
         SDL_GL_SwapWindow(window);
     }
