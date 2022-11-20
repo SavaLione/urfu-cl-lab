@@ -203,9 +203,16 @@ __kernel void example(
     const int y = get_global_id(1);
     int2 pos = (int2)(x, y);
     uint4 pixel = read_imageui(img_in, sampler, pos);
-    pixel.x += 100;
-    pixel.y += 100;
-    pixel.z += 100;
+
+    if(pixel.y >= 255)
+        pixel.y = 0;
+    
+    if(pixel.z >= 255)
+        pixel.z = 0;
+
+    // pixel.x += 10;
+    pixel.y += 10;
+    pixel.z += 10;
     write_imageui(img_out, pos, pixel);
 }
 )opencl_kernel";
@@ -447,7 +454,7 @@ int main(int argc, char *argv[])
     compute::image2d img_2d_out(context_cl, ir.width(), ir.height(), format_cl, compute::image2d::write_only);
 
     // fill buffer
-    queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
+    // queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
 
     // setup tesselate_sphere kernel
     compute::kernel kernel_cl(program_cl, "example");
@@ -461,18 +468,30 @@ int main(int argc, char *argv[])
     // std::size_t region[3] = {ir.width(), ir.height(), 1};
     std::size_t region[3] = {ir.width(), ir.height(), 1};
 
-    // compute
-    queue_cl.enqueue_nd_range_kernel(kernel_cl, 2, origin, region, 0);
-    queue_cl.finish();
+    // // compute
+    // queue_cl.enqueue_nd_range_kernel(kernel_cl, 2, origin, region, 0);
+    // queue_cl.finish();
 
-    // read data from device
-    queue_cl.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir.data());
+    // // read data from device
+    // queue_cl.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir.data());
 
     /* Main loop */
     bool exit = false;
     SDL_Event event;
     while(!exit)
     {
+        // fill
+        queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
+        queue_cl.finish();
+
+        // compute
+        queue_cl.enqueue_nd_range_kernel(kernel_cl, 2, origin, region, 0);
+        queue_cl.finish();
+
+        // read data from device
+        queue_cl.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir.data());
+        queue_cl.finish();
+
         while(SDL_PollEvent(&event))
         {
             switch(event.type)
