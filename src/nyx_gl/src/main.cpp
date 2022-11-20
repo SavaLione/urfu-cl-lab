@@ -1,7 +1,5 @@
 #include "main.h"
-
-#include "SDL2/SDL_video.h"
-#include "glm/fwd.hpp"
+#include "boost/compute/buffer.hpp"
 
 #include <array>
 #include <cstddef>
@@ -96,6 +94,12 @@ public:
     uint8_t const *const_data() const
     {
         return _image.data();
+    }
+
+    void fill_zeros()
+    {
+        for(std::size_t i = 0; i < _image.size(); i++)
+            _image[i] = 0;
     }
 
     void print()
@@ -217,7 +221,7 @@ __kernel void example(
 }
 )opencl_kernel";
 
-std::string opencl_kernel_click_mak = R"opencl_kernel(
+std::string opencl_kernel_click_map = R"opencl_kernel(
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
 __kernel void click_map(
@@ -253,6 +257,7 @@ __kernel void click_map(
 
 int main(int argc, char *argv[])
 {
+    try{
     /* Signal handler */
     signal(SIGINT, signal_callback);
 
@@ -440,8 +445,50 @@ int main(int argc, char *argv[])
 
     /*                                                      OpenCL click map                                        */
 
+    /* Variables */
+    image_representation ir_click_map(window_width, window_height, 4);
+    ir_click_map.fill_zeros();
+    spdlog::info(ir_click_map.height());
+    spdlog::info(ir_click_map.width());
+    spdlog::info(ir_click_map.size());
+
+    std::vector<compute::int2_> vector_click_map;
+    vector_click_map.push_back({20, 20});
+    vector_click_map.push_back({40, 40});
+    vector_click_map.push_back({60, 60});
+    vector_click_map.push_back({80, 80});
+
     // build program
-    compute::program program_cl_cm = compute::program::create_with_source(opencl_kernel_click_mak, context_cl);
+    compute::program program_cl_cm = compute::program::create_with_source(opencl_kernel_click_map, context_cl);
+
+    // create input and output images on the gpu
+    // compute::image2d img_2d_in_click_map(context_cl, ir_click_map.width(), ir_click_map.height(), format_cl, compute::image2d::read_only);
+    // compute::image2d img_2d_out_click_map(context_cl, ir_click_map.width(), ir_click_map.height(), format_cl, compute::image2d::write_only);
+    // compute::buffer buffer_vector_click_map(context_cl, vector_click_map.size() * sizeof(compute::int2_));
+
+    // setup tesselate_sphere kernel
+    // compute::kernel kernel_cl_click_map(program_cl_cm, "click_map");
+
+    // set args
+    try
+    {
+        // int i_cl_map_size = vector_click_map.size();
+        // kernel_cl_click_map.set_arg<compute::image2d>(0, img_2d_in_click_map);
+        // kernel_cl_click_map.set_arg<compute::image2d>(1, img_2d_out_click_map);
+        // kernel_cl_click_map.set_arg(3, buffer_vector_click_map);
+        // kernel_cl_click_map.set_arg(4, i_cl_map_size);
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL set_arg error: {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected set_arg error");
+    }
+
+    // write buffer
+    // queue_cl.enqueue_write_buffer(buffer_vector_click_map, 0, vector_click_map.size() * sizeof(compute::int2_), vector_click_map.data());
 
     try
     {
@@ -519,6 +566,16 @@ int main(int argc, char *argv[])
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    }
+    catch(std::exception const& e)
+    {
+        spdlog::error("Error: {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("Unexpected error");
+    }
 
     return EXIT_SUCCESS;
 }

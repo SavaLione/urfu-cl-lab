@@ -66,5 +66,6 @@ SpacesInParentheses: 'false'
 SpacesInSquareBrackets: 'false'
 TabWidth: '4'
 UseTab: Never
-
+# Disable auto #include
+SortIncludes: false
 ...
