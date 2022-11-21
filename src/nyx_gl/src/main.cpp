@@ -1,5 +1,7 @@
 #include "main.h"
+#include "boost/compute/algorithm/copy_n.hpp"
 #include "boost/compute/buffer.hpp"
+#include "boost/compute/types/fundamental.hpp"
 
 #include <array>
 #include <cstddef>
@@ -227,8 +229,8 @@ __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_T
 __kernel void click_map(
     __read_only image2d_t img_in,
     __write_only image2d_t img_out,
-    __global const int2* clicks,
-    const int clicks_size)
+    __global const int2 *clicks,
+    int clicks_size)
 {
     const int x = get_global_id(0);
     const int y = get_global_id(1);
@@ -255,9 +257,178 @@ __kernel void click_map(
 }
 )opencl_kernel";
 
+void simple_kern()
+{
+    // get the default device
+    compute::device device = compute::system::default_device();
+
+    // create a context for the device
+    compute::context context(device);
+
+    // setup input arrays
+    float a[] = {1, 2, 3, 4};
+    float b[] = {5, 6, 7, 8};
+
+    // make space for the output
+    float c[] = {0, 0, 0, 0};
+
+    // create memory buffers for the input and output
+    compute::buffer buffer_a(context, 4 * sizeof(float));
+    compute::buffer buffer_b(context, 4 * sizeof(float));
+    compute::buffer buffer_c(context, 4 * sizeof(float));
+
+    // source code for the add kernel
+    const char source[] = "__kernel void add(__global const float *a,"
+                          "                  __global const float *b,"
+                          "                  __global float *c)"
+                          "{"
+                          "    const uint i = get_global_id(0);"
+                          "    c[i] = a[i] + b[i];"
+                          "}";
+
+    // create the program with the source
+    compute::program program = compute::program::create_with_source(source, context);
+
+    // compile the program
+    program.build();
+
+    // create the kernel
+    compute::kernel kernel(program, "add");
+
+    // set the kernel arguments
+    kernel.set_arg(0, buffer_a);
+    kernel.set_arg(1, buffer_b);
+    kernel.set_arg(2, buffer_c);
+
+    // create a command queue
+    compute::command_queue queue(context, device);
+
+    // write the data from 'a' and 'b' to the device
+    queue.enqueue_write_buffer(buffer_a, 0, 4 * sizeof(float), a);
+    queue.enqueue_write_buffer(buffer_b, 0, 4 * sizeof(float), b);
+
+    // run the add kernel
+    queue.enqueue_1d_range_kernel(kernel, 0, 4, 0);
+
+    // transfer results back to the host array 'c'
+    queue.enqueue_read_buffer(buffer_c, 0, 4 * sizeof(float), c);
+
+    // print out results in 'c'
+    spdlog::info("c: [{}, {}, {}, {}]", c[0], c[1], c[2], c[3]);
+}
+
+void test_kern()
+{
+    // source code for the add kernel
+    std::string source = R"cl(
+__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+
+__kernel void click_map(
+    __read_only image2d_t img_in,
+    __write_only image2d_t img_out,
+    __global const int2 *clicks,
+    int clicks_size)
+{
+    const int x = get_global_id(0);
+    const int y = get_global_id(1);
+    int2 pos = (int2)(x, y);
+}
+)cl";
+
+    int window_width  = 1024;
+    int window_height = 1024;
+
+    // get the default device
+    compute::device device = compute::system::default_device();
+
+    // create a context for the device
+    compute::context context(device);
+
+    // image2d format
+    compute::image_format format(CL_RGBA, CL_UNSIGNED_INT8);
+
+    /* Variables */
+    image_representation ir_click_map(window_width, window_height, 4);
+    ir_click_map.fill_zeros();
+    ir_click_map.print();
+
+    std::vector<compute::int2_> vector_click_map;
+    vector_click_map.push_back({20, 20});
+    vector_click_map.push_back({40, 40});
+    vector_click_map.push_back({60, 60});
+    vector_click_map.push_back({80, 80});
+
+    // build program
+    compute::program program = compute::program::create_with_source(opencl_kernel_click_map, context);
+
+    try
+    {
+        program.build();
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL build error: {}", e.what());
+        spdlog::error("OpenCL build log: \n{}", program.build_log());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected build error");
+    }
+
+    // setup kernel
+    compute::kernel kernel_cl_click_map(program, "click_map");
+
+    // create input and output images on the gpu
+    compute::image2d img_2d_in_click_map(context, ir_click_map.width(), ir_click_map.height(), format, compute::image2d::read_only);
+    compute::image2d img_2d_out_click_map(context, ir_click_map.width(), ir_click_map.height(), format, compute::image2d::write_only);
+    compute::buffer buffer_vector_click_map(context, vector_click_map.size() * sizeof(compute::int2_), compute::buffer::read_only);
+
+    // set args
+    try
+    {
+        kernel_cl_click_map.set_arg(0, img_2d_in_click_map);
+        kernel_cl_click_map.set_arg(1, img_2d_out_click_map);
+        kernel_cl_click_map.set_arg(2, buffer_vector_click_map);
+        kernel_cl_click_map.set_arg(3, (int)vector_click_map.size());
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL set_arg error: {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected set_arg error");
+    }
+
+    // regions
+    std::size_t origin[3] = {0, 0, 0};
+    std::size_t region[3] = {window_width, window_height, 1};
+
+    // create a command queue
+    compute::command_queue queue(context, device);
+
+    // write buffers
+    queue.enqueue_write_image(img_2d_in_click_map, img_2d_in_click_map.origin(), img_2d_in_click_map.size(), ir_click_map.const_data());
+    queue.enqueue_write_buffer(buffer_vector_click_map, 0, vector_click_map.size() * sizeof(compute::int2_), vector_click_map.data());
+    queue.finish();
+
+    // compute
+    queue.enqueue_nd_range_kernel(kernel_cl_click_map, 2, origin, region, 0);
+    queue.finish();
+
+    // read data from device
+    queue.enqueue_read_image(img_2d_out_click_map, origin, region, 0, 0, ir_click_map.data());
+    queue.finish();
+
+    for(std::size_t i = 0; i < ir_click_map.size(); i++)
+    {
+        if(ir_click_map.data()[i] != 0)
+            spdlog::info("ir_click_map[{}]: {}", i, ir_click_map.data()[i]);
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    try{
     /* Signal handler */
     signal(SIGINT, signal_callback);
 
@@ -443,65 +614,30 @@ int main(int argc, char *argv[])
     std::size_t origin[3] = {0, 0, 0};
     std::size_t region[3] = {ir.width(), ir.height(), 1};
 
-    /*                                                      OpenCL click map                                        */
-
-    /* Variables */
-    image_representation ir_click_map(window_width, window_height, 4);
-    ir_click_map.fill_zeros();
-    spdlog::info(ir_click_map.height());
-    spdlog::info(ir_click_map.width());
-    spdlog::info(ir_click_map.size());
-
-    std::vector<compute::int2_> vector_click_map;
-    vector_click_map.push_back({20, 20});
-    vector_click_map.push_back({40, 40});
-    vector_click_map.push_back({60, 60});
-    vector_click_map.push_back({80, 80});
-
-    // build program
-    compute::program program_cl_cm = compute::program::create_with_source(opencl_kernel_click_map, context_cl);
-
-    // create input and output images on the gpu
-    // compute::image2d img_2d_in_click_map(context_cl, ir_click_map.width(), ir_click_map.height(), format_cl, compute::image2d::read_only);
-    // compute::image2d img_2d_out_click_map(context_cl, ir_click_map.width(), ir_click_map.height(), format_cl, compute::image2d::write_only);
-    // compute::buffer buffer_vector_click_map(context_cl, vector_click_map.size() * sizeof(compute::int2_));
-
-    // setup tesselate_sphere kernel
-    // compute::kernel kernel_cl_click_map(program_cl_cm, "click_map");
-
-    // set args
     try
     {
-        // int i_cl_map_size = vector_click_map.size();
-        // kernel_cl_click_map.set_arg<compute::image2d>(0, img_2d_in_click_map);
-        // kernel_cl_click_map.set_arg<compute::image2d>(1, img_2d_out_click_map);
-        // kernel_cl_click_map.set_arg(3, buffer_vector_click_map);
-        // kernel_cl_click_map.set_arg(4, i_cl_map_size);
+        simple_kern();
     }
     catch(std::exception const &e)
     {
-        spdlog::error("OpenCL set_arg error: {}", e.what());
+        spdlog::error("simple_kern() error: {}", e.what());
     }
     catch(...)
     {
-        spdlog::error("OpenCL unexpected set_arg error");
+        spdlog::error("Unexpected simple_kern() error");
     }
-
-    // write buffer
-    // queue_cl.enqueue_write_buffer(buffer_vector_click_map, 0, vector_click_map.size() * sizeof(compute::int2_), vector_click_map.data());
 
     try
     {
-        program_cl_cm.build();
+        test_kern();
     }
     catch(std::exception const &e)
     {
-        spdlog::error("OpenCL build error: {}", e.what());
-        spdlog::error("OpenCL build log: \n{}", program_cl_cm.build_log());
+        spdlog::error("test_kern() error: {}", e.what());
     }
     catch(...)
     {
-        spdlog::error("OpenCL unexpected build error");
+        spdlog::error("Unexpected test_kern() error");
     }
 
     /* Main loop */
@@ -566,16 +702,6 @@ int main(int argc, char *argv[])
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
-    }
-    catch(std::exception const& e)
-    {
-        spdlog::error("Error: {}", e.what());
-    }
-    catch(...)
-    {
-        spdlog::error("Unexpected error");
-    }
 
     return EXIT_SUCCESS;
 }
