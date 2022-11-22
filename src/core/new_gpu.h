@@ -43,6 +43,7 @@
 #include "core/buffer_representation.h"
 
 void draw_image_cl(image_representation &img);
+void draw_image_cl(image_representation &img, std::string const &kern);
 void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff);
 
 #endif // CORE_NEW_GPU_H

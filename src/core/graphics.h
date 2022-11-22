@@ -57,10 +57,14 @@ class graphics
 public:
     graphics();
     ~graphics();
+    void run();
 
 protected:
     virtual void pool_event();
     virtual void loop();
+    virtual void init();
+
+    image_representation ir;
 
 private:
     /* SDL */
@@ -78,8 +82,6 @@ private:
     GLuint _ebo = 0;
 
     std::array<GLuint, 1> textures;
-
-    image_representation ir;
 };
 
 #endif // CORE_GRAPHICS_H

@@ -39,9 +39,11 @@
 
 #include "core/graphics.h"
 
-class cl_image : graphics
+class cl_image : public graphics
 {
-
+private:
+    void loop() override;
+    void init() override;
 };
 
 #endif // CORE_CL_IMAGE_H

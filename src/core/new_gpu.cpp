@@ -224,6 +224,76 @@ void draw_image_cl(image_representation &img)
     queue.finish();
 }
 
+void draw_image_cl(image_representation &img, std::string const &kern)
+{
+    // get the default device
+    compute::device device = compute::system::default_device();
+
+    // create a context for the device
+    compute::context context(device);
+
+    // image2d format
+    compute::image_format format(CL_RGBA, CL_UNSIGNED_INT8);
+
+    // build program
+    compute::program program = compute::program::create_with_source(kern, context);
+
+    try
+    {
+        program.build();
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL build error: {}", e.what());
+        spdlog::error("OpenCL build log: \n{}", program.build_log());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected build error");
+    }
+
+    // setup kernel
+    compute::kernel kernel(program, "draw_image_cl");
+
+    // create input and output images on the gpu
+    compute::image2d img_2d_in(context, img.width(), img.height(), format, compute::image2d::read_only);
+    compute::image2d img_2d_out(context, img.width(), img.height(), format, compute::image2d::write_only);
+
+    // set args
+    try
+    {
+        kernel.set_arg(0, img_2d_in);
+        kernel.set_arg(1, img_2d_out);
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL set_arg error: {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected set_arg error");
+    }
+
+    // regions
+    std::size_t origin[3] = {0, 0, 0};
+    std::size_t region[3] = {img.width(), img.height(), 1};
+
+    // create a command queue
+    compute::command_queue queue(context, device);
+
+    // write buffers
+    queue.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), img.const_data());
+    queue.finish();
+
+    // compute
+    queue.enqueue_nd_range_kernel(kernel, 2, origin, region, 0);
+    queue.finish();
+
+    // read data from device
+    queue.enqueue_read_image(img_2d_out, origin, region, 0, 0, img.data());
+    queue.finish();
+}
+
 void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff)
 {
     // get the default device

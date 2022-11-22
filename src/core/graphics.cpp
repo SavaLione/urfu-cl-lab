@@ -214,22 +214,22 @@ graphics::graphics()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    /* Main loop */
-    while(!_exit)
-    {
-        loop();
-        pool_event();
+    // /* Main loop */
+    // while(!_exit)
+    // {
+    //     loop();
+    //     pool_event();
 
-        /* Update texture */
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+    //     /* Update texture */
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /* Draw */
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //     /* Draw */
+    //     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        SDL_GL_SwapWindow(window);
-    }
+    //     SDL_GL_SwapWindow(window);
+    // }
 }
 
 graphics::~graphics()
@@ -275,3 +275,28 @@ void graphics::pool_event()
 }
 
 void graphics::loop() {}
+
+void graphics::run()
+{
+    /* Initialization */
+    init();
+
+    /* Main loop */
+    while(!_exit)
+    {
+        loop();
+        pool_event();
+
+        /* Update texture */
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        /* Draw */
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        SDL_GL_SwapWindow(window);
+    }
+}
+
+void graphics::init() {}

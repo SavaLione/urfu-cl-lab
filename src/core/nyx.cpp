@@ -353,6 +353,7 @@ int main(int argc, char *argv[])
     try
     {
         cl_image cli;
+        cli.run();
     }
     catch(std::exception const &e)
     {
