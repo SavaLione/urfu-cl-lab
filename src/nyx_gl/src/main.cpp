@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#include <cstdint>
 // clang-format on
 
 // clang-format off
@@ -54,6 +55,21 @@
 class image_representation
 {
 public:
+    struct vec3
+    {
+        std::int8_t r;
+        std::int8_t g;
+        std::int8_t b;
+    };
+
+    struct vec4
+    {
+        std::int8_t r;
+        std::int8_t g;
+        std::int8_t b;
+        std::int8_t a;
+    };
+
     image_representation(std::size_t const &width, std::size_t const &height, std::size_t const &depth) : _width(width), _height(height), _depth(depth)
     {
         std::size_t size = width * height * depth;
@@ -94,6 +110,14 @@ public:
     {
         for(std::size_t i = 0; i < _image.size(); i++)
             _image[i] = 0;
+    }
+
+    void set_pixel(std::size_t x, std::size_t y, vec4 color)
+    {
+        _image[(y * _width + x) * 4 + 0] = color.r;
+        _image[(y * _width + x) * 4 + 1] = color.g;
+        _image[(y * _width + x) * 4 + 2] = color.b;
+        _image[(y * _width + x) * 4 + 3] = color.a;
     }
 
     void print()
@@ -252,6 +276,188 @@ __kernel void click_map(
 }
 )opencl_kernel";
 
+std::string opencl_new_test_kernel = R"opencl_kernel(
+__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+
+__kernel void new_test_kernel(
+    __read_only image2d_t img_in,
+    __write_only image2d_t img_out,
+    __global const uchar4 *elements_in,
+    __global uchar4 *elements_out)
+{
+    const int x = get_global_id(0);
+    const int y = get_global_id(1);
+    int2 pos = (int2)(x, y);
+
+    // const int2 image_size = get_image_dim(img_in);
+    const int2 image_size = (int2)(get_image_width(img_in), get_image_height(img_in));
+
+    uint4 pixel = read_imageui(img_in, sampler, pos);
+    uint4 pixel_white = (uint4)(255, 255, 255, 255);
+
+    uchar LIFETIME = 5;
+
+    // if(all(pixel != (uint4)(0,0,0,0)))
+    if(pixel.s0 != 0)
+    {
+        int element_num = y*image_size.x + x;
+        uchar4 element = elements_in[element_num];
+
+        write_imageui(img_out, pos, pixel_white);
+
+        // lifetime
+        if(element.s0 != 0)
+        {
+            // Uncomment this
+            element.s0--;
+
+            // direction 0
+            if(element.s1 == 0)
+            {
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
+                        elements_out[element_num - 4].s0 += LIFETIME;
+                        elements_out[element_num - 4].s1 = 0;
+                    }
+                }
+            }
+
+            // direction 1
+            if(element.s1 == 1)
+            {
+                write_imageui(img_out, (int2)(pos.x - 0, pos.y - 1), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num - 3].s0 += LIFETIME;
+                        elements_out[element_num - 3].s1 = 1;
+                    }
+                }
+            }
+
+            // direction 2
+            if(element.s1 == 2)
+            {
+                write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num - 2].s0 += LIFETIME;
+                        elements_out[element_num - 2].s1 = 2;
+                    }
+                }
+            }
+
+            // direction 3
+            if(element.s1 == 3)
+            {
+                write_imageui(img_out, (int2)(pos.x - 1, pos.y + 0), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num - 1].s0 += LIFETIME;
+                        elements_out[element_num - 1].s1 = 3;
+                    }
+                }
+            }
+
+            // direction 5
+            if(element.s1 == 5)
+            {
+                write_imageui(img_out, (int2)(pos.x + 1, pos.y + 0), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num + 1].s0 += LIFETIME;
+                        elements_out[element_num + 1].s1 = 5;
+                    }
+                }
+            }
+
+            // direction 6
+            if(element.s1 == 6)
+            {
+                write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num + 2].s0 += LIFETIME;
+                        elements_out[element_num + 2].s1 = 6;
+                    }
+                }
+            }
+
+            // direction 7
+            if(element.s1 == 6)
+            {
+                write_imageui(img_out, (int2)(pos.x - 1, pos.y - 0), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num + 3].s0 += LIFETIME;
+                        elements_out[element_num + 3].s1 = 7;
+                    }
+                }
+            }
+
+            // direction 8
+            if(element.s1 == 8)
+            {
+                write_imageui(img_out, (int2)(pos.x + 1, pos.y - 1), pixel_white);
+
+                if(element_num >= 8)
+                {
+                    if(element_num <= ((image_size.x * image_size.y) - 8))
+                    {
+                        elements_out[element_num + 4].s0 += LIFETIME;
+                        elements_out[element_num + 4].s1 = 8;
+                    }
+                }
+            }
+
+            // Write changes
+            //elements_out[element_num] = element;
+        }
+    }
+}
+)opencl_kernel";
+
+struct pix
+{
+    compute::int2_ position;
+
+    /*
+        One of eight directions
+            p - pixel
+            0 - possible direction
+                |0|0|0|
+                |0|p|0|
+                |0|0|0|
+            
+                |0|1|2|
+                |3|4|5|
+                |6|7|8|
+
+    */
+    compute::uchar_ direction;
+    compute::uchar_ speed;
+};
+
 void test_kern(image_representation &ir_click_map, std::vector<compute::int2_> &vector_click_map)
 {
     // get the default device
@@ -327,6 +533,129 @@ void test_kern(image_representation &ir_click_map, std::vector<compute::int2_> &
 
     // Clear clicks
     vector_click_map.clear();
+}
+
+class image_pixel_representation
+{
+public:
+    image_pixel_representation(std::size_t const &width, std::size_t const &height) : _width(width), _height(height)
+    {
+        std::size_t size = width * height;
+        _image.resize(size, {0, 0, 0, 0});
+    }
+
+    std::size_t const &width() const
+    {
+        return _width;
+    }
+
+    std::size_t const &height() const
+    {
+        return _height;
+    }
+
+    std::size_t size()
+    {
+        return _image.size();
+    }
+
+    compute::uchar4_ *data()
+    {
+        return _image.data();
+    }
+
+    compute::uchar4_ const *const_data() const
+    {
+        return _image.data();
+    }
+
+    void fill_zeros()
+    {
+        for(std::size_t i = 0; i < _image.size(); i++)
+            _image[i] = {0, 0, 0, 0};
+    }
+
+private:
+    std::size_t _width;
+    std::size_t _height;
+    std::vector<compute::uchar4_> _image;
+};
+
+void test_kern_new_map(image_representation &ir_click_map, image_pixel_representation &ipr)
+{
+    // get the default device
+    compute::device device = compute::system::default_device();
+
+    // create a context for the device
+    compute::context context(device);
+
+    // image2d format
+    compute::image_format format(CL_RGBA, CL_UNSIGNED_INT8);
+
+    // build program
+    compute::program program = compute::program::create_with_source(opencl_new_test_kernel, context);
+
+    try
+    {
+        program.build();
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL build error: {}", e.what());
+        spdlog::error("OpenCL build log: \n{}", program.build_log());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected build error");
+    }
+
+    // setup kernel
+    compute::kernel kernel_cl_click_map(program, "new_test_kernel");
+
+    // create input and output images on the gpu
+    compute::image2d img_2d_in(context, ir_click_map.width(), ir_click_map.height(), format, compute::image2d::read_only);
+    compute::image2d img_2d_out(context, ir_click_map.width(), ir_click_map.height(), format, compute::image2d::write_only);
+    compute::buffer buffer_ipr_in(context, ipr.size() * sizeof(compute::uchar4_), compute::buffer::read_only);
+    compute::buffer buffer_ipr_out(context, ipr.size() * sizeof(compute::uchar4_), compute::buffer::write_only);
+
+    // set args
+    try
+    {
+        kernel_cl_click_map.set_arg(0, img_2d_in);
+        kernel_cl_click_map.set_arg(1, img_2d_out);
+        kernel_cl_click_map.set_arg(2, buffer_ipr_in);
+        kernel_cl_click_map.set_arg(3, buffer_ipr_out);
+    }
+    catch(std::exception const &e)
+    {
+        spdlog::error("OpenCL set_arg error: {}", e.what());
+    }
+    catch(...)
+    {
+        spdlog::error("OpenCL unexpected set_arg error");
+    }
+
+    // regions
+    std::size_t origin[3] = {0, 0, 0};
+    std::size_t region[3] = {ir_click_map.width(), ir_click_map.height(), 1};
+
+    // create a command queue
+    compute::command_queue queue(context, device);
+
+    // write buffers
+    queue.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir_click_map.const_data());
+    queue.enqueue_write_buffer(buffer_ipr_in, 0, ipr.size() * sizeof(compute::uchar4_), ipr.data());
+    queue.finish();
+
+    // compute
+    // queue.enqueue_nd_range_kernel(kernel_cl_click_map, 2, origin, region, 0);
+    queue.enqueue_nd_range_kernel(kernel_cl_click_map, 2, origin, region, 0);
+    queue.finish();
+
+    // read data from device
+    queue.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir_click_map.data());
+    queue.enqueue_read_buffer(buffer_ipr_out, 0, ipr.size() * sizeof(compute::uchar4_), ipr.data());
+    queue.finish();
 }
 
 int main(int argc, char *argv[])
@@ -455,10 +784,10 @@ int main(int argc, char *argv[])
                 ir.data()[i] = 0;
                 break;
             case 1:
-                ir.data()[i] = 255;
+                ir.data()[i] = 0;
                 break;
             case 2:
-                ir.data()[i] = 239;
+                ir.data()[i] = 0;
                 break;
             case 3:
                 ir.data()[i] = 255;
@@ -479,77 +808,38 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    /* OpenCL */
+    /* OpenGL */
+    image_pixel_representation ipr(ir.width(), ir.height());
+    ipr.fill_zeros();
 
-    // get the default device
-    compute::device gpu_cl = compute::system::default_device();
-    spdlog::info("OpenCL device: {}", gpu_cl.name());
-
-    // create context for default device
-    compute::context context_cl(gpu_cl);
-
-    // create command queue
-    compute::command_queue queue_cl(context_cl, gpu_cl);
-
-    // build program
-    compute::program program_cl = compute::program::create_with_source(opencl_kernel, context_cl);
-    program_cl.build();
-
-    // image2d format
-    compute::image_format format_cl(CL_RGBA, CL_UNSIGNED_INT8);
-
-    // create input and output images on the gpu
-    compute::image2d img_2d_in(context_cl, ir.width(), ir.height(), format_cl, compute::image2d::read_only);
-    compute::image2d img_2d_out(context_cl, ir.width(), ir.height(), format_cl, compute::image2d::write_only);
-
-    // fill buffer
-    queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
-
-    // setup tesselate_sphere kernel
-    compute::kernel kernel_cl(program_cl, "example");
-
-    // set args
-    kernel_cl.set_arg<compute::image2d>(0, img_2d_in);
-    kernel_cl.set_arg<compute::image2d>(1, img_2d_out);
-
-    // regions
-    std::size_t origin[3] = {0, 0, 0};
-    std::size_t region[3] = {ir.width(), ir.height(), 1};
-
-    /* Clicks */
-    std::vector<compute::int2_> click_map;
+    try
+    {
+        test_kern_new_map(ir, ipr);
+    }
+    catch(std::exception const& e)
+    {
+        spdlog::info("Error: {}", e.what());
+        exit(EXIT_FAILURE);
+    }
 
     /* Main loop */
     bool exit = false;
     SDL_Event event;
     while(!exit)
     {
-        // fill
-        queue_cl.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir.const_data());
-        queue_cl.finish();
-
-        // compute
-        queue_cl.enqueue_nd_range_kernel(kernel_cl, 2, origin, region, 0);
-        queue_cl.finish();
-
-        // read data from device
-        queue_cl.enqueue_read_image(img_2d_out, origin, region, 0, 0, ir.data());
-        queue_cl.finish();
-
-        /* Click map */
-        if(click_map.size() > 0)
-            try
+        try
+        {
+            test_kern_new_map(ir, ipr);
+            for(std::size_t i = 0; i < ipr.size(); i++)
             {
-                test_kern(ir, click_map);
+                if(ipr.data()[i] != compute::uchar4_ {0, 0, 0, 0})
+                    spdlog::info("pos: {} data: {} {}", i, ipr.data()[i].x, ipr.data()[i].y);
             }
-            catch(std::exception const &e)
-            {
-                spdlog::error("test_kern() error: {}", e.what());
-            }
-            catch(...)
-            {
-                spdlog::error("Unexpected test_kern() error");
-            }
+        }
+        catch(...)
+        {
+            spdlog::info("Unexpected error");
+        }
 
         while(SDL_PollEvent(&event))
         {
@@ -567,7 +857,8 @@ int main(int argc, char *argv[])
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-                    click_map.push_back({event.button.x, event.button.y});
+                    ipr.data()[event.button.y * ipr.width() + event.button.x] = compute::uchar4_ {50, 0, 0, 0};
+                    ir.set_pixel(event.button.x, event.button.y, {255, 255, 255, 255});
                     break;
                 case SDL_QUIT:
                     exit = true;
