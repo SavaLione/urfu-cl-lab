@@ -10,6 +10,8 @@ Options:
   -c, --cpu-only                  Perform only cpu tests
   -v, --vector-size <size>        Vector of elements size (default: 102400000)
   -i, --iteration-count <count>   Count of iterations (default: 100)
+  -l, --laboratory-work <number>  Laboratory work number (default: 1)
+  -b, --verbose                   Verbose output
   -h, --help                      Display this help and exit
 ```
 
