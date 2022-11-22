@@ -144,14 +144,7 @@ void compute_gpu::compute_vec_16(std::string opencl_kernel_name)
     /* Fill vectors */
     fill(vec_a_float_16, vec_b_float_16);
 
-    _compute(
-        opencl_kernel_name,
-        vec_a_float_16.begin(),
-        vec_a_float_16.end(),
-        vec_b_float_16.begin(),
-        vec_b_float_16.end(),
-        vec_c_float_16.begin(),
-        vec_c_float_16.end());
+    _compute(opencl_kernel_name, vec_a_float_16.begin(), vec_a_float_16.end(), vec_b_float_16.begin(), vec_b_float_16.end(), vec_c_float_16.begin(), vec_c_float_16.end());
 }
 
 void compute_gpu::compute_vec_8(std::string opencl_kernel_name)
@@ -163,14 +156,7 @@ void compute_gpu::compute_vec_8(std::string opencl_kernel_name)
     /* Fill vectors */
     fill(vec_a_float_8, vec_b_float_8);
 
-    _compute(
-        opencl_kernel_name,
-        vec_a_float_8.begin(),
-        vec_a_float_8.end(),
-        vec_b_float_8.begin(),
-        vec_b_float_8.end(),
-        vec_c_float_8.begin(),
-        vec_c_float_8.end());
+    _compute(opencl_kernel_name, vec_a_float_8.begin(), vec_a_float_8.end(), vec_b_float_8.begin(), vec_b_float_8.end(), vec_c_float_8.begin(), vec_c_float_8.end());
 }
 
 void compute_gpu::compute_vec_4(std::string opencl_kernel_name)
@@ -182,14 +168,7 @@ void compute_gpu::compute_vec_4(std::string opencl_kernel_name)
     /* Fill vectors */
     fill(vec_a_float_4, vec_b_float_4);
 
-    _compute(
-        opencl_kernel_name,
-        vec_a_float_4.begin(),
-        vec_a_float_4.end(),
-        vec_b_float_4.begin(),
-        vec_b_float_4.end(),
-        vec_c_float_4.begin(),
-        vec_c_float_4.end());
+    _compute(opencl_kernel_name, vec_a_float_4.begin(), vec_a_float_4.end(), vec_b_float_4.begin(), vec_b_float_4.end(), vec_c_float_4.begin(), vec_c_float_4.end());
 }
 
 void compute_gpu::compute_vec_2(std::string opencl_kernel_name)
@@ -201,14 +180,7 @@ void compute_gpu::compute_vec_2(std::string opencl_kernel_name)
     /* Fill vectors */
     fill(vec_a_float_2, vec_b_float_2);
 
-    _compute(
-        opencl_kernel_name,
-        vec_a_float_2.begin(),
-        vec_a_float_2.end(),
-        vec_b_float_2.begin(),
-        vec_b_float_2.end(),
-        vec_c_float_2.begin(),
-        vec_c_float_2.end());
+    _compute(opencl_kernel_name, vec_a_float_2.begin(), vec_a_float_2.end(), vec_b_float_2.begin(), vec_b_float_2.end(), vec_c_float_2.begin(), vec_c_float_2.end());
 }
 
 void compute_gpu::compute_one_vec_16(std::string opencl_kernel_name)
@@ -257,6 +229,7 @@ void compute_gpu::compute_one_vec_2(std::string opencl_kernel_name)
 
 void compute_gpu::run_all()
 {
+    // btw it works, but disabled 'cause it may cause troubles
     if(false)
         compute_lattice_2d("addition_lattice_2d");
 
@@ -300,6 +273,5 @@ void compute_gpu::compute_lattice_2d(std::string opencl_kernel_name)
     /* Fill vectors */
     fill(vec_a_float, vec_b_float);
 
-    _compute_lattice_2d(
-        opencl_kernel_name, vec_a_float.begin(), vec_a_float.end(), vec_b_float.begin(), vec_b_float.end(), vec_c_float.begin(), vec_c_float.end());
+    _compute_lattice_2d(opencl_kernel_name, vec_a_float.begin(), vec_a_float.end(), vec_b_float.begin(), vec_b_float.end(), vec_c_float.begin(), vec_c_float.end());
 }

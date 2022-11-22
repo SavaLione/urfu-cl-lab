@@ -1,9 +1,6 @@
-__kernel void simple_vec_add(
-    __global const float16* a,
-    __global const float16* b,
-    __global float16* c)
+__kernel void simple_vec_add(__global const float16 *a, __global const float16 *b, __global float16 *c)
 {
-	int index = get_global_id(0);
+    int index = get_global_id(0);
 
     c[index].s0 = a[index].s0 + b[index].s0;
     c[index].s1 = a[index].s1 + b[index].s1;

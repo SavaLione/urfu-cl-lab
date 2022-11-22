@@ -39,7 +39,6 @@
 
 #include "core/execution_time.h"
 
-
 #include <exception>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -77,12 +76,7 @@ private:
         iterator_type end_iterator_c);
 
     template<typename iterator_type>
-    void _compute(
-        operation_name name,
-        iterator_type start_iterator_a,
-        iterator_type end_iterator_a,
-        iterator_type start_iterator_c,
-        iterator_type end_iterator_c);
+    void _compute(operation_name name, iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_c, iterator_type end_iterator_c);
 
     std::size_t vector_size     = 102400000;
     std::size_t iteration_count = 100;
@@ -185,8 +179,7 @@ void compute_cpu::_compute(
 }
 
 template<typename iterator_type>
-void compute_cpu::_compute(
-    operation_name name, iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_c, iterator_type end_iterator_c)
+void compute_cpu::_compute(operation_name name, iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_c, iterator_type end_iterator_c)
 {
     typedef typename std::iterator_traits<iterator_type>::value_type data_type;
     typedef typename std::iterator_traits<iterator_type> data_size;

@@ -141,12 +141,7 @@ private:
         iterator_type end_iterator_c);
 
     template<typename iterator_type>
-    void _compute(
-        std::string opencl_application_name,
-        iterator_type start_iterator_a,
-        iterator_type end_iterator_a,
-        iterator_type start_iterator_c,
-        iterator_type end_iterator_c);
+    void _compute(std::string opencl_application_name, iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_c, iterator_type end_iterator_c);
 
     template<typename iterator_type>
     void _compute_lattice_2d(
@@ -291,11 +286,7 @@ void compute_gpu::_compute(
 
 template<typename iterator_type>
 void compute_gpu::_compute(
-    std::string opencl_application_name,
-    iterator_type start_iterator_a,
-    iterator_type end_iterator_a,
-    iterator_type start_iterator_c,
-    iterator_type end_iterator_c)
+    std::string opencl_application_name, iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_c, iterator_type end_iterator_c)
 {
     typedef typename std::iterator_traits<iterator_type>::value_type data_type;
 
