@@ -30,45 +30,60 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief Image representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 22 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#ifndef CORE_IMAGE_REPRESENTATION_H
+#define CORE_IMAGE_REPRESENTATION_H
 
-#include <string>
+#include <cstdint>
+#include <cstdlib>
 #include <vector>
 
-class kernel_loader
+class image_representation
 {
 public:
-    static kernel_loader &instance()
+    struct vec3
     {
-        static kernel_loader kl;
-        return kl;
+        std::int8_t r;
+        std::int8_t g;
+        std::int8_t b;
+    };
+
+    struct vec4
+    {
+        std::int8_t r;
+        std::int8_t g;
+        std::int8_t b;
+        std::int8_t a;
+    };
+
+    image_representation() : _width(0), _height(0), _depth(0)
+    {
+        _image.clear();
     }
 
-    void load();
-    void load(std::string const &name);
-
-    std::vector<std::string> const &get() const
+    image_representation(std::size_t const &width, std::size_t const &height, std::size_t const &depth) : _width(width), _height(height), _depth(depth)
     {
-        return _string_kernels;
+        std::size_t size = width * height * depth;
+        _image.resize(size, 0);
     }
 
-    void print();
-
-    void reset();
-    void reload();
+    std::size_t const &width() const;
+    std::size_t const &height() const;
+    std::size_t const &depth() const;
+    std::size_t size();
+    uint8_t *data();
+    uint8_t const *const_data() const;
+    void fill_zeros();
+    void set_pixel(std::size_t x, std::size_t y, vec4 color);
 
 private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
-
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
+    std::size_t _width;
+    std::size_t _height;
+    std::size_t _depth;
+    std::vector<uint8_t> _image;
 };
 
-#endif // COMPUTE_KERNEL_LOADER_H
+#endif // CORE_IMAGE_REPRESENTATION_H

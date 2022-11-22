@@ -30,45 +30,41 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief Platform specific things
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 22 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#include "core/platform.h"
 
-#include <string>
-#include <vector>
+#include "core/settings.h"
 
-class kernel_loader
+#include <spdlog/spdlog.h>
+
+void signal_callback(int signum)
 {
-public:
-    static kernel_loader &instance()
+    spdlog::info("Signal: {}", signum);
+
+    /* Settings instance */
+    settings &settings_instance = settings::instance();
+    settings_instance.set_exit(true);
+
+    switch(signum)
     {
-        static kernel_loader kl;
-        return kl;
+        case 2:
+            spdlog::info("Signal SIGINT. Exiting from the application");
+            break;
+        case 3:
+            spdlog::info("Signal SIGQUIT. Exiting from the application");
+            break;
+        case 10:
+            spdlog::error("Signal SIGBUS. Bus error");
+            break;
+        case 13:
+            spdlog::error("Signal SIGPIPE. Write on a pipe with no one to read it");
+            break;
+        default:
+            spdlog::warn("Unspecified signal: {}", signum);
+            break;
     }
-
-    void load();
-    void load(std::string const &name);
-
-    std::vector<std::string> const &get() const
-    {
-        return _string_kernels;
-    }
-
-    void print();
-
-    void reset();
-    void reload();
-
-private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
-
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
-};
-
-#endif // COMPUTE_KERNEL_LOADER_H
+    exit(signum);
+}

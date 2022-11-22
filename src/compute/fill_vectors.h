@@ -41,34 +41,33 @@
 #include <vector>
 
 template<typename iterator_type>
-void fill_vectors(
-	iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_b, iterator_type end_iterator_b)
+void fill_vectors(iterator_type start_iterator_a, iterator_type end_iterator_a, iterator_type start_iterator_b, iterator_type end_iterator_b)
 {
-	typedef typename std::iterator_traits<iterator_type>::value_type data_type;
-	typedef typename std::iterator_traits<iterator_type> data_size;
+    typedef typename std::iterator_traits<iterator_type>::value_type data_type;
+    typedef typename std::iterator_traits<iterator_type> data_size;
 
-	std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
-	std::size_t size_of_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
+    std::size_t size_of_a = sizeof(data_type) * (end_iterator_a - start_iterator_a);
+    std::size_t size_of_b = sizeof(data_type) * (end_iterator_b - start_iterator_b);
 
-	std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
-	std::size_t size_b = sizeof(data_size) * (end_iterator_b - start_iterator_b);
+    std::size_t size_a = sizeof(data_size) * (end_iterator_a - start_iterator_a);
+    std::size_t size_b = sizeof(data_size) * (end_iterator_b - start_iterator_b);
 
-	if(size_of_a != size_of_b)
-	{
-		throw std::logic_error("Iterators are not equal.");
-	}
-
-#pragma omp parallel for
-	for(std::size_t i = 0; i < size_a; i++)
-	{
-		start_iterator_a[i] = (float)i / 2;
-	}
+    if(size_of_a != size_of_b)
+    {
+        throw std::logic_error("Iterators are not equal.");
+    }
 
 #pragma omp parallel for
-	for(std::size_t i = 0; i < size_b; i++)
-	{
-		start_iterator_b[i] = (float)i * 2;
-	}
+    for(std::size_t i = 0; i < size_a; i++)
+    {
+        start_iterator_a[i] = (float)i / 2;
+    }
+
+#pragma omp parallel for
+    for(std::size_t i = 0; i < size_b; i++)
+    {
+        start_iterator_b[i] = (float)i * 2;
+    }
 }
 
 #endif // COMPUTE_FILL_VECTORS_H

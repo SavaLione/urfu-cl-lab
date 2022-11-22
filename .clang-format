@@ -29,7 +29,7 @@ BinPackArguments: 'false'
 BinPackParameters: 'false'
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Allman
-ColumnLimit: '130'
+ColumnLimit: '180'
 CompactNamespaces: 'false'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
 ContinuationIndentWidth: '4'
@@ -65,6 +65,7 @@ SpacesInContainerLiterals: 'false'
 SpacesInParentheses: 'false'
 SpacesInSquareBrackets: 'false'
 TabWidth: '4'
-UseTab: Always
-
+UseTab: Never
+# Disable auto #include
+SortIncludes: false
 ...

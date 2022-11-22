@@ -42,42 +42,42 @@
 class execution_time
 {
 public:
-	void start();
-	void stop();
+    void start();
+    void stop();
 
-	long long const count_nanoseconds() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::nanoseconds>(_stop - _start)).count();
-	}
+    long long const count_nanoseconds() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::nanoseconds>(_stop - _start)).count();
+    }
 
-	long long const count_microseconds() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::microseconds>(_stop - _start)).count();
-	}
+    long long const count_microseconds() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::microseconds>(_stop - _start)).count();
+    }
 
-	long long const count_milliseconds() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::milliseconds>(_stop - _start)).count();
-	}
+    long long const count_milliseconds() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::milliseconds>(_stop - _start)).count();
+    }
 
-	long long const count_seconds() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::seconds>(_stop - _start)).count();
-	}
+    long long const count_seconds() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::seconds>(_stop - _start)).count();
+    }
 
-	long long const count_minutes() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::minutes>(_stop - _start)).count();
-	}
+    long long const count_minutes() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::minutes>(_stop - _start)).count();
+    }
 
-	long long const count_hours() const &
-	{
-		return (std::chrono::duration_cast<std::chrono::hours>(_stop - _start)).count();
-	}
+    long long const count_hours() const &
+    {
+        return (std::chrono::duration_cast<std::chrono::hours>(_stop - _start)).count();
+    }
 
 private:
-	std::chrono::steady_clock::time_point _start;
-	std::chrono::steady_clock::time_point _stop;
+    std::chrono::steady_clock::time_point _start;
+    std::chrono::steady_clock::time_point _stop;
 };
 
 #endif // CORE_EXECUTION_TIME_H

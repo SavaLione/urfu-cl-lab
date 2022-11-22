@@ -30,45 +30,58 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief Graphics and drawing everything
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 22 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#ifndef CORE_GRAPHICS_H
+#define CORE_GRAPHICS_H
+
+// clang-format off
+#include <CL/cl_gl.h>
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
+// clang-format on
+
+#include "core/image_representation.h"
+#include "core/buffer_representation.h"
+#include "core/new_gpu.h"
 
 #include <string>
-#include <vector>
+#include <array>
 
-class kernel_loader
+class graphics
 {
 public:
-    static kernel_loader &instance()
-    {
-        static kernel_loader kl;
-        return kl;
-    }
+    graphics();
+    ~graphics();
+    void run();
 
-    void load();
-    void load(std::string const &name);
+protected:
+    virtual void pool_event();
+    virtual void loop();
+    virtual void init();
 
-    std::vector<std::string> const &get() const
-    {
-        return _string_kernels;
-    }
-
-    void print();
-
-    void reset();
-    void reload();
+    image_representation ir;
 
 private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
+    /* SDL */
+    SDL_Window *window;
+    SDL_GLContext context;
+    SDL_Event event;
 
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
+    int window_width  = 0;
+    int window_height = 0;
+    bool _exit        = false;
+
+    /* OpenGL */
+    GLuint _vao = 0;
+    GLuint _vbo = 0;
+    GLuint _ebo = 0;
+
+    std::array<GLuint, 1> textures;
 };
 
-#endif // COMPUTE_KERNEL_LOADER_H
+#endif // CORE_GRAPHICS_H

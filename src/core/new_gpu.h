@@ -30,45 +30,20 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief New gpu functions and etc.
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 22 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#ifndef CORE_NEW_GPU_H
+#define CORE_NEW_GPU_H
 
-#include <string>
-#include <vector>
+#include <boost/compute/types.hpp>
 
-class kernel_loader
-{
-public:
-    static kernel_loader &instance()
-    {
-        static kernel_loader kl;
-        return kl;
-    }
+#include "core/image_representation.h"
+#include "core/buffer_representation.h"
 
-    void load();
-    void load(std::string const &name);
+void draw_image_cl(image_representation &img);
+void draw_image_cl(image_representation &img, std::string const &kern);
+void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff);
 
-    std::vector<std::string> const &get() const
-    {
-        return _string_kernels;
-    }
-
-    void print();
-
-    void reset();
-    void reload();
-
-private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
-
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
-};
-
-#endif // COMPUTE_KERNEL_LOADER_H
+#endif // CORE_NEW_GPU_H

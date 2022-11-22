@@ -30,45 +30,52 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief Image representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 22 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#include "core/image_representation.h"
 
-#include <string>
-#include <vector>
-
-class kernel_loader
+std::size_t const &image_representation::width() const
 {
-public:
-    static kernel_loader &instance()
-    {
-        static kernel_loader kl;
-        return kl;
-    }
+    return _width;
+}
 
-    void load();
-    void load(std::string const &name);
+std::size_t const &image_representation::height() const
+{
+    return _height;
+}
 
-    std::vector<std::string> const &get() const
-    {
-        return _string_kernels;
-    }
+std::size_t const &image_representation::depth() const
+{
+    return _depth;
+}
 
-    void print();
+std::size_t image_representation::size()
+{
+    return _image.size();
+}
 
-    void reset();
-    void reload();
+uint8_t *image_representation::data()
+{
+    return _image.data();
+}
 
-private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
+uint8_t const *image_representation::const_data() const
+{
+    return _image.data();
+}
 
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
-};
+void image_representation::fill_zeros()
+{
+    for(std::size_t i = 0; i < _image.size(); i++)
+        _image[i] = 0;
+}
 
-#endif // COMPUTE_KERNEL_LOADER_H
+void image_representation::set_pixel(std::size_t x, std::size_t y, vec4 color)
+{
+    _image[(y * _width + x) * 4 + 0] = color.r;
+    _image[(y * _width + x) * 4 + 1] = color.g;
+    _image[(y * _width + x) * 4 + 2] = color.b;
+    _image[(y * _width + x) * 4 + 3] = color.a;
+}
