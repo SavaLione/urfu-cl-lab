@@ -148,6 +148,3 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 # Output
 function_output_directory(${PROJECT_NAME})
 file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)
-
-# Test
-add_subdirectory(src/nyx_gl)
