@@ -13,19 +13,19 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -DNDEBUG -fopenmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -DNDEBUG")
 else()
     message(STATUS "Unknown build type: " ${CMAKE_BUILD_TYPE})
 endif()
 
-# DELETE THIS AFTER TESTS
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-everything")
+# static
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -130,19 +130,19 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 # Libraries
 if(Threads_FOUND)
-    target_link_libraries(${PROJECT_NAME} Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 endif()
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 endif()
-target_link_libraries(${PROJECT_NAME} OpenCL::OpenCL)
-target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SPDLOG_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARY})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
+target_link_libraries(${PROJECT_NAME} PRIVATE GLEW::GLEW)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 
 # Output
