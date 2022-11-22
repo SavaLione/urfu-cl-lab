@@ -36,10 +36,6 @@
  */
 #include "compute/compute_gpu.h"
 
-#include <CL/cl.h>
-#include <CL/cl_ext.h>
-#include <string>
-
 compute_gpu::compute_gpu(std::size_t const &vector_size, std::size_t const &iteration_count)
 {
     this->vector_size     = vector_size;

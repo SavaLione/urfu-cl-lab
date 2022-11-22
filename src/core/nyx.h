@@ -37,7 +37,6 @@
 #ifndef CORE_NYX_H
 #define CORE_NYX_H
 
-void signal_callback(int signum);
 void print_help();
 
 #endif // CORE_NYX_H

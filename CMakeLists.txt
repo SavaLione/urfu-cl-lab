@@ -51,10 +51,10 @@ find_package(GLEW REQUIRED)
 set(NYX_CORE_SRC
     src/core/execution_time.h
     src/core/execution_time.cpp
-    src/core/image.h
-    src/core/image.cpp
     src/core/nyx.h
     src/core/nyx.cpp
+    src/core/platform.h
+    src/core/platform.cpp
     src/core/settings.h
     src/core/settings.cpp
 )
@@ -135,6 +135,4 @@ function_output_directory(${PROJECT_NAME})
 file(COPY src/compute/kernels DESTINATION ${CMAKE_BINARY_DIR}/bin/)
 
 # Test
-add_subdirectory(src/nyx_test)
-add_subdirectory(src/nyx_compute)
 add_subdirectory(src/nyx_gl)

@@ -39,10 +39,7 @@
 #include <SDL2/SDL.h>
 #include <cstddef>
 #include <exception>
-#include <fstream>
-#include <iterator>
 #include <spdlog/spdlog.h>
-#include <sstream>
 
 kernel_loader::kernel_loader() {}
 

@@ -30,51 +30,13 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief Platform specific things
  * @author Saveliy Pototskiy (SavaLione)
- * @date 16 Nod 2022
+ * @date 22 Nov 2022
  */
-#ifndef CORE_IMAGE_H
-#define CORE_IMAGE_H
+#ifndef CORE_PLATFORM_H
+#define CORE_PLATFORM_H
 
-// clang-format off
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_TARGET_OPENCL_VERSION  120
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+void signal_callback(int signum);
 
-#if defined(__APPLE__) || defined(__MACOSX)
-	#include <OpenCL/cl.hpp>
-#else
-	#include <CL/cl.h>
-#endif
-// clang-format on
-
-#include "compute/kernel_loader.h"
-
-#include <CL/opencl.hpp>
-#include <exception>
-#include <iterator>
-#include <spdlog/spdlog.h>
-#include <stdexcept>
-#include <string>
-
-class image
-{
-public:
-    void run();
-
-private:
-    /* Kernel loader instance */
-    kernel_loader &kernel_loader_instance = kernel_loader::instance();
-
-    std::vector<cl::Platform> all_platforms;
-    cl::Platform default_platform;
-    std::vector<cl::Device> all_devices;
-    cl::Device default_device;
-    cl::Context context;
-    cl::Program::Sources sources;
-    std::vector<std::string> kernels;
-    cl::Program program;
-};
-
-#endif // CORE_IMAGE_H
+#endif // CORE_PLATFORM_H
