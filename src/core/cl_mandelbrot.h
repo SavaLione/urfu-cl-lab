@@ -30,21 +30,20 @@
  */
 /**
  * @file
- * @brief New gpu functions and etc.
+ * @brief Draw OpenCL image (the Mandelbrot set)
  * @author Saveliy Pototskiy (SavaLione)
+ * @author Willem Melching (Author of kernel of the Mandelbrot set)
  * @date 22 Nov 2022
  */
-#ifndef CORE_NEW_GPU_H
-#define CORE_NEW_GPU_H
+#ifndef CORE_CL_MANDELBROT_H
+#define CORE_CL_MANDELBROT_H
 
-#include <boost/compute/types.hpp>
+#include "core/graphics.h"
 
-#include "core/image_representation.h"
-#include "core/buffer_representation.h"
+class cl_mandelbrot : public graphics
+{
+private:
+    void init() override;
+};
 
-void draw_image_cl(image_representation &img);
-void draw_image_cl(image_representation &img, std::string const &kern);
-void draw_write_only_cl(image_representation &img, std::string const &kern);
-void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff);
-
-#endif // CORE_NEW_GPU_H
+#endif // CORE_CL_MANDELBROT_H

@@ -49,6 +49,7 @@
 #include "core/settings.h"
 #include "core/platform.h"
 #include "core/cl_image.h"
+#include "core/cl_mandelbrot.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -204,10 +205,11 @@ int main(int argc, char *argv[])
                 {
                     case 1:
                     case 2:
+                    case 3:
                         settings_instance.set_laboratory_work(l);
                         break;
                     default:
-                        spdlog::error("argument -l or --laboratory-work must be 1 or 2");
+                        spdlog::error("argument -l or --laboratory-work must be 1, 2 or 3");
                         print_help();
                         break;
                 }
@@ -263,6 +265,12 @@ int main(int argc, char *argv[])
             {
                 cl_image cli;
                 cli.run();
+                break;
+            }
+            case 3:
+            {
+                cl_mandelbrot clm;
+                clm.run();
                 break;
             }
             default:
