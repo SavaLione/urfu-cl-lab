@@ -1,4 +1,5 @@
 - Changed README.md (usage)
+- Fixed files indentation (tabs replaced with spaces)
 
 2.0.0 - 2022-11-22
 ------------------
