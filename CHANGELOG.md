@@ -1,3 +1,6 @@
+2.0.1 - 2022-11-22
+------------------
+
 - Changed README.md (usage)
 - Fixed files indentation (tabs replaced with spaces)
 - Added the Mandelbrot set example (``core/cl_mandelbrot.h``, ``core/cl_mandelbrot.cpp``)
