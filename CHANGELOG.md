@@ -1,5 +1,8 @@
 - Changed README.md (usage)
 - Fixed files indentation (tabs replaced with spaces)
+- Added the Mandelbrot set example (``core/cl_mandelbrot.h``, ``core/cl_mandelbrot.cpp``)
+    - Author of kernel: Willem Melching
+    - https://blog.willemmelching.nl/random/2020/04/12/mandelbrot/
 
 2.0.0 - 2022-11-22
 ------------------
