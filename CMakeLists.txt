@@ -53,6 +53,8 @@ find_package(Boost REQUIRED)
 set(NYX_CORE_SRC
     src/core/buffer_representation.h
     src/core/buffer_representation.cpp
+    src/core/cl_image.h
+    src/core/cl_image.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
     src/core/graphics.h

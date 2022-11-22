@@ -343,14 +343,16 @@
 //     exit(EXIT_SUCCESS);
 // }
 
-#include "core/graphics.h"
+#include "core/cl_image.h"
+
 #include <exception>
+#include <spdlog/spdlog.h>
 
 int main(int argc, char *argv[])
 {
     try
     {
-        graphics g;
+        cl_image cli;
     }
     catch(std::exception const &e)
     {

@@ -59,6 +59,11 @@ public:
         std::int8_t a;
     };
 
+    image_representation() : _width(0), _height(0), _depth(0)
+    {
+        _image.clear();
+    }
+
     image_representation(std::size_t const &width, std::size_t const &height, std::size_t const &depth) : _width(width), _height(height), _depth(depth)
     {
         std::size_t size = width * height * depth;

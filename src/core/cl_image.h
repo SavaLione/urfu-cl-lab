@@ -30,56 +30,18 @@
  */
 /**
  * @file
- * @brief Graphics and drawing everything
+ * @brief Draw OpenCL image
  * @author Saveliy Pototskiy (SavaLione)
  * @date 22 Nov 2022
  */
-#ifndef CORE_GRAPHICS_H
-#define CORE_GRAPHICS_H
+#ifndef CORE_CL_IMAGE_H
+#define CORE_CL_IMAGE_H
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
+#include "core/graphics.h"
 
-#include "core/image_representation.h"
-#include "core/buffer_representation.h"
-#include "core/new_gpu.h"
-
-#include <string>
-#include <array>
-
-class graphics
+class cl_image : graphics
 {
-public:
-    graphics();
-    ~graphics();
 
-protected:
-    virtual void pool_event();
-    virtual void loop();
-
-private:
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-
-    /* OpenGL */
-    GLuint _vao = 0;
-    GLuint _vbo = 0;
-    GLuint _ebo = 0;
-
-    std::array<GLuint, 1> textures;
-
-    image_representation ir;
 };
 
-#endif // CORE_GRAPHICS_H
+#endif // CORE_CL_IMAGE_H

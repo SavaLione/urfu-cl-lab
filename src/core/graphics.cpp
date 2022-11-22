@@ -36,6 +36,10 @@
  */
 #include "core/graphics.h"
 
+#include <cstddef>
+#include <stdexcept>
+#include <spdlog/spdlog.h>
+
 const GLchar *vertex_shader = R"glsl(
     #version 150 core
     in vec2 position;
@@ -80,7 +84,7 @@ graphics::graphics()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_Window *window = SDL_CreateWindow("nyx", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("nyx", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
     {
         std::string _err = "Error creating SDL2 window: ";
@@ -88,7 +92,7 @@ graphics::graphics()
         throw std::runtime_error(_err);
     }
 
-    SDL_GLContext context = SDL_GL_CreateContext(window);
+    context = SDL_GL_CreateContext(window);
     if(!context)
     {
         std::string _err = "Error creating SDL2 context: ";
@@ -104,8 +108,6 @@ graphics::graphics()
     }
 
     /* SDL variables */
-    int window_width  = 0;
-    int window_height = 0;
     SDL_GetWindowSize(window, &window_width, &window_height);
     spdlog::info("Window width: {} height: {}", window_width, window_height);
 
@@ -115,9 +117,9 @@ graphics::graphics()
     glEnable(GL_DEPTH_TEST);
 
     /* OpenGL */
-    GLuint _vao = 0;
-    GLuint _vbo = 0;
-    GLuint _ebo = 0;
+    _vao = 0;
+    _vbo = 0;
+    _ebo = 0;
 
     // Create Vertex Array Object
     glGenVertexArrays(1, &_vao);
@@ -177,10 +179,9 @@ graphics::graphics()
     glVertexAttribPointer(tex_attribute, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void *)(5 * sizeof(GLfloat)));
 
     // Load textures
-    std::array<GLuint, 1> textures;
     glGenTextures(1, textures.data());
 
-    image_representation ir(window_width, window_height, 4);
+    ir = image_representation(window_width, window_height, 4);
     for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
     {
         switch(rgb)
@@ -214,34 +215,10 @@ graphics::graphics()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* Main loop */
-    bool exit = false;
-    SDL_Event event;
-    while(!exit)
+    while(!_exit)
     {
-        while(SDL_PollEvent(&event))
-        {
-            switch(event.type)
-            {
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym)
-                    {
-                        case SDLK_ESCAPE:
-                            exit = true;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-                    break;
-                case SDL_QUIT:
-                    exit = true;
-                    break;
-                default:
-                    break;
-            }
-        }
+        loop();
+        pool_event();
 
         /* Update texture */
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
@@ -253,6 +230,10 @@ graphics::graphics()
 
         SDL_GL_SwapWindow(window);
     }
+}
+
+graphics::~graphics()
+{
     /* OpenGL */
     glDeleteBuffers(1, &_ebo);
     glDeleteBuffers(1, &_vbo);
@@ -264,3 +245,33 @@ graphics::graphics()
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
+
+void graphics::pool_event()
+{
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_ESCAPE:
+                        _exit = true;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
+                break;
+            case SDL_QUIT:
+                _exit = true;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void graphics::loop() {}
