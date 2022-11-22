@@ -61,8 +61,6 @@ set(NYX_CORE_SRC
     src/core/graphics.cpp
     src/core/image_representation.h
     src/core/image_representation.cpp
-    src/core/image.h
-    src/core/image.cpp
     src/core/new_gpu.h
     src/core/new_gpu.cpp
     src/core/nyx.h
