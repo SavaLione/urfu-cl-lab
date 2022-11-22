@@ -289,26 +289,23 @@ __kernel void new_test_kernel(
     const int y = get_global_id(1);
     int2 pos = (int2)(x, y);
 
-    // const int2 image_size = get_image_dim(img_in);
     const int2 image_size = (int2)(get_image_width(img_in), get_image_height(img_in));
 
     uint4 pixel = read_imageui(img_in, sampler, pos);
     uint4 pixel_white = (uint4)(255, 255, 255, 255);
+    uint4 pixel_black = (uint4)(0, 0, 0, 0);
 
     uchar LIFETIME = 5;
 
-    // if(all(pixel != (uint4)(0,0,0,0)))
     if(pixel.s0 != 0)
     {
         int element_num = y*image_size.x + x;
         uchar4 element = elements_in[element_num];
 
-        write_imageui(img_out, pos, pixel_white);
-
         // lifetime
         if(element.s0 != 0)
         {
-            // Uncomment this
+            write_imageui(img_out, pos, pixel_white);
             element.s0--;
 
             // direction 0
@@ -321,117 +318,16 @@ __kernel void new_test_kernel(
                         write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
                         elements_out[element_num - 4].s0 += LIFETIME;
                         elements_out[element_num - 4].s1 = 0;
-                    }
-                }
-            }
 
-            // direction 1
-            if(element.s1 == 1)
-            {
-                write_imageui(img_out, (int2)(pos.x - 0, pos.y - 1), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num - 3].s0 += LIFETIME;
-                        elements_out[element_num - 3].s1 = 1;
-                    }
-                }
-            }
-
-            // direction 2
-            if(element.s1 == 2)
-            {
-                write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num - 2].s0 += LIFETIME;
-                        elements_out[element_num - 2].s1 = 2;
-                    }
-                }
-            }
-
-            // direction 3
-            if(element.s1 == 3)
-            {
-                write_imageui(img_out, (int2)(pos.x - 1, pos.y + 0), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num - 1].s0 += LIFETIME;
-                        elements_out[element_num - 1].s1 = 3;
-                    }
-                }
-            }
-
-            // direction 5
-            if(element.s1 == 5)
-            {
-                write_imageui(img_out, (int2)(pos.x + 1, pos.y + 0), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num + 1].s0 += LIFETIME;
-                        elements_out[element_num + 1].s1 = 5;
-                    }
-                }
-            }
-
-            // direction 6
-            if(element.s1 == 6)
-            {
-                write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num + 2].s0 += LIFETIME;
-                        elements_out[element_num + 2].s1 = 6;
-                    }
-                }
-            }
-
-            // direction 7
-            if(element.s1 == 6)
-            {
-                write_imageui(img_out, (int2)(pos.x - 1, pos.y - 0), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
-                        elements_out[element_num + 3].s0 += LIFETIME;
-                        elements_out[element_num + 3].s1 = 7;
-                    }
-                }
-            }
-
-            // direction 8
-            if(element.s1 == 8)
-            {
-                write_imageui(img_out, (int2)(pos.x + 1, pos.y - 1), pixel_white);
-
-                if(element_num >= 8)
-                {
-                    if(element_num <= ((image_size.x * image_size.y) - 8))
-                    {
+                        write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel_white);
                         elements_out[element_num + 4].s0 += LIFETIME;
-                        elements_out[element_num + 4].s1 = 8;
+                        elements_out[element_num + 4].s1 = 0;
                     }
                 }
             }
 
             // Write changes
-            //elements_out[element_num] = element;
+            elements_out[element_num] = element;
         }
     }
 }
@@ -644,11 +540,10 @@ void test_kern_new_map(image_representation &ir_click_map, image_pixel_represent
 
     // write buffers
     queue.enqueue_write_image(img_2d_in, img_2d_in.origin(), img_2d_in.size(), ir_click_map.const_data());
-    queue.enqueue_write_buffer(buffer_ipr_in, 0, ipr.size() * sizeof(compute::uchar4_), ipr.data());
+    queue.enqueue_write_buffer(buffer_ipr_in, 0, ipr.size() * sizeof(compute::uchar4_), ipr.const_data());
     queue.finish();
 
     // compute
-    // queue.enqueue_nd_range_kernel(kernel_cl_click_map, 2, origin, region, 0);
     queue.enqueue_nd_range_kernel(kernel_cl_click_map, 2, origin, region, 0);
     queue.finish();
 
@@ -814,11 +709,16 @@ int main(int argc, char *argv[])
 
     try
     {
-        test_kern_new_map(ir, ipr);
+        // test_kern_new_map(ir, ipr);
     }
-    catch(std::exception const& e)
+    catch(std::exception const &e)
     {
         spdlog::info("Error: {}", e.what());
+        exit(EXIT_FAILURE);
+    }
+    catch(...)
+    {
+        spdlog::info("Unexpected error");
         exit(EXIT_FAILURE);
     }
 
@@ -833,8 +733,12 @@ int main(int argc, char *argv[])
             for(std::size_t i = 0; i < ipr.size(); i++)
             {
                 if(ipr.data()[i] != compute::uchar4_ {0, 0, 0, 0})
-                    spdlog::info("pos: {} data: {} {}", i, ipr.data()[i].x, ipr.data()[i].y);
+                    spdlog::info("pos: {} data: (lifetime: {}) (direction: {})", i, ipr.data()[i].x, ipr.data()[i].y);
             }
+        }
+        catch(std::exception const &e)
+        {
+            spdlog::info("Error: {}", e.what());
         }
         catch(...)
         {
@@ -857,8 +761,14 @@ int main(int argc, char *argv[])
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-                    ipr.data()[event.button.y * ipr.width() + event.button.x] = compute::uchar4_ {50, 0, 0, 0};
+                    ipr.data()[event.button.y * ipr.width() + event.button.x] = compute::uchar4_ {5, 0, 0, 0};
                     ir.set_pixel(event.button.x, event.button.y, {255, 255, 255, 255});
+
+                    ipr.data()[(event.button.y - 1) * ipr.width() + event.button.x - 1] = compute::uchar4_ {5, 0, 0, 0};
+                    ir.set_pixel(event.button.x - 1, event.button.y - 1, {255, 255, 255, 255});
+
+                    ipr.data()[(event.button.y - 2) * ipr.width() + event.button.x - 2] = compute::uchar4_ {5, 0, 0, 0};
+                    ir.set_pixel(event.button.x - 2, event.button.y - 2, {255, 255, 255, 255});
                     break;
                 case SDL_QUIT:
                     exit = true;
