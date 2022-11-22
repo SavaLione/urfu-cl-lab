@@ -305,7 +305,18 @@ __kernel void new_test_kernel(
         // lifetime
         if(element.s0 != 0)
         {
+            // write pixel and area
             write_imageui(img_out, pos, pixel_white);
+            
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y + 0), pixel_white);
+            write_imageui(img_out, (int2)(pos.x + 0, pos.y + 1), pixel_white);
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel_white);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y + 0), pixel_white);
+            write_imageui(img_out, (int2)(pos.x + 0, pos.y - 1), pixel_white);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
+            write_imageui(img_out, (int2)(pos.x + 1, pos.y - 1), pixel_white);
+            write_imageui(img_out, (int2)(pos.x - 1, pos.y + 1), pixel_white);
+
             element.s0--;
 
             // direction 0
@@ -315,13 +326,15 @@ __kernel void new_test_kernel(
                 {
                     if(element_num <= ((image_size.x * image_size.y) - 8))
                     {
-                        write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
-                        elements_out[element_num - 4].s0 += LIFETIME;
-                        elements_out[element_num - 4].s1 = 0;
+                        // write_imageui(img_out, (int2)(pos.x - 1, pos.y - 1), pixel_white);
+                        // elements_out[element_num - 4].s0 += LIFETIME;
+                        // elements_out[element_num - 4].s1 = 0;
 
-                        write_imageui(img_out, (int2)(pos.x + 1, pos.y + 1), pixel_white);
-                        elements_out[element_num + 4].s0 += LIFETIME;
-                        elements_out[element_num + 4].s1 = 0;
+                        for(int i = 0; i < 8; i++)
+                        {
+                            elements_out[element_num - i].s0 += LIFETIME;
+                            elements_out[element_num - i].s1 = 0;
+                        }
                     }
                 }
             }
@@ -730,11 +743,6 @@ int main(int argc, char *argv[])
         try
         {
             test_kern_new_map(ir, ipr);
-            for(std::size_t i = 0; i < ipr.size(); i++)
-            {
-                if(ipr.data()[i] != compute::uchar4_ {0, 0, 0, 0})
-                    spdlog::info("pos: {} data: (lifetime: {}) (direction: {})", i, ipr.data()[i].x, ipr.data()[i].y);
-            }
         }
         catch(std::exception const &e)
         {
@@ -763,12 +771,6 @@ int main(int argc, char *argv[])
                     spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
                     ipr.data()[event.button.y * ipr.width() + event.button.x] = compute::uchar4_ {5, 0, 0, 0};
                     ir.set_pixel(event.button.x, event.button.y, {255, 255, 255, 255});
-
-                    ipr.data()[(event.button.y - 1) * ipr.width() + event.button.x - 1] = compute::uchar4_ {5, 0, 0, 0};
-                    ir.set_pixel(event.button.x - 1, event.button.y - 1, {255, 255, 255, 255});
-
-                    ipr.data()[(event.button.y - 2) * ipr.width() + event.button.x - 2] = compute::uchar4_ {5, 0, 0, 0};
-                    ir.set_pixel(event.button.x - 2, event.button.y - 2, {255, 255, 255, 255});
                     break;
                 case SDL_QUIT:
                     exit = true;
