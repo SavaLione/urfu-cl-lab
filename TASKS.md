@@ -29,14 +29,14 @@
 ## Second OpenCL lab
 Task: Build an application that models and visualizes the behavior of particles on flat.
 
-- [ ] Connection between OpenCL and OpenGL
-- [ ] Per pixel coloring
-    - [ ] Custom color
-    - [ ] The count of particles is equal to the count of pixels, but the count of pixels must be multiple of 1024
-- [ ] Interaction with application size
+- [x] Connection between OpenCL and OpenGL
+- [x] Per pixel coloring
+    - [x] Custom color
+    - [x] The count of particles is equal to the count of pixels, but the count of pixels must be multiple of 1024
+- [x] Interaction with application size
     - [ ] Interaction by computer mouse
     - [ ] Boom effect of colored particles
-    - [ ] Each particle must have coordinates of the image pixel that was used for that specified particle
+    - [x] Each particle must have coordinates of the image pixel that was used for that specified particle
 - [ ] Collision between particle and window borders
-- [ ] Pixel shader
+- [x] Pixel shader
 - [ ] Recreating the image
