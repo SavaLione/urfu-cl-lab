@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "1.1.0"
+    VERSION "2.0.0"
     LANGUAGES CXX
 )
 
@@ -24,7 +24,8 @@ else()
     message(STATUS "Unknown build type: " ${CMAKE_BUILD_TYPE})
 endif()
 
-message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+# DELETE THIS AFTER TESTS
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-everything")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -46,11 +47,20 @@ find_package(OpenGL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(Boost REQUIRED)
 
 # Sources
 set(NYX_CORE_SRC
+    src/core/buffer_representation.h
+    src/core/buffer_representation.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
+    src/core/image_representation.h
+    src/core/image_representation.cpp
+    src/core/image.h
+    src/core/image.cpp
+    src/core/new_gpu.h
+    src/core/new_gpu.cpp
     src/core/nyx.h
     src/core/nyx.cpp
     src/core/platform.h
@@ -129,6 +139,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
+target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 
 # Output
 function_output_directory(${PROJECT_NAME})

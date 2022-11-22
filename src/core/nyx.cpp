@@ -49,16 +49,12 @@
 #include "core/settings.h"
 #include "core/platform.h"
 
-#include <SDL_events.h>
-#include <SDL_keycode.h>
-#include <SDL_touch.h>
 #include <cstdlib>
 #include <getopt.h>
 #include <iostream>
 #include <signal.h>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
