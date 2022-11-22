@@ -55,6 +55,8 @@ set(NYX_CORE_SRC
     src/core/buffer_representation.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
+    src/core/graphics.h
+    src/core/graphics.cpp
     src/core/image_representation.h
     src/core/image_representation.cpp
     src/core/image.h
