@@ -30,52 +30,31 @@
  */
 /**
  * @file
- * @brief Graphics and drawing everything
+ * @brief Class for drawing 2D image via buffer and OpenGL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 26 Nov 2022
  */
-#ifndef CORE_GRAPHICS_H
-#define CORE_GRAPHICS_H
+#ifndef CORE_GL_IMAGE_H
+#define CORE_GL_IMAGE_H
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
+#include "core/sdl_wrapper.h"
 
 #include "core/image_representation.h"
 #include "core/buffer_representation.h"
-#include "core/new_gpu.h"
 
-#include <string>
 #include <array>
 
-class graphics
+class gl_image : sdl_wrapper
 {
 public:
-    graphics();
-    ~graphics();
+    gl_image();
+    ~gl_image();
     void run();
 
 protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
-
     image_representation ir;
 
 private:
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-
     /* OpenGL */
     GLuint _vao = 0;
     GLuint _vbo = 0;
@@ -84,4 +63,4 @@ private:
     std::array<GLuint, 1> textures;
 };
 
-#endif // CORE_GRAPHICS_H
+#endif // CORE_GL_IMAGE_H

@@ -37,6 +37,8 @@
  */
 #include "core/cl_mandelbrot.h"
 
+#include "core/new_gpu.h"
+
 /*
     Author of kernel: Willem Melching
     https://blog.willemmelching.nl/random/2020/04/12/mandelbrot/

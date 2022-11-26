@@ -38,9 +38,9 @@
 #ifndef CORE_CL_MANDELBROT_H
 #define CORE_CL_MANDELBROT_H
 
-#include "core/graphics.h"
+#include "core/gl_image.h"
 
-class cl_mandelbrot : public graphics
+class cl_mandelbrot : public gl_image
 {
 private:
     void init() override;

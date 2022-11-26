@@ -59,8 +59,8 @@ set(NYX_CORE_SRC
     src/core/cl_mandelbrot.cpp
     src/core/execution_time.h
     src/core/execution_time.cpp
-    src/core/graphics.h
-    src/core/graphics.cpp
+    src/core/gl_image.h
+    src/core/gl_image.cpp
     src/core/image_representation.h
     src/core/image_representation.cpp
     src/core/new_gpu.h

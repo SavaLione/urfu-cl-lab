@@ -82,10 +82,10 @@ sdl_wrapper::sdl_wrapper()
     SDL_GetWindowSize(window, &window_width, &window_height);
     spdlog::info("Window width: {} height: {}", window_width, window_height);
 
-    /* Some OpenGL settings */
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClearDepth(1.0f);
-    glEnable(GL_DEPTH_TEST);
+    // /* Some OpenGL settings */
+    // // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // // glClearDepth(1.0f);
+    // // glEnable(GL_DEPTH_TEST);
 }
 
 sdl_wrapper::~sdl_wrapper()

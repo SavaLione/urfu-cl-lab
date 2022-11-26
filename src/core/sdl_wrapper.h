@@ -52,7 +52,7 @@ class sdl_wrapper
 public:
     sdl_wrapper();
     ~sdl_wrapper();
-    void run();
+    virtual void run();
 
 protected:
     virtual void pool_event();

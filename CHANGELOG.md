@@ -1,5 +1,7 @@
 - Added OpenGL tasks
-- Added SDL2 wrapper
+- Added SDL2 wrapper (``core/sdl_wrapper.h``, ``core/sdl_wrapper.cpp``)
+- Removed graphics (SDL2 interaction) wrapper (``core/graphics.h``, ``core/graphics.cpp``)
+- Added class for easy drawing 2D image via buffer and OpenGL (``core/gl_image.h``, ``core/gl_image.cpp``)
 
 2.0.1 - 2022-11-22
 ------------------

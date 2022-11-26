@@ -30,14 +30,12 @@
  */
 /**
  * @file
- * @brief Graphics and drawing everything
+ * @brief Class for drawing 2D image via buffer and OpenGL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 26 Nov 2022
  */
-#include "core/graphics.h"
+#include "core/gl_image.h"
 
-#include <cstddef>
-#include <stdexcept>
 #include <spdlog/spdlog.h>
 
 const GLchar *vertex_shader = R"glsl(
@@ -60,57 +58,15 @@ const GLchar *fragment_shader = R"glsl(
     in vec3 Color;
     in vec2 Texcoord;
     out vec4 outColor;
-    uniform sampler2D texKitten;
+    uniform sampler2D tex_sampler;
     void main()
     {
-        outColor = texture(texKitten, Texcoord);
+        outColor = texture(tex_sampler, Texcoord);
     }
 )glsl";
 
-graphics::graphics()
+gl_image::gl_image()
 {
-    /* SDL 2.0 initialization */
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-    {
-        std::string _err = "Error initialization SDL2: ";
-        _err += SDL_GetError();
-        throw std::runtime_error(_err);
-    }
-
-    // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-    window = SDL_CreateWindow("nyx", 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-    if(!window)
-    {
-        std::string _err = "Error creating SDL2 window: ";
-        _err += SDL_GetError();
-        throw std::runtime_error(_err);
-    }
-
-    context = SDL_GL_CreateContext(window);
-    if(!context)
-    {
-        std::string _err = "Error creating SDL2 context: ";
-        _err += SDL_GetError();
-        throw std::runtime_error(_err);
-    }
-
-    // Enable glew experimental, this enables some more OpenGL extensions.
-    glewExperimental = GL_TRUE;
-    if(glewInit() != GLEW_OK)
-    {
-        throw std::runtime_error("Failed to initialize GLEW");
-    }
-
-    /* SDL variables */
-    SDL_GetWindowSize(window, &window_width, &window_height);
-    spdlog::info("Window width: {} height: {}", window_width, window_height);
-
     /* Some OpenGL settings */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
@@ -207,76 +163,24 @@ graphics::graphics()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
-    glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "tex_sampler"), 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // /* Main loop */
-    // while(!_exit)
-    // {
-    //     loop();
-    //     pool_event();
-
-    //     /* Update texture */
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
-
-    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //     /* Draw */
-    //     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    //     SDL_GL_SwapWindow(window);
-    // }
 }
 
-graphics::~graphics()
+gl_image::~gl_image()
 {
     /* OpenGL */
     glDeleteBuffers(1, &_ebo);
     glDeleteBuffers(1, &_vbo);
     glDeleteVertexArrays(1, &_vao);
     glDeleteTextures(1, textures.data());
-
-    /* SDL */
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 }
 
-void graphics::pool_event()
-{
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-            case SDL_KEYDOWN:
-                switch(event.key.keysym.sym)
-                {
-                    case SDLK_ESCAPE:
-                        _exit = true;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
-                break;
-            case SDL_QUIT:
-                _exit = true;
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void graphics::loop() {}
-
-void graphics::run()
+void gl_image::run()
 {
     /* Initialization */
     init();
@@ -298,5 +202,3 @@ void graphics::run()
         SDL_GL_SwapWindow(window);
     }
 }
-
-void graphics::init() {}

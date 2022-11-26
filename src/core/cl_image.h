@@ -37,9 +37,9 @@
 #ifndef CORE_CL_IMAGE_H
 #define CORE_CL_IMAGE_H
 
-#include "core/graphics.h"
+#include "core/gl_image.h"
 
-class cl_image : public graphics
+class cl_image : public gl_image
 {
 private:
     void loop() override;
