@@ -51,6 +51,7 @@
 #include "core/cl_image.h"
 #include "core/cl_mandelbrot.h"
 #include "core/sdl_wrapper.h"
+#include "core/rgb_triangle.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -277,8 +278,10 @@ int main(int argc, char *argv[])
             }
             case 4:
             {
-                sdl_wrapper sdlw;
-                sdlw.run();
+                // sdl_wrapper sdlw;
+                // sdlw.run();
+                rgb_triangle rgb;
+                rgb.run();
                 break;
             }
             default:

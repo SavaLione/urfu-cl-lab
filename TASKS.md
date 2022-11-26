@@ -44,7 +44,7 @@ Task: Build an application that models and visualizes the behavior of particles 
 
 ## OpenGL
 ### First OpenGL lab
-- [ ] OpenGL RGB triangle
+- [x] OpenGL RGB triangle
 
 ### Second OpenGL lab
 - [ ] OpenGL triangle via Vertex Array Object (VAO)
