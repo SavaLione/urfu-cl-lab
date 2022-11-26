@@ -1,3 +1,6 @@
+- Added OpenGL tasks
+- Added SDL2 wrapper
+
 2.0.1 - 2022-11-22
 ------------------
 

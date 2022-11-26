@@ -69,6 +69,8 @@ set(NYX_CORE_SRC
     src/core/nyx.cpp
     src/core/platform.h
     src/core/platform.cpp
+    src/core/sdl_wrapper.h
+    src/core/sdl_wrapper.cpp
     src/core/settings.h
     src/core/settings.cpp
 )
