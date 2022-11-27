@@ -52,6 +52,7 @@
 #include "core/cl_mandelbrot.h"
 #include "core/sdl_wrapper.h"
 #include "core/rgb_triangle.h"
+#include "core/vao_triangle.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -209,10 +210,11 @@ int main(int argc, char *argv[])
                     case 2:
                     case 3:
                     case 4:
+                    case 5:
                         settings_instance.set_laboratory_work(l);
                         break;
                     default:
-                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3 or 4");
+                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4 or 5");
                         print_help();
                         break;
                 }
@@ -278,10 +280,14 @@ int main(int argc, char *argv[])
             }
             case 4:
             {
-                // sdl_wrapper sdlw;
-                // sdlw.run();
                 rgb_triangle rgb;
                 rgb.run();
+                break;
+            }
+            case 5:
+            {
+                vao_triangle vt;
+                vt.run();
                 break;
             }
             default:

@@ -47,16 +47,16 @@ Task: Build an application that models and visualizes the behavior of particles 
 - [x] OpenGL RGB triangle
 
 ### Second OpenGL lab
-- [ ] OpenGL triangle via Vertex Array Object (VAO)
-- [ ] Shaders
-    - [ ] Fragment
-    - [ ] Vertex
+- [x] OpenGL triangle via Vertex Array Object (VAO)
+- [x] Shaders
+    - [x] Fragment
+    - [x] Vertex
 
 ### Third OpenGL lab
 - [ ] OpenGL transformations
 - [ ] Basic transformations
-    - [ ]  Rotate
-    - [ ]  Move
+    - [ ] Rotate
+    - [ ] Move
     - [ ] Scale
 - [ ] Keyboard support
 

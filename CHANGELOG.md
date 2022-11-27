@@ -4,6 +4,7 @@
 - Added class for easy drawing 2D image via buffer and OpenGL (``core/gl_image.h``, ``core/gl_image.cpp``)
 - Added RGB OpenGL triangle (``core/rgb_triangle.h``, ``core/rgb_triangle.cpp``)
 - Added keyboard interaction for RGB triangle
+- Added OpenGL VAO triangle (``core/vao_triangle.h``, ``core/vao_triangle.cpp``)
 
 2.0.1 - 2022-11-22
 ------------------

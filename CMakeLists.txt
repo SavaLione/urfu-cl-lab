@@ -75,6 +75,8 @@ set(NYX_CORE_SRC
     src/core/sdl_wrapper.cpp
     src/core/settings.h
     src/core/settings.cpp
+    src/core/vao_triangle.h
+    src/core/vao_triangle.cpp
 )
 
 set(NYX_COMPUTE_KERNELS_SRC
