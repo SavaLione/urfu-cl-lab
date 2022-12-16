@@ -38,6 +38,12 @@
 #define GUI_PROGRAM_H
 
 #include "gui/shader.h"
+#include <type_traits>
+
+namespace _program
+{
+    GLuint _create(std::string const &vertex, std::string const &fragment);
+} // namespace _program
 
 class program
 {
@@ -45,10 +51,7 @@ public:
     program() = default;
 
     /* Create program */
-    program(shader const &vertex, shader const &fragment);
-
-    /* Create program */
-    program(std::string const &vertex, std::string const &fragment);
+    program(std::string const &vertex, std::string const &fragment) : _vertex_source(vertex), _fragment_source(fragment), _id(_program::_create(vertex, fragment)) {}
 
     ~program();
 
@@ -58,9 +61,32 @@ public:
         return _id;
     }
 
+    program(program const &p) : _vertex_source(p._vertex_source), _fragment_source(p._fragment_source), _id(_program::_create(p._vertex_source, p._fragment_source)) {}
+
+    program &operator=(program const &p)
+    {
+        _vertex_source   = p._vertex_source;
+        _fragment_source = p._fragment_source;
+        _id              = _program::_create(p._vertex_source, p._fragment_source);
+        return *this;
+    }
+
+    void swap(program &p)
+    {
+        std::swap(this->_vertex_source, p._vertex_source);
+        std::swap(this->_fragment_source, p._fragment_source);
+        std::swap(this->_id, p._id);
+    }
+
 private:
     /* Program id */
     GLuint _id = 0;
+
+    /* Vertex shader source code */
+    std::string _vertex_source;
+
+    /* Fragment shader source code */
+    std::string _fragment_source;
 };
 
 #endif // GUI_PROGRAM_H

@@ -41,3 +41,31 @@ shader::~shader()
     if(_id)
         glDeleteShader(_id);
 }
+
+GLuint _shader::_create(shader_type const &type, std::string const &source)
+{
+    GLuint ret_id   = glCreateShader(type);
+    char const *src = source.c_str();
+
+    glShaderSource(ret_id, 1, &src, nullptr);
+    glCompileShader(ret_id);
+
+    int result;
+
+    glGetShaderiv(ret_id, GL_COMPILE_STATUS, &result);
+
+    if(result == GL_FALSE)
+    {
+        int length;
+        glGetShaderiv(ret_id, GL_INFO_LOG_LENGTH, &length);
+        std::vector<char> message(length);
+        glGetShaderInfoLog(ret_id, length, &length, message.data());
+        std::string _err = "Shader compilation error: ";
+        for(size_t i = 0; i < message.size(); i++)
+            _err += message[i];
+        glDeleteShader(ret_id);
+        throw std::runtime_error(_err);
+    }
+
+    return ret_id;
+}

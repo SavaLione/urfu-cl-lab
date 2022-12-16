@@ -47,6 +47,7 @@
 
 #include <cstddef>
 #include <string>
+#include <type_traits>
 
 enum shader_type
 {
@@ -54,35 +55,16 @@ enum shader_type
     vertex   = 0x8B31
 };
 
+namespace _shader
+{
+    /* Create program */
+    GLuint _create(shader_type const &type, std::string const &source);
+} // namespace _shader
+
 class shader
 {
 public:
-    /* Create and compile shader */
-    shader(shader_type const &type, std::string const &source)
-    {
-        _id             = glCreateShader(type);
-        char const *src = source.c_str();
-
-        glShaderSource(_id, 1, &src, nullptr);
-        glCompileShader(_id);
-
-        int result;
-
-        glGetShaderiv(_id, GL_COMPILE_STATUS, &result);
-
-        if(result == GL_FALSE)
-        {
-            int length;
-            glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &length);
-            std::vector<char> message(length);
-            glGetShaderInfoLog(_id, length, &length, message.data());
-            std::string _err = "Shader compilation error: ";
-            for(size_t i = 0; i < message.size(); i++)
-                _err += message[i];
-            glDeleteShader(_id);
-            throw std::runtime_error(_err);
-        }
-    }
+    shader(shader_type const &type, std::string const &source) : _type(type), _source(source), _id(_shader::_create(type, source)) {}
 
     ~shader();
 
@@ -92,9 +74,32 @@ public:
         return _id;
     }
 
+    shader(shader const &s) : _type(s._type), _source(s._source), _id(_shader::_create(s._type, s._source)) {}
+
+    shader &operator=(shader const &s)
+    {
+        _type   = s._type;
+        _source = s._source;
+        _id     = _shader::_create(_type, _source);
+        return *this;
+    }
+
+    void swap(shader &s)
+    {
+        std::swap(this->_type, s._type);
+        std::swap(this->_source, s._source);
+        std::swap(this->_id, s._id);
+    }
+
 private:
     /* Shader id */
     GLuint _id = 0;
+
+    /* Shader type */
+    shader_type _type;
+
+    /* Shader source code */
+    std::string _source;
 };
 
 #endif // GUI_SHADER_H

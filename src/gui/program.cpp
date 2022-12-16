@@ -42,24 +42,7 @@ program::~program()
         glDeleteProgram(_id);
 }
 
-program::program(shader const &vertex, shader const &fragment)
-{
-    GLuint program = glCreateProgram();
-    // GLuint vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
-    // GLuint fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
-
-    glAttachShader(program, vertex.id());
-    glAttachShader(program, fragment.id());
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    // glDeleteShader(vs);
-    // glDeleteShader(fs);
-
-    _id = program;
-}
-
-program::program(std::string const &vertex, std::string const &fragment)
+GLuint _program::_create(std::string const &vertex, std::string const &fragment)
 {
     GLuint program = glCreateProgram();
     // GLuint vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
@@ -75,5 +58,5 @@ program::program(std::string const &vertex, std::string const &fragment)
     // glDeleteShader(vs);
     // glDeleteShader(fs);
 
-    _id = program;
+    return program;
 }
