@@ -30,45 +30,26 @@
  */
 /**
  * @file
- * @brief OpenCL kernel loader
+ * @brief RGB OpenGL triangle
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Sep 2022
+ * @date 26 Nov 2022
  */
-#ifndef COMPUTE_KERNEL_LOADER_H
-#define COMPUTE_KERNEL_LOADER_H
+#ifndef GUI_RGB_TRIANGLE_H
+#define GUI_RGB_TRIANGLE_H
 
-#include <string>
-#include <vector>
+#include "gui/sdl_wrapper.h"
 
-class kernel_loader
+#include <cstdint>
+
+class rgb_triangle : public sdl_wrapper
 {
 public:
-    static kernel_loader &instance()
-    {
-        static kernel_loader kl;
-        return kl;
-    }
-
-    void load();
-    void load(std::string const &name);
-
-    std::vector<std::string> const &get() const
-    {
-        return _string_kernels;
-    }
-
-    void print();
-
-    void reset();
-    void reload();
+    rgb_triangle();
 
 private:
-    kernel_loader();
-    kernel_loader(kernel_loader const &)            = delete;
-    kernel_loader &operator=(kernel_loader const &) = delete;
-
-    std::vector<std::string> _loaded_kernels;
-    std::vector<std::string> _string_kernels;
+    void loop();
+    void pool_event();
+    std::int8_t rotate = 0;
 };
 
-#endif // COMPUTE_KERNEL_LOADER_H
+#endif // GUI_RGB_TRIANGLE_H

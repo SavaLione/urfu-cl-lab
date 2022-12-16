@@ -30,44 +30,20 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief Draw OpenCL image
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 22 Nov 2022
  */
-#ifndef CORE_SDL_WRAPPER_H
-#define CORE_SDL_WRAPPER_H
+#ifndef GUI_CL_IMAGE_H
+#define GUI_CL_IMAGE_H
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
+#include "gui/gl_image.h"
 
-#include <string>
-
-class sdl_wrapper
+class cl_image : public gl_image
 {
-public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
-
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
-
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
+private:
+    void loop() override;
+    void init() override;
 };
 
-#endif // CORE_SDL_WRAPPER_H
+#endif // CORE_CL_IMAGE_H

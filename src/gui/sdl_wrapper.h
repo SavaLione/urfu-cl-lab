@@ -30,20 +30,44 @@
  */
 /**
  * @file
- * @brief Draw OpenCL image (the Mandelbrot set)
+ * @brief SDL2 wrapper
  * @author Saveliy Pototskiy (SavaLione)
- * @author Willem Melching (Author of kernel of the Mandelbrot set)
- * @date 22 Nov 2022
+ * @date 26 Nov 2022
  */
-#ifndef CORE_CL_MANDELBROT_H
-#define CORE_CL_MANDELBROT_H
+#ifndef GUI_SDL_WRAPPER_H
+#define GUI_SDL_WRAPPER_H
 
-#include "core/gl_image.h"
+// clang-format off
+#include <CL/cl_gl.h>
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
+// clang-format on
 
-class cl_mandelbrot : public gl_image
+#include <string>
+
+class sdl_wrapper
 {
-private:
-    void init() override;
+public:
+    sdl_wrapper();
+    ~sdl_wrapper();
+    virtual void run();
+
+protected:
+    virtual void pool_event();
+    virtual void loop();
+    virtual void init();
+
+    /* SDL */
+    SDL_Window *window;
+    SDL_GLContext context;
+    SDL_Event event;
+
+    int window_width  = 0;
+    int window_height = 0;
+    bool _exit        = false;
+    std::string _name = "nyx";
 };
 
-#endif // CORE_CL_MANDELBROT_H
+#endif // GUI_SDL_WRAPPER_H

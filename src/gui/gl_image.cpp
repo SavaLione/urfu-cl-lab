@@ -34,7 +34,7 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Nov 2022
  */
-#include "core/gl_image.h"
+#include "gui/gl_image.h"
 
 #include "io/log/logger.h"
 

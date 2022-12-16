@@ -30,8 +30,20 @@
  */
 /**
  * @file
- * @brief Buffer representation for OpenCL
+ * @brief Draw OpenCL image (the Mandelbrot set)
  * @author Saveliy Pototskiy (SavaLione)
+ * @author Willem Melching (Author of kernel of the Mandelbrot set)
  * @date 22 Nov 2022
  */
-#include "core/buffer_representation.h"
+#ifndef GUI_CL_MANDELBROT_H
+#define GUI_CL_MANDELBROT_H
+
+#include "gui/gl_image.h"
+
+class cl_mandelbrot : public gl_image
+{
+private:
+    void init() override;
+};
+
+#endif // GUI_CL_MANDELBROT_H

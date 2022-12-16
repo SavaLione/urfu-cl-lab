@@ -30,21 +30,52 @@
  */
 /**
  * @file
- * @brief New gpu functions and etc.
+ * @brief Image representation
  * @author Saveliy Pototskiy (SavaLione)
  * @date 22 Nov 2022
  */
-#ifndef CORE_NEW_GPU_H
-#define CORE_NEW_GPU_H
+#include "gui/image_representation.h"
 
-#include <boost/compute/types.hpp>
+std::size_t const &image_representation::width() const
+{
+    return _width;
+}
 
-#include "core/image_representation.h"
-#include "core/buffer_representation.h"
+std::size_t const &image_representation::height() const
+{
+    return _height;
+}
 
-void draw_image_cl(image_representation &img);
-void draw_image_cl(image_representation &img, std::string const &kern);
-void draw_write_only_cl(image_representation &img, std::string const &kern);
-void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff);
+std::size_t const &image_representation::depth() const
+{
+    return _depth;
+}
 
-#endif // CORE_NEW_GPU_H
+std::size_t image_representation::size()
+{
+    return _image.size();
+}
+
+uint8_t *image_representation::data()
+{
+    return _image.data();
+}
+
+uint8_t const *image_representation::const_data() const
+{
+    return _image.data();
+}
+
+void image_representation::fill_zeros()
+{
+    for(std::size_t i = 0; i < _image.size(); i++)
+        _image[i] = 0;
+}
+
+void image_representation::set_pixel(std::size_t x, std::size_t y, vec4 color)
+{
+    _image[(y * _width + x) * 4 + 0] = color.r;
+    _image[(y * _width + x) * 4 + 1] = color.g;
+    _image[(y * _width + x) * 4 + 2] = color.b;
+    _image[(y * _width + x) * 4 + 3] = color.a;
+}

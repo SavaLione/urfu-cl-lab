@@ -34,7 +34,7 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 22 Nov 2022
  */
-#include "core/new_gpu.h"
+#include "compute/new_gpu.h"
 
 // clang-format off
 #define CL_HPP_ENABLE_EXCEPTIONS

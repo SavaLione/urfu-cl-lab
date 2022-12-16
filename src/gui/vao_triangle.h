@@ -30,20 +30,28 @@
  */
 /**
  * @file
- * @brief Draw OpenCL image
+ * @brief OpenGL vao triangle
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 27 Nov 2022
  */
-#ifndef CORE_CL_IMAGE_H
-#define CORE_CL_IMAGE_H
+#ifndef GUI_VAO_TRIANGLE_H
+#define GUI_VAO_TRIANGLE_H
 
-#include "core/gl_image.h"
+#include "gui/sdl_wrapper.h"
 
-class cl_image : public gl_image
+class vao_triangle : public sdl_wrapper
 {
+public:
+    vao_triangle();
+    ~vao_triangle();
+
 private:
-    void loop() override;
-    void init() override;
+    void loop();
+
+    /* OpenGL */
+    GLuint vertex_array_id = 0;
+    GLuint program_id      = 0;
+    GLuint vertex_buffer   = 0;
 };
 
-#endif // CORE_CL_IMAGE_H
+#endif // CORE_VAO_TRIANGLE_H

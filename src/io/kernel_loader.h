@@ -30,47 +30,45 @@
  */
 /**
  * @file
- * @brief Draw OpenCL image
+ * @brief OpenCL kernel loader
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 26 Sep 2022
  */
-#include "core/cl_image.h"
+#ifndef IO_KERNEL_LOADER_H
+#define IO_KERNEL_LOADER_H
 
-#include "core/new_gpu.h"
-#include "io/log/logger.h"
+#include <string>
+#include <vector>
 
-std::string kernel_source = R"opencl_kernel(
-__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
-
-__kernel void draw_image_cl(
-    __read_only image2d_t img_in,
-    __write_only image2d_t img_out)
+class kernel_loader
 {
-    const int x = get_global_id(0);
-    const int y = get_global_id(1);
-    int2 pos = (int2)(x, y);
+public:
+    static kernel_loader &instance()
+    {
+        static kernel_loader kl;
+        return kl;
+    }
 
-    uint4 pixel = read_imageui(img_in, sampler, pos);
+    void load();
+    void load(std::string const &name);
 
-    if(pixel.x >= 255)
-        pixel.x = 0;
-    if(pixel.y >= 255)
-        pixel.y = 0;
-    if(pixel.z >= 255)
-        pixel.z = 0;
+    std::vector<std::string> const &get() const
+    {
+        return _string_kernels;
+    }
 
-    pixel.x += 5;
-    pixel.y += 10;
-    pixel.z += 15;
-    pixel.w = 255;
+    void print();
 
-    write_imageui(img_out, pos, pixel);
-}
-)opencl_kernel";
+    void reset();
+    void reload();
 
-void cl_image::loop()
-{
-    draw_image_cl(ir, kernel_source);
-}
+private:
+    kernel_loader();
+    kernel_loader(kernel_loader const &)            = delete;
+    kernel_loader &operator=(kernel_loader const &) = delete;
 
-void cl_image::init() {}
+    std::vector<std::string> _loaded_kernels;
+    std::vector<std::string> _string_kernels;
+};
+
+#endif // IO_KERNEL_LOADER_H

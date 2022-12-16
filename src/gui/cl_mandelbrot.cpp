@@ -35,9 +35,9 @@
  * @author Willem Melching (Author of kernel of the Mandelbrot set)
  * @date 22 Nov 2022
  */
-#include "core/cl_mandelbrot.h"
+#include "gui/cl_mandelbrot.h"
 
-#include "core/new_gpu.h"
+#include "compute/new_gpu.h"
 
 /*
     Author of kernel: Willem Melching

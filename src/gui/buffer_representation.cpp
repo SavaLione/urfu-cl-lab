@@ -30,28 +30,8 @@
  */
 /**
  * @file
- * @brief OpenGL vao triangle
+ * @brief Buffer representation for OpenCL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 27 Nov 2022
+ * @date 22 Nov 2022
  */
-#ifndef CORE_VAO_TRIANGLE_H
-#define CORE_VAO_TRIANGLE_H
-
-#include "core/sdl_wrapper.h"
-
-class vao_triangle : public sdl_wrapper
-{
-public:
-    vao_triangle();
-    ~vao_triangle();
-
-private:
-    void loop();
-
-    /* OpenGL */
-    GLuint vertex_array_id = 0;
-    GLuint program_id      = 0;
-    GLuint vertex_buffer   = 0;
-};
-
-#endif // CORE_VAO_TRIANGLE_H
+#include "gui/buffer_representation.h"

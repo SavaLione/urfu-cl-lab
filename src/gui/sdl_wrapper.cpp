@@ -34,7 +34,7 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Nov 2022
  */
-#include "core/sdl_wrapper.h"
+#include "gui/sdl_wrapper.h"
 
 #include "io/log/logger.h"
 

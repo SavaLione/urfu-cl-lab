@@ -49,11 +49,11 @@
 #include "core/settings.h"
 #include "platform/platform.h"
 #include "io/log/logger.h"
-#include "core/cl_image.h"
-#include "core/cl_mandelbrot.h"
-#include "core/sdl_wrapper.h"
-#include "core/rgb_triangle.h"
-#include "core/vao_triangle.h"
+#include "gui/cl_image.h"
+#include "gui/cl_mandelbrot.h"
+#include "gui/sdl_wrapper.h"
+#include "gui/rgb_triangle.h"
+#include "gui/vao_triangle.h"
 
 #include <cstdlib>
 #include <getopt.h>

@@ -34,13 +34,14 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Sep 2022
  */
-#include "compute/kernel_loader.h"
+#include "io/kernel_loader.h"
 
 #include "io/log/logger.h"
 
 #include <SDL2/SDL.h>
 #include <cstddef>
 #include <exception>
+
 kernel_loader::kernel_loader() {}
 
 void kernel_loader::load(std::string const &name)

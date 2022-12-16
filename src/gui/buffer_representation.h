@@ -30,60 +30,77 @@
  */
 /**
  * @file
- * @brief Image representation
+ * @brief Buffer representation for OpenCL
  * @author Saveliy Pototskiy (SavaLione)
  * @date 22 Nov 2022
  */
-#ifndef CORE_IMAGE_REPRESENTATION_H
-#define CORE_IMAGE_REPRESENTATION_H
+#ifndef GUI_BUFFER_REPRESENTATION_H
+#define GUI_BUFFER_REPRESENTATION_H
 
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
 
-class image_representation
+template<typename cl_type>
+class buffer_representation
 {
 public:
-    struct vec3
+    buffer_representation(std::size_t const &width, std::size_t const &height) : _width(width), _height(height)
     {
-        std::int8_t r;
-        std::int8_t g;
-        std::int8_t b;
-    };
-
-    struct vec4
-    {
-        std::int8_t r;
-        std::int8_t g;
-        std::int8_t b;
-        std::int8_t a;
-    };
-
-    image_representation() : _width(0), _height(0), _depth(0)
-    {
-        _image.clear();
-    }
-
-    image_representation(std::size_t const &width, std::size_t const &height, std::size_t const &depth) : _width(width), _height(height), _depth(depth)
-    {
-        std::size_t size = width * height * depth;
-        _image.resize(size, 0);
+        std::size_t size = width * height;
+        _buffer.resize(size);
     }
 
     std::size_t const &width() const;
     std::size_t const &height() const;
-    std::size_t const &depth() const;
     std::size_t size();
-    uint8_t *data();
-    uint8_t const *const_data() const;
-    void fill_zeros();
-    void set_pixel(std::size_t x, std::size_t y, vec4 color);
+    cl_type *data();
+    cl_type const *const_data() const;
+    void const fill(cl_type const &data) const;
 
 private:
     std::size_t _width;
     std::size_t _height;
-    std::size_t _depth;
-    std::vector<uint8_t> _image;
+    std::vector<cl_type> _buffer;
 };
 
-#endif // CORE_IMAGE_REPRESENTATION_H
+///////////////////////////////////////////////////////////////////////////////
+
+template<typename cl_type>
+std::size_t const &buffer_representation<cl_type>::width() const
+{
+    return _width;
+}
+
+template<typename cl_type>
+std::size_t const &buffer_representation<cl_type>::height() const
+{
+    return _height;
+}
+
+template<typename cl_type>
+std::size_t buffer_representation<cl_type>::size()
+{
+    return _buffer.size();
+}
+
+template<typename cl_type>
+cl_type *buffer_representation<cl_type>::data()
+{
+    return _buffer.data();
+}
+
+template<typename cl_type>
+cl_type const *buffer_representation<cl_type>::const_data() const
+{
+    return _buffer.data();
+}
+
+template<typename cl_type>
+void const buffer_representation<cl_type>::fill(cl_type const &data) const
+{
+    for(std::size_t i = 0; i < _buffer; i++)
+        _buffer[i] = data;
+}
+
+#endif // GUI_BUFFER_REPRESENTATION_H

@@ -34,8 +34,9 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Nov 2022
  */
-#include "core/rgb_triangle.h"
-#include "SDL2/SDL_keycode.h"
+#include "gui/rgb_triangle.h"
+
+#include <SDL2/SDL_keycode.h>
 #include <cmath>
 
 #include "io/log/logger.h"

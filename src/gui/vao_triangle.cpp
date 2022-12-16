@@ -34,7 +34,7 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 27 Nov 2022
  */
-#include "core/vao_triangle.h"
+#include "gui/vao_triangle.h"
 
 #include <cstddef>
 #include <string>

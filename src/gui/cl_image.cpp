@@ -30,26 +30,47 @@
  */
 /**
  * @file
- * @brief RGB OpenGL triangle
+ * @brief Draw OpenCL image
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 22 Nov 2022
  */
-#ifndef CORE_RGB_TRIANGLE_H
-#define CORE_RGB_TRIANGLE_H
+#include "gui/cl_image.h"
 
-#include "core/sdl_wrapper.h"
+#include "compute/new_gpu.h"
+#include "io/log/logger.h"
 
-#include <cstdint>
+std::string kernel_source = R"opencl_kernel(
+__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
-class rgb_triangle : public sdl_wrapper
+__kernel void draw_image_cl(
+    __read_only image2d_t img_in,
+    __write_only image2d_t img_out)
 {
-public:
-    rgb_triangle();
+    const int x = get_global_id(0);
+    const int y = get_global_id(1);
+    int2 pos = (int2)(x, y);
 
-private:
-    void loop();
-    void pool_event();
-    std::int8_t rotate = 0;
-};
+    uint4 pixel = read_imageui(img_in, sampler, pos);
 
-#endif // CORE_RGB_TRIANGLE_H
+    if(pixel.x >= 255)
+        pixel.x = 0;
+    if(pixel.y >= 255)
+        pixel.y = 0;
+    if(pixel.z >= 255)
+        pixel.z = 0;
+
+    pixel.x += 5;
+    pixel.y += 10;
+    pixel.z += 15;
+    pixel.w = 255;
+
+    write_imageui(img_out, pos, pixel);
+}
+)opencl_kernel";
+
+void cl_image::loop()
+{
+    draw_image_cl(ir, kernel_source);
+}
+
+void cl_image::init() {}

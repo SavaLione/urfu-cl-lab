@@ -30,77 +30,37 @@
  */
 /**
  * @file
- * @brief Buffer representation for OpenCL
+ * @brief Class for drawing 2D image via buffer and OpenGL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 26 Nov 2022
  */
-#ifndef CORE_BUFFER_REPRESENTATION_H
-#define CORE_BUFFER_REPRESENTATION_H
+#ifndef GUI_GL_IMAGE_H
+#define GUI_GL_IMAGE_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
+#include "gui/sdl_wrapper.h"
 
-template<typename cl_type>
-class buffer_representation
+#include "gui/image_representation.h"
+#include "gui/buffer_representation.h"
+
+#include <array>
+
+class gl_image : sdl_wrapper
 {
 public:
-    buffer_representation(std::size_t const &width, std::size_t const &height) : _width(width), _height(height)
-    {
-        std::size_t size = width * height;
-        _buffer.resize(size);
-    }
+    gl_image();
+    ~gl_image();
+    void run();
 
-    std::size_t const &width() const;
-    std::size_t const &height() const;
-    std::size_t size();
-    cl_type *data();
-    cl_type const *const_data() const;
-    void const fill(cl_type const &data) const;
+protected:
+    image_representation ir;
 
 private:
-    std::size_t _width;
-    std::size_t _height;
-    std::vector<cl_type> _buffer;
+    /* OpenGL */
+    GLuint _vao = 0;
+    GLuint _vbo = 0;
+    GLuint _ebo = 0;
+
+    std::array<GLuint, 1> textures;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-template<typename cl_type>
-std::size_t const &buffer_representation<cl_type>::width() const
-{
-    return _width;
-}
-
-template<typename cl_type>
-std::size_t const &buffer_representation<cl_type>::height() const
-{
-    return _height;
-}
-
-template<typename cl_type>
-std::size_t buffer_representation<cl_type>::size()
-{
-    return _buffer.size();
-}
-
-template<typename cl_type>
-cl_type *buffer_representation<cl_type>::data()
-{
-    return _buffer.data();
-}
-
-template<typename cl_type>
-cl_type const *buffer_representation<cl_type>::const_data() const
-{
-    return _buffer.data();
-}
-
-template<typename cl_type>
-void const buffer_representation<cl_type>::fill(cl_type const &data) const
-{
-    for(std::size_t i = 0; i < _buffer; i++)
-        _buffer[i] = data;
-}
-
-#endif // CORE_BUFFER_REPRESENTATION_H
+#endif // GUI_GL_IMAGE_H

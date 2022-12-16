@@ -49,9 +49,9 @@
 #endif
 // clang-format on
 
-#include "compute/kernel_loader.h"
 #include "core/execution_time.h"
 #include "io/log/logger.h"
+#include "io/kernel_loader.h"
 
 #include <CL/opencl.hpp>
 #include <exception>
