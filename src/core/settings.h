@@ -73,8 +73,8 @@ private:
     settings &operator=(settings const &) = delete;
 
     /* Variables */
-    bool gpu                    = true;
-    bool cpu                    = true;
+    bool gpu                    = false;
+    bool cpu                    = false;
     std::size_t vector_size     = 102400000;
     std::size_t iteration_count = 100;
     std::size_t laboratory_work = 1;
