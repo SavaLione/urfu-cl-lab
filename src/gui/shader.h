@@ -45,6 +45,7 @@
 #include <GL/gl.h>
 // clang-format on
 
+#include <cstddef>
 #include <string>
 
 enum shader_type
@@ -73,10 +74,11 @@ public:
         {
             int length;
             glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &length);
-            char *message = (char *)malloc(length);
-            glGetShaderInfoLog(_id, length, &length, message);
+            std::vector<char> message(length);
+            glGetShaderInfoLog(_id, length, &length, message.data());
             std::string _err = "Shader compilation error: ";
-            _err += message;
+            for(size_t i = 0; i < message.size(); i++)
+                _err += message[i];
             glDeleteShader(_id);
             throw std::runtime_error(_err);
         }
