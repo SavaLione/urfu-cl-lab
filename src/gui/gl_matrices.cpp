@@ -37,39 +37,46 @@
 #include "gui/gl_matrices.h"
 
 #include <cstddef>
+#include <iterator>
 #include <string>
+#include <type_traits>
 
+#include "SDL_keycode.h"
 #include "gui/program.h"
 #include "io/log/logger.h"
 
 gl_matrices::gl_matrices()
 {
     /* Shaders */
-    std::string fragment_shader = R"shader(
-#version 330 core
+    fragment_shader = R"shader(
+        #version 330 core
 
-// Ouput data
-out vec3 color;
+        // Ouput data
+        out vec3 color;
 
-void main()
-{
-	// Output color = red 
-	color = vec3(1,0,0);
-}
-)shader";
+        void main()
+        {
+	        // Output color = red 
+	        color = vec3(1,0,0);
+        }
+    )shader";
 
-    std::string vertex_shader = R"shader(
-#version 330 core
+    vertex_shader = R"shader(
+        #version 330 core
 
-// Input vertex data, different for all executions of this shader.
-layout(location = 0) in vec3 vertexPosition_modelspace;
+        // Input vertex data, different for all executions of this shader.
+        layout(location = 0) in vec3 vertexPosition_modelspace;
 
-void main()
-{
-    gl_Position.xyz = vertexPosition_modelspace;
-    gl_Position.w = 1.0;
-}
-)shader";
+        // Values that stay constant for the whole mesh.
+        uniform mat4 MVP;
+
+        void main()
+        {
+        	// Output position of the vertex, in clip space : MVP * position
+	        gl_Position =  MVP * vec4(vertexPosition_modelspace, 1);
+
+        }
+    )shader";
 
     /* OpenGL */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -93,6 +100,24 @@ void main()
         0.0f,
     };
 
+    /* GLM */
+    matrix_id = glGetUniformLocation(program_id.id(), "MVP");
+
+    // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+    projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+
+    // Camera matrix
+    view = glm::lookAt(
+        glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+
+    // Model matrix : an identity matrix (model will be at the origin)
+    model = glm::mat4(1.0f);
+    // Our ModelViewProjection : multiplication of our 3 matrices
+    mvp = projection * view * model; // Remember, matrix multiplication is the other way around
+
     // Vertex buffer
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -115,6 +140,10 @@ void gl_matrices::loop()
     // Use our shader
     glUseProgram(program_id.id());
 
+    // Send our transformation to the currently bound shader,
+    // in the "MVP" uniform
+    glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
+
     // First attribute buffer : vertices
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -133,4 +162,36 @@ void gl_matrices::loop()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
+}
+
+void gl_matrices::pool_event()
+{
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_ESCAPE:
+                        _exit = true;
+                        break;
+                    case SDLK_f:
+                    
+                        spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
+                break;
+            case SDL_QUIT:
+                _exit = true;
+                break;
+            default:
+                break;
+        }
+    }
 }

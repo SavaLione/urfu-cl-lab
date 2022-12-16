@@ -44,7 +44,7 @@
 vao_triangle::vao_triangle()
 {
     /* Shaders */
-    std::string fragment_shader = R"shader(
+    fragment_shader = R"shader(
         #version 330 core
 
         // Ouput data
@@ -57,7 +57,7 @@ vao_triangle::vao_triangle()
         }
     )shader";
 
-    std::string vertex_shader = R"shader(
+    vertex_shader = R"shader(
         #version 330 core
 
         // Input vertex data, different for all executions of this shader.

@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.5.0"
+    VERSION "2.5.1"
     DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
     HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
@@ -48,6 +48,7 @@ find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Boost REQUIRED)
 find_package(fmt)
+find_package(glm REQUIRED)
 
 if(fmt_FOUND)
     set(NYX_EXTERNAL_FMT ON)
@@ -162,6 +163,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 if(fmt_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 
 # Output
 function_output_directory(${PROJECT_NAME})

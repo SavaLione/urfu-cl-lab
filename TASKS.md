@@ -53,7 +53,7 @@ Task: Build an application that models and visualizes the behavior of particles 
     - [x] Vertex
 
 ### Third OpenGL lab
-- [ ] OpenGL transformations
+- [x] OpenGL transformations
 - [ ] Basic transformations
     - [ ] Rotate
     - [ ] Move

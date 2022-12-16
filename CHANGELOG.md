@@ -35,6 +35,7 @@
 - Fixed potential memory leak in ``src/gui/shader`` (``char *message = (char *)malloc(length);``)
 - Fixed OpenGL shader representation (``src/gui/shader.h``, ``src/gui/shader.cpp``)
 - Fixed OpenGL program representation (``src/gui/program.h``, ``src/gui/program.cpp``)
+- Completed third OpenGL task
 
 2.0.1 - 2022-11-22
 ------------------

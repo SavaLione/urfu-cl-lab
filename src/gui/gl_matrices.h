@@ -37,6 +37,10 @@
 #ifndef GUI_GL_MATRICES_H
 #define GUI_GL_MATRICES_H
 
+#include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "gui/sdl_wrapper.h"
 #include "gui/program.h"
 
@@ -48,11 +52,36 @@ public:
 
 private:
     void loop();
+    void pool_event();
 
     /* OpenGL */
     GLuint vertex_array_id = 0;
     GLuint vertex_buffer   = 0;
+    GLuint matrix_id       = 0;
     program program_id;
+
+    /* GLM */
+
+    /* Field of view */
+    std::float_t fov = 45.0f;
+
+    std::float_t ratio_x = 4.0f;
+    std::float_t ratio_y = 3.0f;
+
+    std::float_t display_range_near = 0.1f;
+    std::float_t display_range_far  = 100.0f;
+
+    /* Projection matrix */
+    glm::mat4 projection;
+
+    /* Camera matrix */
+    glm::mat4 view;
+
+    /* Model matrix */
+    glm::mat4 model;
+
+    /* Model view projection */
+    glm::mat4 mvp;
 };
 
 #endif // GUI_GL_MATRICES_H
