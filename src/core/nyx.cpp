@@ -319,6 +319,7 @@ void print_help()
     std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
     std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
     std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
+    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4 or 5" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display this help and exit" << std::endl;
     exit(EXIT_SUCCESS);

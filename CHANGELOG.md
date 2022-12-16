@@ -18,6 +18,8 @@
     - Supported languages: ``https://github.com/github/linguist/blob/master/lib/linguist/languages.yml``
 - Fixed implicit conversion of NULL constant to ``GLuint`` (aka ``unsigned int``)
 - Fixed comparison between ``NULL`` and non-pointer (``GLuint`` (aka ``unsigned int``) and ``NULL``)
+- Fixed bad import bug (``src/core/new_gpu.cpp`` -> ``#include <fmt/core.h>``)
+- Changed print help information (``print_help()``)
 
 
 2.0.1 - 2022-11-22

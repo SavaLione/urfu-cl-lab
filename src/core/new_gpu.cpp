@@ -66,8 +66,6 @@
 
 namespace compute = boost::compute;
 
-#include <fmt/core.h>
-
 #include "io/log/logger.h"
 
 std::string image_cl_kernel_source = R"opencl_kernel(
