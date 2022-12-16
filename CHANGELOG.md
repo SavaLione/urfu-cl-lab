@@ -26,6 +26,12 @@
 - Changed file structure
 - Changed default behavior (now by default we won't run any tasks)
 - Cleaned up CMake
+- Fixed type in source code (``OpenCV`` -> ``OpenCL``)
+- Fixed memory leak (``compile_shader(unsigned int type, std::string const &source)``)
+- Fixed memory leak (``throw std::runtime_error(_err);`` and ``glDeleteShader(id);``)
+- Added OpenGL shader representation (``src/gui/shader.h``, ``src/gui/shader.cpp``)
+- Added OpenGL program representation (``src/gui/program.h``, ``src/gui/program.cpp``)
+- Fixed argument parsing bug
 
 
 2.0.1 - 2022-11-22

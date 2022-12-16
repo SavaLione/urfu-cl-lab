@@ -30,49 +30,14 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief OpenGL shader representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 16 Nov 2022
  */
-#ifndef GUI_SDL_WRAPPER_H
-#define GUI_SDL_WRAPPER_H
+#include "gui/shader.h"
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
-
-#include <string>
-
-#include "gui/program.h"
-
-class sdl_wrapper
+shader::~shader()
 {
-public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
-
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
-
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
-
-    std::string fragment_shader;
-    std::string vertex_shader;
-};
-
-#endif // GUI_SDL_WRAPPER_H
+    if(_id)
+        glDeleteShader(_id);
+}

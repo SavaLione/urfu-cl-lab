@@ -54,11 +54,13 @@
 #include "gui/sdl_wrapper.h"
 #include "gui/rgb_triangle.h"
 #include "gui/vao_triangle.h"
+#include "gui/gl_matrices.h"
 
 #include <cstdlib>
 #include <getopt.h>
 #include <iostream>
 #include <signal.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 int main(int argc, char *argv[])
@@ -103,7 +105,6 @@ int main(int argc, char *argv[])
 
         if(opt == -1)
         {
-            print_help();
             break;
         }
 
@@ -145,13 +146,13 @@ int main(int argc, char *argv[])
 
                 if(v < 16)
                 {
-                    spdlog::error("argument -v or --vector-size must be greater than 16, because we use OpenCV sixteen component vectors");
+                    spdlog::error("argument -v or --vector-size must be greater than 16, because we use OpenCL sixteen component vectors");
                     exit(EXIT_FAILURE);
                 }
 
                 if((v % 16) != 0)
                 {
-                    spdlog::error("argument -v or --vector-size must be multiple of 16, because we use OpenCV sixteen component vectors");
+                    spdlog::error("argument -v or --vector-size must be multiple of 16, because we use OpenCL sixteen component vectors");
                     exit(EXIT_FAILURE);
                 }
 
@@ -214,10 +215,11 @@ int main(int argc, char *argv[])
                     case 3:
                     case 4:
                     case 5:
+                    case 6:
                         settings_instance.set_laboratory_work(l);
                         break;
                     default:
-                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4 or 5");
+                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4, 5 or 6");
                         print_help();
                         break;
                 }
@@ -242,7 +244,7 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-
+    
     try
     {
         switch(settings_instance.get_laboratory_work())
@@ -296,6 +298,12 @@ int main(int argc, char *argv[])
                 vt.run();
                 break;
             }
+            case 6:
+            {
+                gl_matrices glm;
+                glm.run();
+                break;
+            }
             default:
                 print_help();
                 break;
@@ -304,6 +312,7 @@ int main(int argc, char *argv[])
     catch(std::exception const &e)
     {
         spdlog::error(e.what());
+        exit(EXIT_FAILURE);
     }
     catch(...)
     {
@@ -319,12 +328,12 @@ void print_help()
     std::cout << "Usage: nyx [OPTION]" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  -g, --gpu-only                  Perform only gpu tests" << std::endl;
-    std::cout << "  -c, --cpu-only                  Perform only cpu tests" << std::endl;
-    std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
-    std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
+    std::cout << "  -g, --gpu-only                  Perform only gpu tests (OpenCL)" << std::endl;
+    std::cout << "  -c, --cpu-only                  Perform only cpu tests (OpenCL)" << std::endl;
+    std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000) (OpenCL)" << std::endl;
+    std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100) (OpenCL)" << std::endl;
     std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
-    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4 or 5" << std::endl;
+    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4, 5 or 6" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;

@@ -30,12 +30,12 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief OpenGL shader representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 16 Dec 2022
  */
-#ifndef GUI_SDL_WRAPPER_H
-#define GUI_SDL_WRAPPER_H
+#ifndef GUI_SHADER_H
+#define GUI_SHADER_H
 
 // clang-format off
 #include <CL/cl_gl.h>
@@ -47,32 +47,52 @@
 
 #include <string>
 
-#include "gui/program.h"
-
-class sdl_wrapper
+enum shader_type
 {
-public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
-
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
-
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
-
-    std::string fragment_shader;
-    std::string vertex_shader;
+    fragment = 0x8B30,
+    vertex   = 0x8B31
 };
 
-#endif // GUI_SDL_WRAPPER_H
+class shader
+{
+public:
+    /* Create and compile shader */
+    shader(shader_type const &type, std::string const &source)
+    {
+        _id             = glCreateShader(type);
+        char const *src = source.c_str();
+
+        glShaderSource(_id, 1, &src, nullptr);
+        glCompileShader(_id);
+
+        int result;
+
+        glGetShaderiv(_id, GL_COMPILE_STATUS, &result);
+
+        if(result == GL_FALSE)
+        {
+            int length;
+            glGetShaderiv(_id, GL_INFO_LOG_LENGTH, &length);
+            char *message = (char *)malloc(length);
+            glGetShaderInfoLog(_id, length, &length, message);
+            std::string _err = "Shader compilation error: ";
+            _err += message;
+            glDeleteShader(_id);
+            throw std::runtime_error(_err);
+        }
+    }
+
+    ~shader();
+
+    /* Get shader id */
+    GLuint const &id() const
+    {
+        return _id;
+    }
+
+private:
+    /* Shader id */
+    GLuint _id = 0;
+};
+
+#endif // GUI_SHADER_H

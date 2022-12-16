@@ -136,7 +136,7 @@ void sdl_wrapper::run()
     {
         loop();
         pool_event();
-        
+
         SDL_GL_SwapWindow(window);
     }
 }

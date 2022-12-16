@@ -30,19 +30,19 @@
  */
 /**
  * @file
- * @brief OpenGL vao triangle
+ * @brief OpenGL operations with matrices
  * @author Saveliy Pototskiy (SavaLione)
- * @date 27 Nov 2022
+ * @date 16 Dec 2022
  */
-#include "gui/vao_triangle.h"
+#include "gui/gl_matrices.h"
 
 #include <cstddef>
 #include <string>
 
+#include "gui/program.h"
 #include "io/log/logger.h"
 
-
-vao_triangle::vao_triangle()
+gl_matrices::gl_matrices()
 {
     /* Shaders */
     std::string fragment_shader = R"shader(
@@ -99,7 +99,7 @@ void main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
-vao_triangle::~vao_triangle()
+gl_matrices::~gl_matrices()
 {
     // Cleanup VBO
     if(vertex_buffer != 0)
@@ -108,7 +108,7 @@ vao_triangle::~vao_triangle()
         glDeleteVertexArrays(1, &vertex_array_id);
 }
 
-void vao_triangle::loop()
+void gl_matrices::loop()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

@@ -50,8 +50,8 @@ private:
 
     /* OpenGL */
     GLuint vertex_array_id = 0;
-    GLuint program_id      = 0;
     GLuint vertex_buffer   = 0;
+    program program_id;
 };
 
 #endif // CORE_VAO_TRIANGLE_H

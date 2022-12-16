@@ -30,49 +30,37 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief OpenGL program representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 16 Dec 2022
  */
-#ifndef GUI_SDL_WRAPPER_H
-#define GUI_SDL_WRAPPER_H
+#ifndef GUI_PROGRAM_H
+#define GUI_PROGRAM_H
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
+#include "gui/shader.h"
 
-#include <string>
-
-#include "gui/program.h"
-
-class sdl_wrapper
+class program
 {
 public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
+    program() = default;
 
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
+    /* Create program */
+    program(shader const &vertex, shader const &fragment);
 
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
+    /* Create program */
+    program(std::string const &vertex, std::string const &fragment);
 
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
+    ~program();
 
-    std::string fragment_shader;
-    std::string vertex_shader;
+    /* Get program id */
+    GLuint const &id() const
+    {
+        return _id;
+    }
+
+private:
+    /* Program id */
+    GLuint _id = 0;
 };
 
-#endif // GUI_SDL_WRAPPER_H
+#endif // GUI_PROGRAM_H

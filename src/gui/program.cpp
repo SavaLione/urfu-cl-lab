@@ -30,49 +30,50 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief OpenGL program representation
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 16 Dec 2022
  */
-#ifndef GUI_SDL_WRAPPER_H
-#define GUI_SDL_WRAPPER_H
-
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
-
-#include <string>
-
 #include "gui/program.h"
 
-class sdl_wrapper
+program::~program()
 {
-public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
+    if(_id)
+        glDeleteProgram(_id);
+}
 
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
+program::program(shader const &vertex, shader const &fragment)
+{
+    GLuint program = glCreateProgram();
+    // GLuint vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+    // GLuint fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
 
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
+    glAttachShader(program, vertex.id());
+    glAttachShader(program, fragment.id());
+    glLinkProgram(program);
+    glValidateProgram(program);
 
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
+    // glDeleteShader(vs);
+    // glDeleteShader(fs);
 
-    std::string fragment_shader;
-    std::string vertex_shader;
-};
+    _id = program;
+}
 
-#endif // GUI_SDL_WRAPPER_H
+program::program(std::string const &vertex, std::string const &fragment)
+{
+    GLuint program = glCreateProgram();
+    // GLuint vs      = compile_shader(GL_VERTEX_SHADER, vertex_shader);
+    // GLuint fs      = compile_shader(GL_FRAGMENT_SHADER, fragment_shader);
+    shader vertex_shader(shader_type::vertex, vertex);
+    shader fragment_shader(shader_type::fragment, fragment);
+
+    glAttachShader(program, vertex_shader.id());
+    glAttachShader(program, fragment_shader.id());
+    glLinkProgram(program);
+    glValidateProgram(program);
+
+    // glDeleteShader(vs);
+    // glDeleteShader(fs);
+
+    _id = program;
+}

@@ -30,49 +30,29 @@
  */
 /**
  * @file
- * @brief SDL2 wrapper
+ * @brief OpenGL operations with matrices
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 16 Dec 2022
  */
-#ifndef GUI_SDL_WRAPPER_H
-#define GUI_SDL_WRAPPER_H
+#ifndef GUI_GL_MATRICES_H
+#define GUI_GL_MATRICES_H
 
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
-
-#include <string>
-
+#include "gui/sdl_wrapper.h"
 #include "gui/program.h"
 
-class sdl_wrapper
+class gl_matrices : public sdl_wrapper
 {
 public:
-    sdl_wrapper();
-    ~sdl_wrapper();
-    virtual void run();
+    gl_matrices();
+    ~gl_matrices();
 
-protected:
-    virtual void pool_event();
-    virtual void loop();
-    virtual void init();
+private:
+    void loop();
 
-    /* SDL */
-    SDL_Window *window;
-    SDL_GLContext context;
-    SDL_Event event;
-
-    int window_width  = 0;
-    int window_height = 0;
-    bool _exit        = false;
-    std::string _name = "nyx";
-
-    std::string fragment_shader;
-    std::string vertex_shader;
+    /* OpenGL */
+    GLuint vertex_array_id = 0;
+    GLuint vertex_buffer   = 0;
+    program program_id;
 };
 
-#endif // GUI_SDL_WRAPPER_H
+#endif // GUI_GL_MATRICES_H

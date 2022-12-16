@@ -36,9 +36,13 @@
  */
 #include "gui/gl_image.h"
 
+#include "gui/shader.h"
 #include "io/log/logger.h"
 
-const GLchar *vertex_shader = R"glsl(
+gl_image::gl_image()
+{
+    /* Shaders */
+    vertex_shader = R"glsl(
     #version 150 core
     in vec2 position;
     in vec3 color;
@@ -53,7 +57,7 @@ const GLchar *vertex_shader = R"glsl(
     }
 )glsl";
 
-const GLchar *fragment_shader = R"glsl(
+    fragment_shader = R"glsl(
     #version 150 core
     in vec3 Color;
     in vec2 Texcoord;
@@ -65,8 +69,6 @@ const GLchar *fragment_shader = R"glsl(
     }
 )glsl";
 
-gl_image::gl_image()
-{
     /* Some OpenGL settings */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
@@ -104,19 +106,15 @@ gl_image::gl_image()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
     // Create and compile the vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertex_shader, NULL);
-    glCompileShader(vertexShader);
+    shader vert_shader(::shader_type::vertex, vertex_shader);
 
     // Create and compile the fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
-    glCompileShader(fragmentShader);
+    shader frag_shader(::shader_type::fragment, fragment_shader);
 
     // Link the vertex and fragment shader into a shader program
     GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, vert_shader.id());
+    glAttachShader(shaderProgram, frag_shader.id());
     glBindFragDataLocation(shaderProgram, 0, "outColor");
     glLinkProgram(shaderProgram);
     glUseProgram(shaderProgram);
