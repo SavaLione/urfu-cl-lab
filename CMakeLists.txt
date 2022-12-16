@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.2.2"
+    VERSION "2.2.3"
     DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
     HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
@@ -138,6 +138,8 @@ set(NYX_IO_SRC
 )
 
 set(NYX_PLATFORM_SRC
+    src/platform/compiler_version.h
+    src/platform/compiler_version.cpp
     src/platform/platform.h
     src/platform/platform.cpp
 )

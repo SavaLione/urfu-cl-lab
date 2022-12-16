@@ -21,6 +21,8 @@
 - Fixed bad import bug (``src/core/new_gpu.cpp`` -> ``#include <fmt/core.h>``)
 - Changed print help information (``print_help()``)
 - Disabled clangd inlay hints (``.clangd``)
+- Added build information (``print_build_info()``, flags: ``--build-info``, ``-u``)
+- Added a function to determine the compiler name and version (``src/platform/compiler_version.h``, ``src/platform/compiler_version.cpp``)
 
 
 2.0.1 - 2022-11-22

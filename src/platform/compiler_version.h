@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: BSD-3-Clause
  * 
- * Copyright (c) 2022, Saveliy Pototskiy (SavaLione) (savalione.com)
+ * Copyright (c) 2021-2022, Saveliy Pototskiy (SavaLione) (savalione.com)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,17 +30,15 @@
  */
 /**
  * @file
- * @brief Nyx application
+ * @brief A simple function to determine the compiler name and version
  * @author Saveliy Pototskiy (SavaLione)
- * @date 21 Sep 2022
+ * @date 3 Mar 2021
  */
-#ifndef CORE_NYX_H
-#define CORE_NYX_H
+#ifndef PLATFORM_COMPILER_VERSION_H
+#define PLATFORM_COMPILER_VERSION_H
 
-/* Display help information and exit */
-void print_help();
+#include <string>
 
-/* Display build information end exit */
-void print_build_info();
+std::string compiler_version();
 
-#endif // CORE_NYX_H
+#endif // PLATFORM_COMPILER_VERSION_H

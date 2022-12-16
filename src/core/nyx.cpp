@@ -84,16 +84,18 @@ int main(int argc, char *argv[])
     settings &settings_instance = settings::instance();
 
     /* Options */
-    std::string const short_opts = "gcv:i:l:bh";
+    std::string const short_opts = "gcv:i:l:bhu";
 
-    std::array<option, 7> long_options = {
+    std::array<option, 8> long_options = {
         {{"gpu-only", no_argument, nullptr, 'g'},
          {"cpu-only", no_argument, nullptr, 'c'},
          {"vector-size", required_argument, nullptr, 'v'},
          {"iteration-count", required_argument, nullptr, 'i'},
          {"laboratory-work", required_argument, nullptr, 'l'},
          {"verbose", no_argument, nullptr, 'b'},
-         {"help", no_argument, nullptr, 'h'}}};
+         {"help", no_argument, nullptr, 'h'},
+         {"build-info", no_argument, nullptr, 'u'}
+         }};
 
     while(true)
     {
@@ -230,6 +232,9 @@ int main(int argc, char *argv[])
                 spdlog::set_level(spdlog::level::debug);
                 spdlog::debug("Verbose output example");
                 break;
+            case 'u':
+                print_build_info();
+                break;
             case 'h':
             case '?':
             default:
@@ -321,6 +326,79 @@ void print_help()
     std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
     std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4 or 5" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
-    std::cout << "  -h, --help                      Display this help and exit" << std::endl;
+    std::cout << "  -h, --help                      Display help information and exit" << std::endl;
+    std::cout << "  -u, --build-info                Display build information end exit" << std::endl;
+    exit(EXIT_SUCCESS);
+}
+
+void print_build_info()
+{
+    std::cout << "Version: " << NYX_VERSION << std::endl;
+    std::cout << "  Major: " << NYX_VERSION_MAJOR << std::endl;
+    std::cout << "  Minor: " << NYX_VERSION_MINOR << std::endl;
+    std::cout << "  Patch: " << NYX_VERSION_PATCH << std::endl;
+    std::cout << std::endl;
+    std::cout << "Description: " << NYX_DESCRIPTION << std::endl;
+    std::cout << "Homepage url: " << NYX_HOMEPAGE_URL << std::endl;
+    std::cout << std::endl;
+    std::cout << "Project generator: " << NYX_GENERATOR << std::endl;
+    std::cout << "Project build type: " << NYX_BUILD_TYPE << std::endl;
+    std::cout << std::endl;
+    std::cout << "Compile version: " << compiler_version() << std::endl;
+    std::cout << "Compile date: " << __DATE__ << " " << __TIME__ << std::endl;
+    std::cout << std::endl;
+    std::cout << "Project C compiler variables" << std::endl;
+    std::cout << "    Extensions: " << NYX_C_EXTENSIONS << std::endl;
+    std::cout << "    Standard: " << NYX_C_STANDARD << std::endl;
+    std::cout << "    Compiler: " << NYX_C_COMPILER << std::endl;
+    std::cout << "    Compiler id: " << NYX_C_COMPILER_ID << std::endl;
+    std::cout << "    Compiler predefines command: " << NYX_C_COMPILER_PREDEFINES_COMMAND << std::endl;
+    std::cout << "    Compiler target: " << NYX_C_COMPILER_TARGET << std::endl;
+    std::cout << "    Compiler version: " << NYX_C_COMPILER_VERSION << std::endl;
+    std::cout << "    Flags: " << NYX_C_FLAGS << std::endl;
+    std::cout << "    Simulate id: " << NYX_C_SIMULATE_ID << std::endl;
+    std::cout << "    Standard include derictories: " << NYX_C_STANDARD_INCLUDE_DIRECTORIES << std::endl;
+    std::cout << "    Standard libraries: " << NYX_C_STANDARD_LIBRARIES << std::endl;
+    std::cout << "    Standard required: " << NYX_C_STANDARD_REQUIRED << std::endl;
+    std::cout << "    Compiler ABI: " << NYX_C_COMPILER_ABI << std::endl;
+    std::cout << "    Compiler architecture id: " << NYX_C_COMPILER_ARCHITECTURE_ID << std::endl;
+    std::cout << "    Compiler compiler version internal: " << NYX_C_COMPILER_VERSION_INTERNAL << std::endl;
+    std::cout << "    Linker preference: " << NYX_C_LINKER_PREFERENCE << std::endl;
+    std::cout << "    Linker preference propagates: " << NYX_C_LINKER_PREFERENCE_PROPAGATES << std::endl;
+    std::cout << "    Platform id: " << NYX_C_PLATFORM_ID << std::endl;
+    std::cout << "Project C++ compiler variables" << std::endl;
+    std::cout << "    Extensions: " << NYX_CXX_EXTENSIONS << std::endl;
+    std::cout << "    Standard: " << NYX_CXX_STANDARD << std::endl;
+    std::cout << "    Compiler: " << NYX_CXX_COMPILER << std::endl;
+    std::cout << "    Compiler id: " << NYX_CXX_COMPILER_ID << std::endl;
+    std::cout << "    Compiler predefines command: " << NYX_CXX_COMPILER_PREDEFINES_COMMAND << std::endl;
+    std::cout << "    Compiler target: " << NYX_CXX_COMPILER_TARGET << std::endl;
+    std::cout << "    Compiler version: " << NYX_CXX_COMPILER_VERSION << std::endl;
+    std::cout << "    Flags: " << NYX_CXX_FLAGS << std::endl;
+    std::cout << "    Simulate id: " << NYX_CXX_SIMULATE_ID << std::endl;
+    std::cout << "    Standard include derictories: " << NYX_CXX_STANDARD_INCLUDE_DIRECTORIES << std::endl;
+    std::cout << "    Standard libraries: " << NYX_CXX_STANDARD_LIBRARIES << std::endl;
+    std::cout << "    Standard required: " << NYX_CXX_STANDARD_REQUIRED << std::endl;
+    std::cout << "    Compiler ABI: " << NYX_CXX_COMPILER_ABI << std::endl;
+    std::cout << "    Compiler architecture id: " << NYX_CXX_COMPILER_ARCHITECTURE_ID << std::endl;
+    std::cout << "    Compiler compiler version internal: " << NYX_CXX_COMPILER_VERSION_INTERNAL << std::endl;
+    std::cout << "    Linker preference: " << NYX_CXX_LINKER_PREFERENCE << std::endl;
+    std::cout << "    Linker preference propagates: " << NYX_CXX_LINKER_PREFERENCE_PROPAGATES << std::endl;
+    std::cout << "    Platform id: " << NYX_CXX_PLATFORM_ID << std::endl;
+    std::cout << std::endl;
+    std::cout << "CMake version: " << NYX_CMAKE_VERSION << std::endl;
+    std::cout << "        Major: " << NYX_CMAKE_VERSION_MAJOR << std::endl;
+    std::cout << "        Minor: " << NYX_CMAKE_VERSION_MINOR << std::endl;
+    std::cout << "        Patch: " << NYX_CMAKE_VERSION_PATCH << std::endl;
+    std::cout << std::endl;
+    std::cout << "Project options" << std::endl;
+    std::cout << "    External fmt library: ";
+    #ifdef NYX_EXTERNAL_FMT
+        std::cout << "YES";
+    #else
+        std::cout << "YES";
+    #endif
+    std::cout << std::endl;
+
     exit(EXIT_SUCCESS);
 }
