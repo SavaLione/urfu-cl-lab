@@ -36,11 +36,11 @@
  */
 #include "compute/kernel_loader.h"
 
+#include "io/log/logger.h"
+
 #include <SDL2/SDL.h>
 #include <cstddef>
 #include <exception>
-#include <spdlog/spdlog.h>
-
 kernel_loader::kernel_loader() {}
 
 void kernel_loader::load(std::string const &name)

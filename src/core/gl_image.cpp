@@ -36,7 +36,7 @@
  */
 #include "core/gl_image.h"
 
-#include <spdlog/spdlog.h>
+#include "io/log/logger.h"
 
 const GLchar *vertex_shader = R"glsl(
     #version 150 core

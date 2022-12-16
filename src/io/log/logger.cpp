@@ -30,41 +30,9 @@
  */
 /**
  * @file
- * @brief Platform specific things
+ * @brief Logger
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 15 Dec 2022
  */
-#include "core/platform.h"
+#include "io/log/logger.h"
 
-#include "core/settings.h"
-
-#include <spdlog/spdlog.h>
-
-void signal_callback(int signum)
-{
-    spdlog::info("Signal: {}", signum);
-
-    /* Settings instance */
-    settings &settings_instance = settings::instance();
-    settings_instance.set_exit(true);
-
-    switch(signum)
-    {
-        case 2:
-            spdlog::info("Signal SIGINT. Exiting from the application");
-            break;
-        case 3:
-            spdlog::info("Signal SIGQUIT. Exiting from the application");
-            break;
-        case 10:
-            spdlog::error("Signal SIGBUS. Bus error");
-            break;
-        case 13:
-            spdlog::error("Signal SIGPIPE. Write on a pipe with no one to read it");
-            break;
-        default:
-            spdlog::warn("Unspecified signal: {}", signum);
-            break;
-    }
-    exit(signum);
-}

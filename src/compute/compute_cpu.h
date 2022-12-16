@@ -38,9 +38,9 @@
 #define COMPUTE_COMPUTE_CPU_H
 
 #include "core/execution_time.h"
+#include "io/log/logger.h"
 
 #include <exception>
-#include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 

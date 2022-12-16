@@ -66,7 +66,9 @@
 
 namespace compute = boost::compute;
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
+
+#include "io/log/logger.h"
 
 std::string image_cl_kernel_source = R"opencl_kernel(
 __constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;

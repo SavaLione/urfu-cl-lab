@@ -36,7 +36,7 @@
  */
 #include "core/sdl_wrapper.h"
 
-#include <spdlog/spdlog.h>
+#include "io/log/logger.h"
 
 sdl_wrapper::sdl_wrapper()
 {

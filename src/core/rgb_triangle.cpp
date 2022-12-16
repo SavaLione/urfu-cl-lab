@@ -38,7 +38,7 @@
 #include "SDL2/SDL_keycode.h"
 #include <cmath>
 
-#include <spdlog/spdlog.h>
+#include "io/log/logger.h"
 
 rgb_triangle::rgb_triangle()
 {

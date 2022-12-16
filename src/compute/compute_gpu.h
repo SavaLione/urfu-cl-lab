@@ -51,11 +51,11 @@
 
 #include "compute/kernel_loader.h"
 #include "core/execution_time.h"
+#include "io/log/logger.h"
 
 #include <CL/opencl.hpp>
 #include <exception>
 #include <iterator>
-#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
 

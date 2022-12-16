@@ -6,3 +6,6 @@
 
 # clangd
 .cache/
+
+# CMake auto generated files
+src/platform/platform.h

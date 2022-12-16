@@ -34,9 +34,38 @@
  * @author Saveliy Pototskiy (SavaLione)
  * @date 22 Nov 2022
  */
-#ifndef CORE_PLATFORM_H
-#define CORE_PLATFORM_H
+#include "platform/platform.h"
 
-void signal_callback(int signum);
+#include "core/settings.h"
 
-#endif // CORE_PLATFORM_H
+#define SPDLOG_FMT_EXTERNAL
+#include <spdlog/spdlog.h>
+
+void signal_callback(int signum)
+{
+    spdlog::info("Signal: {}", signum);
+
+    /* Settings instance */
+    settings &settings_instance = settings::instance();
+    settings_instance.set_exit(true);
+
+    switch(signum)
+    {
+        case 2:
+            spdlog::info("Signal SIGINT. Exiting from the application");
+            break;
+        case 3:
+            spdlog::info("Signal SIGQUIT. Exiting from the application");
+            break;
+        case 10:
+            spdlog::error("Signal SIGBUS. Bus error");
+            break;
+        case 13:
+            spdlog::error("Signal SIGPIPE. Write on a pipe with no one to read it");
+            break;
+        default:
+            spdlog::warn("Unspecified signal: {}", signum);
+            break;
+    }
+    exit(signum);
+}

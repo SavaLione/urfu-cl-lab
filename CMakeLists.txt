@@ -3,7 +3,9 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.0.1"
+    VERSION "2.1.0"
+    DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
+    HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
 )
 
@@ -23,9 +25,6 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
 else()
     message(STATUS "Unknown build type: " ${CMAKE_BUILD_TYPE})
 endif()
-
-# static
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -48,6 +47,16 @@ find_package(spdlog REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Boost REQUIRED)
+find_package(fmt)
+
+if(fmt_FOUND)
+    set(NYX_EXTERNAL_FMT ON)
+else()
+    set(NYX_EXTERNAL_FMT OFF)
+endif()
+
+# CMake configure
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/platform.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/platform.h)
 
 # Sources
 set(NYX_CORE_SRC
@@ -67,8 +76,6 @@ set(NYX_CORE_SRC
     src/core/new_gpu.cpp
     src/core/nyx.h
     src/core/nyx.cpp
-    src/core/platform.h
-    src/core/platform.cpp
     src/core/rgb_triangle.h
     src/core/rgb_triangle.cpp
     src/core/sdl_wrapper.h
@@ -125,9 +132,21 @@ set(NYX_COMPUTE_SRC
     ${NYX_COMPUTE_KERNELS_SRC}
 )
 
+set(NYX_IO_SRC
+    src/io/log/logger.h
+    src/io/log/logger.cpp
+)
+
+set(NYX_PLATFORM_SRC
+    src/platform/platform.h
+    src/platform/platform.cpp
+)
+
 set(NYX_SRC
     ${NYX_CORE_SRC}
     ${NYX_COMPUTE_SRC}
+    ${NYX_IO_SRC}
+    ${NYX_PLATFORM_SRC}
 )
 
 # Executable
@@ -150,6 +169,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE GLEW::GLEW)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+if(fmt_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+endif()
 
 # Output
 function_output_directory(${PROJECT_NAME})

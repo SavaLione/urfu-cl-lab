@@ -47,7 +47,8 @@
 #include "compute/compute_cpu.h"
 #include "compute/compute_gpu.h"
 #include "core/settings.h"
-#include "core/platform.h"
+#include "platform/platform.h"
+#include "io/log/logger.h"
 #include "core/cl_image.h"
 #include "core/cl_mandelbrot.h"
 #include "core/sdl_wrapper.h"
@@ -58,7 +59,6 @@
 #include <getopt.h>
 #include <iostream>
 #include <signal.h>
-#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 int main(int argc, char *argv[])

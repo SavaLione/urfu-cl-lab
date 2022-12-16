@@ -38,7 +38,8 @@
 
 #include <cstddef>
 #include <string>
-#include <spdlog/spdlog.h>
+
+#include "io/log/logger.h"
 
 GLuint compile_shader(unsigned int type, const std::string &source)
 {

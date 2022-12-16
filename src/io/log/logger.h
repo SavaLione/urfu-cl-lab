@@ -30,47 +30,21 @@
  */
 /**
  * @file
- * @brief Draw OpenCL image
+ * @brief Logger
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Nov 2022
+ * @date 15 Dec 2022
  */
-#include "core/cl_image.h"
+#ifndef IO_LOG_LOGGER_H
+#define IO_LOG_LOGGER_H
 
-#include "core/new_gpu.h"
-#include "io/log/logger.h"
+#include "platform/platform.h"
 
-std::string kernel_source = R"opencl_kernel(
-__constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
+/* Do we use external fmt library? */
+#ifdef NYX_EXTERNAL_FMT
+    #define SPDLOG_FMT_EXTERNAL
+    #include <spdlog/spdlog.h>
+#else
+    #include <spdlog/spdlog.h>
+#endif
 
-__kernel void draw_image_cl(
-    __read_only image2d_t img_in,
-    __write_only image2d_t img_out)
-{
-    const int x = get_global_id(0);
-    const int y = get_global_id(1);
-    int2 pos = (int2)(x, y);
-
-    uint4 pixel = read_imageui(img_in, sampler, pos);
-
-    if(pixel.x >= 255)
-        pixel.x = 0;
-    if(pixel.y >= 255)
-        pixel.y = 0;
-    if(pixel.z >= 255)
-        pixel.z = 0;
-
-    pixel.x += 5;
-    pixel.y += 10;
-    pixel.z += 15;
-    pixel.w = 255;
-
-    write_imageui(img_out, pos, pixel);
-}
-)opencl_kernel";
-
-void cl_image::loop()
-{
-    draw_image_cl(ir, kernel_source);
-}
-
-void cl_image::init() {}
+#endif // IO_LOG_LOGGER_H

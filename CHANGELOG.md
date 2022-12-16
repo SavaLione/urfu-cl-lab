@@ -5,6 +5,15 @@
 - Added RGB OpenGL triangle (``core/rgb_triangle.h``, ``core/rgb_triangle.cpp``)
 - Added keyboard interaction for RGB triangle
 - Added OpenGL VAO triangle (``core/vao_triangle.h``, ``core/vao_triangle.cpp``)
+- Changed file structure (``src/platform``, ``src/io``)
+- Added CMake auto configuration (``src/platform/platform.h.in``)
+- Added specific platform variables (``src/platform/platform.h.in``)
+- Added external ``fmt`` library support for ``spdlog``
+- Added logger definition files (``src/io/logger``)
+- Added a rule to ``.gitignore`` to ignore automatically generated files (``src/platform/platform.h``)
+- Added project description in CMake
+- Added project homepage url in CMake
+- Removed CMake linker flags (``CMAKE_EXE_LINKER_FLAGS``)
 
 2.0.1 - 2022-11-22
 ------------------
