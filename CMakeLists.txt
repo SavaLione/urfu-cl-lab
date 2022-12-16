@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.2.5"
+    VERSION "2.2.6"
     DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
     HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
@@ -60,30 +60,19 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/platform.h.in ${CMAKE_CU
 
 # Sources
 set(NYX_CORE_SRC
-    src/core/execution_time.h
     src/core/execution_time.cpp
-    src/core/nyx.h
     src/core/nyx.cpp
-    src/core/settings.h
     src/core/settings.cpp
 )
 
 set(NYX_GUI_SRC
-    src/gui/buffer_representation.h
     src/gui/buffer_representation.cpp
-    src/gui/cl_image.h
     src/gui/cl_image.cpp
-    src/gui/cl_mandelbrot.h
     src/gui/cl_mandelbrot.cpp
-    src/gui/gl_image.h
     src/gui/gl_image.cpp
-    src/gui/image_representation.h
     src/gui/image_representation.cpp
-    src/gui/rgb_triangle.h
     src/gui/rgb_triangle.cpp
-    src/gui/sdl_wrapper.h
     src/gui/sdl_wrapper.cpp
-    src/gui/vao_triangle.h
     src/gui/vao_triangle.cpp
 )
 
@@ -122,28 +111,20 @@ set(NYX_COMPUTE_KERNELS_SRC
 )
 
 set(NYX_COMPUTE_SRC
-    src/compute/compute_cpu.h
     src/compute/compute_cpu.cpp
-    src/compute/compute_gpu.h
     src/compute/compute_gpu.cpp
-    src/compute/fill_vectors.h
     src/compute/fill_vectors.cpp
-    src/compute/new_gpu.h
     src/compute/new_gpu.cpp
     ${NYX_COMPUTE_KERNELS_SRC}
 )
 
 set(NYX_IO_SRC
-    src/io/log/logger.h
     src/io/log/logger.cpp
-    src/io/kernel_loader.h
     src/io/kernel_loader.cpp
 )
 
 set(NYX_PLATFORM_SRC
-    src/platform/compiler_version.h
     src/platform/compiler_version.cpp
-    src/platform/platform.h
     src/platform/platform.cpp
 )
 

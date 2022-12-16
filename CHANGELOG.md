@@ -25,6 +25,7 @@
 - Added a function to determine the compiler name and version (``src/platform/compiler_version.h``, ``src/platform/compiler_version.cpp``)
 - Changed file structure
 - Changed default behavior (now by default we won't run any tasks)
+- Cleaned up CMake
 
 
 2.0.1 - 2022-11-22
