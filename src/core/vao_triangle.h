@@ -49,9 +49,9 @@ private:
     void loop();
 
     /* OpenGL */
-    GLuint vertex_array_id = NULL;
-    GLuint program_id      = NULL;
-    GLuint vertex_buffer   = NULL;
+    GLuint vertex_array_id = 0;
+    GLuint program_id      = 0;
+    GLuint vertex_buffer   = 0;
 };
 
 #endif // CORE_VAO_TRIANGLE_H

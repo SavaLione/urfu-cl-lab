@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
 
         if(opt == -1)
         {
+            print_help();
             break;
         }
 

@@ -140,11 +140,11 @@ vao_triangle::vao_triangle()
 vao_triangle::~vao_triangle()
 {
     // Cleanup VBO
-    if(vertex_buffer != NULL)
+    if(vertex_buffer != 0)
         glDeleteBuffers(1, &vertex_buffer);
-    if(vertex_array_id != NULL)
+    if(vertex_array_id != 0)
         glDeleteVertexArrays(1, &vertex_array_id);
-    if(program_id != NULL)
+    if(program_id != 0)
         glDeleteProgram(program_id);
 }
 
