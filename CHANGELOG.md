@@ -14,6 +14,8 @@
 - Added project description in CMake
 - Added project homepage url in CMake
 - Removed CMake linker flags (``CMAKE_EXE_LINKER_FLAGS``)
+- Added changes to GitHub linguist syntax highlighting (``.gitattributes``)
+    - Supported languages: ``https://github.com/github/linguist/blob/master/lib/linguist/languages.yml``
 
 2.0.1 - 2022-11-22
 ------------------
