@@ -66,6 +66,10 @@
 
 int main(int argc, char *argv[])
 {
+    /* Print help if used didn't write any flag */
+    if(argc <= 1)
+        print_help();
+
     /* Signal handler */
     signal(SIGINT, signal_callback);
 
@@ -87,14 +91,14 @@ int main(int argc, char *argv[])
     settings &settings_instance = settings::instance();
 
     /* Options */
-    std::string const short_opts = "gcv:i:l:bhu";
+    std::string const short_opts = "gcv:i:t:bhu";
 
     std::array<option, 8> long_options = {
-        {{"gpu-only", no_argument, nullptr, 'g'},
-         {"cpu-only", no_argument, nullptr, 'c'},
+        {{"gpu", no_argument, nullptr, 'g'},
+         {"cpu", no_argument, nullptr, 'c'},
          {"vector-size", required_argument, nullptr, 'v'},
          {"iteration-count", required_argument, nullptr, 'i'},
-         {"laboratory-work", required_argument, nullptr, 'l'},
+         {"task-number", required_argument, nullptr, 't'},
          {"verbose", no_argument, nullptr, 'b'},
          {"help", no_argument, nullptr, 'h'},
          {"build-info", no_argument, nullptr, 'u'}}};
@@ -112,13 +116,11 @@ int main(int argc, char *argv[])
         {
             case 'g':
                 settings_instance.set_gpu(true);
-                settings_instance.set_cpu(false);
-                spdlog::info("Perform only gpu tests");
+                spdlog::info("Perform gpu tests");
                 break;
             case 'c':
-                settings_instance.set_gpu(false);
                 settings_instance.set_cpu(true);
-                spdlog::info("Perform only cpu tests");
+                spdlog::info("Perform cpu tests");
                 break;
             case 'v':
             {
@@ -190,25 +192,25 @@ int main(int argc, char *argv[])
                 settings_instance.set_iteration_count(i);
                 break;
             }
-            case 'l':
+            case 't':
             {
-                int l = 0;
+                int t = 0;
                 try
                 {
-                    l = std::stoi(optarg);
+                    t = std::stoi(optarg);
                 }
                 catch(std::invalid_argument const &e)
                 {
-                    spdlog::error("unexpected -l or --laboratory-work argument: {}\n{}", optarg, e.what());
+                    spdlog::error("unexpected -t or --task-number argument: {}\n{}", optarg, e.what());
                     exit(EXIT_FAILURE);
                 }
                 catch(...)
                 {
-                    spdlog::error("unexpected -l or --laboratory-work argument: {}", optarg);
+                    spdlog::error("unexpected -t or --task-number argument: {}", optarg);
                     exit(EXIT_FAILURE);
                 }
 
-                switch(l)
+                switch(t)
                 {
                     case 1:
                     case 2:
@@ -216,16 +218,15 @@ int main(int argc, char *argv[])
                     case 4:
                     case 5:
                     case 6:
-                    case 7:
-                        settings_instance.set_laboratory_work(l);
+                        settings_instance.set_laboratory_work(t);
                         break;
                     default:
-                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4, 5, 6 or 7");
+                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, or 6");
                         print_help();
                         break;
                 }
 
-                spdlog::info("Laboratory work number: {}", l);
+                spdlog::info("Task number: {}", t);
 
                 break;
             }
@@ -239,7 +240,6 @@ int main(int argc, char *argv[])
                 print_build_info();
                 break;
             case 'h':
-            case '?':
             default:
                 print_help();
                 break;
@@ -248,72 +248,26 @@ int main(int argc, char *argv[])
 
     try
     {
-        switch(settings_instance.get_laboratory_work())
+        /* Kernel loader instance */
+        if(settings_instance.get_gpu())
         {
-            case 1:
-            {
-                /* Kernel loader instance */
-                if(settings_instance.get_gpu())
-                {
-                    kernel_loader &kernel_loader_instance = kernel_loader::instance();
-                    kernel_loader_instance.load();
-                }
+            kernel_loader &kernel_loader_instance = kernel_loader::instance();
+            kernel_loader_instance.load();
+        }
 
-                /* Compute the test data on cpu */
-                if(settings_instance.get_cpu())
-                {
-                    compute_cpu cc(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
-                    cc.run_all();
-                }
+        /* Compute the test data on cpu */
+        if(settings_instance.get_cpu())
+        {
+            compute_cpu cc(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+            cc.run_all();
+        }
 
-                /* Compute the test data on gpu */
-                if(settings_instance.get_gpu())
-                {
-                    compute_gpu cg(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
-                    cg.print_info();
-                    cg.run_all();
-                }
-                break;
-            }
-            case 2:
-            {
-                cl_image cli;
-                cli.run();
-                break;
-            }
-            case 3:
-            {
-                cl_mandelbrot clm;
-                clm.run();
-                break;
-            }
-            case 4:
-            {
-                rgb_triangle rgb;
-                rgb.run();
-                break;
-            }
-            case 5:
-            {
-                vao_triangle vt;
-                vt.run();
-                break;
-            }
-            case 6:
-            {
-                gl_matrices glm;
-                glm.run();
-                break;
-            }
-            case 7:
-            {
-                interop i;
-                i.run();
-                break;
-            }
-            default:
-                print_help();
-                break;
+        /* Compute the test data on gpu */
+        if(settings_instance.get_gpu())
+        {
+            compute_gpu cg(settings_instance.get_vector_size(), settings_instance.get_iteration_count());
+            cg.print_info();
+            cg.run_all();
         }
     }
     catch(std::exception const &e)
@@ -327,6 +281,63 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if(settings_instance.get_laboratory_work() != 0)
+        try
+        {
+            switch(settings_instance.get_laboratory_work())
+            {
+                case 1:
+                {
+                    cl_image cli;
+                    cli.run();
+                    break;
+                }
+                case 2:
+                {
+                    cl_mandelbrot clm;
+                    clm.run();
+                    break;
+                }
+                case 3:
+                {
+                    rgb_triangle rgb;
+                    rgb.run();
+                    break;
+                }
+                case 4:
+                {
+                    vao_triangle vt;
+                    vt.run();
+                    break;
+                }
+                case 5:
+                {
+                    gl_matrices glm;
+                    glm.run();
+                    break;
+                }
+                case 6:
+                {
+                    interop iop;
+                    iop.run();
+                    break;
+                }
+                default:
+                    print_help();
+                    break;
+            }
+        }
+        catch(std::exception const &e)
+        {
+            spdlog::error(e.what());
+            exit(EXIT_FAILURE);
+        }
+        catch(...)
+        {
+            spdlog::error("Unexpected error");
+            exit(EXIT_FAILURE);
+        }
+
     return EXIT_SUCCESS;
 }
 
@@ -335,12 +346,18 @@ void print_help()
     std::cout << "Usage: nyx [OPTION]" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  -g, --gpu-only                  Perform only gpu tests (OpenCL)" << std::endl;
-    std::cout << "  -c, --cpu-only                  Perform only cpu tests (OpenCL)" << std::endl;
-    std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000) (OpenCL)" << std::endl;
-    std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100) (OpenCL)" << std::endl;
-    std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
-    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4, 5, 6 or 7" << std::endl;
+    std::cout << "  -g, --gpu                       Perform gpu tests (on gpu via OpenCL)" << std::endl;
+    std::cout << "  -c, --cpu                       Perform cpu tests (on cpu)" << std::endl;
+    std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
+    std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
+    std::cout << "  -t, --task-number <number>      Task number" << std::endl;
+    std::cout << "                                  --task-number must be: 1, 2, 3, 4, 5, or 6, where:" << std::endl;
+    std::cout << "                                      1 - draw some buffer via OpenCL buffer (deprecated)" << std::endl;
+    std::cout << "                                      2 - draw Mandelbrot set via OpenCL buffer" << std::endl;
+    std::cout << "                                      3 - draw OpenGL RGB triangle" << std::endl;
+    std::cout << "                                      4 - draw OpenGL VAO triangle" << std::endl;
+    std::cout << "                                      5 - draw OpenGL VAO triangle with matrices support" << std::endl;
+    std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;

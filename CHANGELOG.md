@@ -49,6 +49,11 @@
 - Added on focus event to ``rgb_triangle`` (``src/gui/rgb_triangle.h``, ``src/gui/rgb_triangle.h``)
 - Added window resize support for ``vao_triangle`` (``src/gui/vao_triangle.h``, ``src/gui/vao_triangle.h``)
 - Added on focus event to ``vao_triangle`` (``src/gui/vao_triangle.h``, ``src/gui/vao_triangle.h``)
+- Changed the default behavior when user didn't set any flag. The application will print help ``print_help()`` and exit
+- Fixed ``cl_image`` for drawing some buffer via OpenCL buffer (``src/gui/cl_image.h``, ``src/gui/cl_image.h``)
+- Changed application help information ``print_help()``
+- Changed application flags (``-l``, ``--laboratory-work``) -> (``-t``, ``--task-number``)
+- Marked as a deprecated class for drawing some buffer via OpenCL buffer (``src/gui/cl_image.h``, ``src/gui/cl_image.h``)
 
 2.0.1 - 2022-11-22
 ------------------

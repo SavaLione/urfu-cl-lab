@@ -39,11 +39,17 @@
 
 #include "gui/gl_image.h"
 
-class cl_image : public gl_image
+/*
+    TODO: Delete this
+    DO NOT USE THIS
+*/
+class [[deprecated]] cl_image : public gl_image
 {
 private:
+    /* SDL2 */
     void loop() override;
     void init() override;
+    void resize_ir(int const &width, int const &height) override;
 };
 
 #endif // CORE_CL_IMAGE_H

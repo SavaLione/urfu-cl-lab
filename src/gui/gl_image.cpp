@@ -230,3 +230,18 @@ void gl_image::loop()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 }
+
+bool gl_image::is_on_focus()
+{
+    return focus;
+}
+
+int gl_image::gl_window_width()
+{
+    return window_width;
+}
+
+int gl_image::gl_window_height()
+{
+    return window_height;
+}

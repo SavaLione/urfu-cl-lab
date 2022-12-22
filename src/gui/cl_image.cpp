@@ -70,7 +70,49 @@ __kernel void draw_image_cl(
 
 void cl_image::loop()
 {
+    if(is_on_focus())
+    {
+        draw_image_cl(ir, kernel_source);
+
+        /* Update texture */
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gl_window_width(), gl_window_width(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        /* Draw */
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+}
+
+void cl_image::init()
+{
     draw_image_cl(ir, kernel_source);
 }
 
-void cl_image::init() {}
+void cl_image::resize_ir(int const &width, int const &height)
+{
+    ir = image_representation(width, height, 4);
+    for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
+    {
+        switch(rgb)
+        {
+            case 0:
+                ir.data()[i] = 0;
+                break;
+            case 1:
+                ir.data()[i] = 0;
+                break;
+            case 2:
+                ir.data()[i] = 0;
+                break;
+            case 3:
+                ir.data()[i] = 255;
+                break;
+            default:
+                rgb = 0;
+                break;
+        }
+    }
+
+    draw_image_cl(ir, kernel_source);
+}

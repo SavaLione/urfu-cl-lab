@@ -43,6 +43,7 @@
 class cl_mandelbrot : public gl_image
 {
 private:
+    /* SDL2 */
     void init() override;
     void resize_ir(int const &width, int const &height) override;
 };

@@ -51,6 +51,11 @@ public:
     ~gl_image();
     void run();
 
+    /* Fix this */
+    bool is_on_focus();
+    int gl_window_width();
+    int gl_window_height();
+
 protected:
     image_representation ir;
 
