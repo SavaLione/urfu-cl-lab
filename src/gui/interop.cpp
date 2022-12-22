@@ -118,14 +118,7 @@ interop::interop()
     /* OpenCL */
 
     // create the OpenGL/OpenCL shared context
-    try
-    {
-        context_ = boost::compute::opengl_create_shared_context();
-    }
-    catch(std::exception &e)
-    {
-        spdlog::error("Can't create OpenGL shared context: {}", e.what());
-    }
+    context_ = boost::compute::opengl_create_shared_context();
 
     // get gpu device
     boost::compute::device gpu = context_.get_device();
@@ -140,93 +133,6 @@ interop::interop()
 
     // Resize
     resize_window(window_width, window_height);
-
-    // // create the OpenGL/OpenCL shared context
-    // try
-    // {
-    //     context_ = boost::compute::opengl_create_shared_context();
-    // }
-    // catch(std::exception &e)
-    // {
-    //     spdlog::error("Can't create OpenGL shared context: {}", e.what());
-    // }
-
-    // boost::compute::device gpu = context_.get_device();
-    // spdlog::info("device: {}", gpu.name());
-
-    /* OpenCL */
-    // // get the default device
-    // boost::compute::device gpu = boost::compute::system::default_device();
-
-    // // create context object
-    // boost::compute::context ctx = boost::compute::system::default_context();
-
-    // query number of devices using the OpenCL API
-    // cl_uint num_devices;
-    // clGetContextInfo(ctx, CL_CONTEXT_NUM_DEVICES, sizeof(cl_uint), &num_devices, 0);
-    // spdlog::info("num_devices: {}", num_devices);
-
-    /* OpenGL */
-    // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // glGenVertexArrays(1, &vertex_array_id);
-    // glBindVertexArray(vertex_array_id);
-
-    // // Create and compile program
-    // program_id = program(vertex_shader, fragment_shader);
-
-    // // Triangle
-    // static const GLfloat g_vertex_buffer_data[] = {
-    //     -1.0f,
-    //     -1.0f,
-    //     0.0f,
-    //     1.0f,
-    //     -1.0f,
-    //     0.0f,
-    //     0.0f,
-    //     1.0f,
-    //     0.0f,
-    // };
-
-    // // Vertex buffer
-    // glGenBuffers(1, &vertex_buffer);
-    // glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-    // glOrtho(0.0, window_width, 0.0, window_height, -1.0, 1.0);
-    // glMatrixMode(GL_MODELVIEW);
-    // glLoadIdentity();
-
-    // // setup the mandelbrot kernel
-    // boost::compute::kernel kernel(program_, "mandelbrot");
-    // kernel.set_arg(0, cl_texture_);
-
-    // // acquire the opengl texture so it can be used in opencl
-    // boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue_);
-
-    // // execute the mandelbrot kernel
-    // queue_.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
-
-    // // release the opengl texture so it can be used by opengl
-    // boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue_);
-
-    // // ensure opencl is finished before rendering in opengl
-    // queue_.finish();
-
-    // // draw a single quad with the mandelbrot image texture
-    // glEnable(GL_TEXTURE_2D);
-    // glBindTexture(GL_TEXTURE_2D, gl_texture_);
-
-    // // clang-format off
-    // glBegin(GL_QUADS);
-    // glTexCoord2f(0, 0); glVertex2f(0, 0);
-    // glTexCoord2f(0, 1); glVertex2f(0, window_height);
-    // glTexCoord2f(1, 1); glVertex2f(window_width, window_height);
-    // glTexCoord2f(1, 0); glVertex2f(window_width, 0);
-    // glEnd();
-    // // clang-format on
 }
 
 interop::~interop()
