@@ -55,6 +55,7 @@
 #include "gui/rgb_triangle.h"
 #include "gui/vao_triangle.h"
 #include "gui/gl_matrices.h"
+#include "gui/interop.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -96,8 +97,7 @@ int main(int argc, char *argv[])
          {"laboratory-work", required_argument, nullptr, 'l'},
          {"verbose", no_argument, nullptr, 'b'},
          {"help", no_argument, nullptr, 'h'},
-         {"build-info", no_argument, nullptr, 'u'}
-         }};
+         {"build-info", no_argument, nullptr, 'u'}}};
 
     while(true)
     {
@@ -216,10 +216,11 @@ int main(int argc, char *argv[])
                     case 4:
                     case 5:
                     case 6:
+                    case 7:
                         settings_instance.set_laboratory_work(l);
                         break;
                     default:
-                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4, 5 or 6");
+                        spdlog::error("argument -l or --laboratory-work must be 1, 2, 3, 4, 5, 6 or 7");
                         print_help();
                         break;
                 }
@@ -244,7 +245,7 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-    
+
     try
     {
         switch(settings_instance.get_laboratory_work())
@@ -304,6 +305,12 @@ int main(int argc, char *argv[])
                 glm.run();
                 break;
             }
+            case 7:
+            {
+                interop i;
+                i.run();
+                break;
+            }
             default:
                 print_help();
                 break;
@@ -333,7 +340,7 @@ void print_help()
     std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000) (OpenCL)" << std::endl;
     std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100) (OpenCL)" << std::endl;
     std::cout << "  -l, --laboratory-work <number>  Laboratory work number (default: 1)" << std::endl;
-    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4, 5 or 6" << std::endl;
+    std::cout << "                                  --laboratory-work must be: 1, 2, 3, 4, 5, 6 or 7" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;
@@ -402,11 +409,11 @@ void print_build_info()
     std::cout << std::endl;
     std::cout << "Project options" << std::endl;
     std::cout << "    External fmt library: ";
-    #ifdef NYX_EXTERNAL_FMT
-        std::cout << "YES";
-    #else
-        std::cout << "YES";
-    #endif
+#ifdef NYX_EXTERNAL_FMT
+    std::cout << "YES";
+#else
+    std::cout << "YES";
+#endif
     std::cout << std::endl;
 
     exit(EXIT_SUCCESS);

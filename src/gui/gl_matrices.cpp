@@ -104,7 +104,7 @@ gl_matrices::gl_matrices()
     matrix_id = glGetUniformLocation(program_id.id(), "MVP");
 
     // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-    projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+    projection = glm::perspective(glm::radians(fov), ratio_x / ratio_y, display_range_near, display_range_far);
 
     // Camera matrix
     view = glm::lookAt(
@@ -177,8 +177,10 @@ void gl_matrices::pool_event()
                         _exit = true;
                         break;
                     case SDLK_f:
-                    
-                        spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
+                        fov += 5.0f;
+                        projection = glm::perspective(glm::radians(fov), ratio_x / ratio_y, display_range_near, display_range_far);
+
+                        mvp = projection * view * model;
                         break;
                     default:
                         break;

@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 3.13.1)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.5.1"
+    VERSION "2.5.2"
     DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
     HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
@@ -73,6 +73,7 @@ set(NYX_GUI_SRC
     src/gui/gl_image.cpp
     src/gui/gl_matrices.cpp
     src/gui/image_representation.cpp
+    src/gui/interop.cpp
     "src/gui/program.cpp"
     src/gui/rgb_triangle.cpp
     src/gui/sdl_wrapper.cpp
