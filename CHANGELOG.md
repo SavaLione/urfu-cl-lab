@@ -40,6 +40,8 @@
 - Added window resize support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
 - Added window resize event (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
 - Added on focus support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added small fixes to ``interop``
+- Cleaned up ``interop``
 
 2.0.1 - 2022-11-22
 ------------------

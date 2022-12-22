@@ -73,10 +73,11 @@ private:
     /* OpenCL */
     std::string cl_source;
 
-    boost::compute::context context_;
-    boost::compute::command_queue queue_;
-    boost::compute::program program_;
-    boost::compute::opengl_texture cl_texture_;
+    boost::compute::device gpu;
+    boost::compute::context cl_context;
+    boost::compute::command_queue cl_queue;
+    boost::compute::program cl_program;
+    boost::compute::opengl_texture cl_texture;
 };
 
 #endif // GUI_INTEROP_H

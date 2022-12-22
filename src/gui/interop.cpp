@@ -118,18 +118,18 @@ interop::interop()
     /* OpenCL */
 
     // create the OpenGL/OpenCL shared context
-    context_ = boost::compute::opengl_create_shared_context();
+    cl_context = boost::compute::opengl_create_shared_context();
 
     // get gpu device
-    boost::compute::device gpu = context_.get_device();
+    gpu = cl_context.get_device();
     spdlog::info("device: {}", gpu.name());
 
     // setup command queue
-    queue_ = boost::compute::command_queue(context_, gpu);
+    cl_queue = boost::compute::command_queue(cl_context, gpu);
 
     // build mandelbrot program
-    program_ = boost::compute::program::create_with_source(cl_source, context_);
-    program_.build();
+    cl_program = boost::compute::program::create_with_source(cl_source, cl_context);
+    cl_program.build();
 
     // Resize
     resize_window(window_width, window_height);
@@ -158,20 +158,20 @@ void interop::loop()
         glLoadIdentity();
 
         // setup the mandelbrot kernel
-        boost::compute::kernel kernel(program_, "mandelbrot");
-        kernel.set_arg(0, cl_texture_);
+        boost::compute::kernel kernel(cl_program, "mandelbrot");
+        kernel.set_arg(0, cl_texture);
 
         // acquire the opengl texture so it can be used in opencl
-        boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue_);
+        boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture.get(), cl_queue);
 
         // execute the mandelbrot kernel
-        queue_.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
+        cl_queue.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
 
         // release the opengl texture so it can be used by opengl
-        boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue_);
+        boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture.get(), cl_queue);
 
         // ensure opencl is finished before rendering in opengl
-        queue_.finish();
+        cl_queue.finish();
 
         // draw a single quad with the mandelbrot image texture
         glEnable(GL_TEXTURE_2D);
@@ -215,5 +215,5 @@ void interop::resize_window(int const &width, int const &height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
     // create opencl object for the texture
-    cl_texture_ = boost::compute::opengl_texture(context_, GL_TEXTURE_2D, 0, gl_texture_, CL_MEM_WRITE_ONLY);
+    cl_texture = boost::compute::opengl_texture(cl_context, GL_TEXTURE_2D, 0, gl_texture_, CL_MEM_WRITE_ONLY);
 }
