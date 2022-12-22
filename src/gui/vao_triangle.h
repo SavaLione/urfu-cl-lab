@@ -46,7 +46,9 @@ public:
     ~vao_triangle();
 
 private:
+    /* SDL2 */
     void loop();
+    void resize_window(int const &width, int const &height);
 
     /* OpenGL */
     GLuint vertex_array_id = 0;
