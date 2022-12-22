@@ -53,27 +53,30 @@ rgb_triangle::rgb_triangle()
 
 void rgb_triangle::loop()
 {
-    std::float_t ratio = (std::float_t)window_width / (std::float_t)window_height;
+    if(focus)
+    {
+        std::float_t ratio = (std::float_t)window_width / (std::float_t)window_height;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotatef((float)rotate * 4.f, 0.f, 0.f, 1.f);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glRotatef((float)rotate * 4.f, 0.f, 0.f, 1.f);
 
-    // clang-format off
-    glBegin(GL_TRIANGLES);
-        glColor3f(1.f, 0.f, 0.f);
-        glVertex3f(-0.6f, -0.4f, 0.f);
-        glColor3f(0.f, 1.f, 0.f);
-        glVertex3f(0.6f, -0.4f, 0.f);
-        glColor3f(0.f, 0.f, 1.f);
-        glVertex3f(0.f, 0.6f, 0.f);
-    glEnd();
-    // clang-format on
+        // clang-format off
+        glBegin(GL_TRIANGLES);
+            glColor3f(1.f, 0.f, 0.f);
+            glVertex3f(-0.6f, -0.4f, 0.f);
+            glColor3f(0.f, 1.f, 0.f);
+            glVertex3f(0.6f, -0.4f, 0.f);
+            glColor3f(0.f, 0.f, 1.f);
+            glVertex3f(0.f, 0.6f, 0.f);
+        glEnd();
+        // clang-format on
+    }
 }
 
 void rgb_triangle::pool_event()

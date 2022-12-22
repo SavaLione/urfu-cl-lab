@@ -46,7 +46,7 @@
 - Added on focus event to ``gl_image`` (``src/gui/gl_image.h``, ``src/gui/gl_image.h``)
 - Added ``clear()`` to image representation (``src/gui/image_representation.h``, ``src/gui/image_representation.h``)
 - Added window resize support for ``rgb_triangle`` (``src/gui/rgb_triangle.h``, ``src/gui/rgb_triangle.h``)
-
+- Added on focus event to ``rgb_triangle`` (``src/gui/rgb_triangle.h``, ``src/gui/rgb_triangle.h``)
 
 2.0.1 - 2022-11-22
 ------------------
