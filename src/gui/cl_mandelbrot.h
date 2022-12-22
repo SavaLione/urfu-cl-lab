@@ -44,6 +44,7 @@ class cl_mandelbrot : public gl_image
 {
 private:
     void init() override;
+    void resize_ir(int const &width, int const &height) override;
 };
 
 #endif // GUI_CL_MANDELBROT_H

@@ -55,6 +55,13 @@ protected:
     image_representation ir;
 
 private:
+    /* SDL2 */
+    void resize_window(int const &width, int const &height);
+
+    virtual void resize_ir(int const &width, int const &height);
+
+    virtual void loop();
+
     /* OpenGL */
     GLuint _vao = 0;
     GLuint _vbo = 0;

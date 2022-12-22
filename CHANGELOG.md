@@ -42,6 +42,10 @@
 - Added on focus support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
 - Added small fixes to ``interop``
 - Cleaned up ``interop``
+- Added windows resize support for ``gl_image`` (``src/gui/gl_image.h``, ``src/gui/gl_image.h``)
+- Added on focus event to ``gl_image`` (``src/gui/gl_image.h``, ``src/gui/gl_image.h``)
+- Added ``clear()`` to image representation (``src/gui/image_representation.h``, ``src/gui/image_representation.h``)
+
 
 2.0.1 - 2022-11-22
 ------------------

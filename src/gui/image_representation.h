@@ -78,6 +78,7 @@ public:
     uint8_t const *const_data() const;
     void fill_zeros();
     void set_pixel(std::size_t x, std::size_t y, vec4 color);
+    void clear();
 
 private:
     std::size_t _width;

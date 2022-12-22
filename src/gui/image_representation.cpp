@@ -79,3 +79,11 @@ void image_representation::set_pixel(std::size_t x, std::size_t y, vec4 color)
     _image[(y * _width + x) * 4 + 2] = color.b;
     _image[(y * _width + x) * 4 + 3] = color.a;
 }
+
+void image_representation::clear()
+{
+    _width  = 0;
+    _height = 0;
+    _depth  = 0;
+    _image.clear();
+}

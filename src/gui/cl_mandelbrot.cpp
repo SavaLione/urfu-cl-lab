@@ -39,6 +39,8 @@
 
 #include "compute/new_gpu.h"
 
+#include "io/log/logger.h"
+
 /*
     Author of kernel: Willem Melching
     https://blog.willemmelching.nl/random/2020/04/12/mandelbrot/
@@ -120,4 +122,34 @@ __kernel void draw_write_only_cl(
 void cl_mandelbrot::init()
 {
     draw_write_only_cl(ir, mandelbrot_kernel_source);
+}
+
+void cl_mandelbrot::resize_ir(int const &width, int const &height)
+{
+    ir = image_representation(width, height, 4);
+    for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
+    {
+        switch(rgb)
+        {
+            case 0:
+                ir.data()[i] = 0;
+                break;
+            case 1:
+                ir.data()[i] = 0;
+                break;
+            case 2:
+                ir.data()[i] = 0;
+                break;
+            case 3:
+                ir.data()[i] = 255;
+                break;
+            default:
+                rgb = 0;
+                break;
+        }
+    }
+
+    draw_write_only_cl(ir, mandelbrot_kernel_source);
+
+    spdlog::info("ir width: {} height: {}", ir.width(), ir.height());
 }

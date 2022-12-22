@@ -69,15 +69,58 @@ gl_image::gl_image()
     }
 )glsl";
 
-    /* Some OpenGL settings */
+    /* OpenGL settings */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
 
+    resize_window(window_width, window_height);
+}
+
+gl_image::~gl_image()
+{
     /* OpenGL */
-    _vao = 0;
-    _vbo = 0;
-    _ebo = 0;
+    glDeleteBuffers(1, &_ebo);
+    glDeleteBuffers(1, &_vbo);
+    glDeleteVertexArrays(1, &_vao);
+    glDeleteTextures(1, textures.data());
+}
+
+void gl_image::run()
+{
+    /* Initialization */
+    init();
+
+    /* Main loop */
+    while(!_exit)
+    {
+        pool_event();
+
+        loop();
+
+        SDL_GL_SwapWindow(window);
+    }
+}
+
+void gl_image::resize_window(int const &width, int const &height)
+{
+    window_width  = width;
+    window_height = height;
+
+    /* OpenGL */
+    if(_ebo != 0)
+        glDeleteBuffers(1, &_ebo);
+    if(_vbo != 0)
+        glDeleteBuffers(1, &_vbo);
+    if(_vao != 0)
+        glDeleteVertexArrays(1, &_vao);
+    if(textures[0] != 0)
+        glDeleteTextures(1, textures.data());
+    for(std::size_t i = 0; i < textures.size(); i++)
+        textures[i] = 0;
+
+    // resize viewport
+    glViewport(0, 0, window_width, window_height);
 
     // Create Vertex Array Object
     glGenVertexArrays(1, &_vao);
@@ -135,6 +178,21 @@ gl_image::gl_image()
     // Load textures
     glGenTextures(1, textures.data());
 
+    resize_ir(width, height);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+    glUniform1i(glGetUniformLocation(shaderProgram, "tex_sampler"), 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void gl_image::resize_ir(int const &width, int const &height)
+{
     ir = image_representation(window_width, window_height, 4);
     for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
     {
@@ -157,46 +215,18 @@ gl_image::gl_image()
                 break;
         }
     }
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
-    glUniform1i(glGetUniformLocation(shaderProgram, "tex_sampler"), 0);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-gl_image::~gl_image()
+void gl_image::loop()
 {
-    /* OpenGL */
-    glDeleteBuffers(1, &_ebo);
-    glDeleteBuffers(1, &_vbo);
-    glDeleteVertexArrays(1, &_vao);
-    glDeleteTextures(1, textures.data());
-}
-
-void gl_image::run()
-{
-    /* Initialization */
-    init();
-
-    /* Main loop */
-    while(!_exit)
+    if(focus)
     {
-        loop();
-        pool_event();
-
         /* Update texture */
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ir.width(), ir.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ir.data());
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* Draw */
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        SDL_GL_SwapWindow(window);
     }
 }
