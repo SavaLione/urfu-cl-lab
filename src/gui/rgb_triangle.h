@@ -47,8 +47,12 @@ public:
     rgb_triangle();
 
 private:
+    /* SDL2 */
     void loop();
     void pool_event();
+    void resize_window(int const &width, int const &height);
+
+    /* RGB OpenGL triangle */
     std::int8_t rotate = 0;
 };
 

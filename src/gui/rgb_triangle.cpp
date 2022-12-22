@@ -43,17 +43,17 @@
 
 rgb_triangle::rgb_triangle()
 {
-    /* Some OpenGL settings */
+    /* OpenGL settings */
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearDepth(1.0f);
     glEnable(GL_DEPTH_TEST);
+
+    resize_window(window_width, window_height);
 }
 
 void rgb_triangle::loop()
 {
     std::float_t ratio = (std::float_t)window_width / (std::float_t)window_height;
-
-    glViewport(0, 0, window_width, window_height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -103,6 +103,24 @@ void rgb_triangle::pool_event()
             case SDL_MOUSEBUTTONDOWN:
                 spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
                 break;
+            case SDL_WINDOWEVENT:
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                        spdlog::info("Window resize x: {} y: {}", event.window.data1, event.window.data2);
+                        resize_window(event.window.data1, event.window.data2);
+                        break;
+                    case SDL_WINDOWEVENT_FOCUS_LOST:
+                        focus = false;
+                        break;
+                    case SDL_WINDOWEVENT_FOCUS_GAINED:
+                        focus = true;
+                        break;
+                    default:
+                        break;
+                }
+                break;
             case SDL_QUIT:
                 _exit = true;
                 break;
@@ -110,4 +128,12 @@ void rgb_triangle::pool_event()
                 break;
         }
     }
+}
+
+void rgb_triangle::resize_window(int const &width, int const &height)
+{
+    window_width  = width;
+    window_height = height;
+
+    glViewport(0, 0, window_width, window_height);
 }
