@@ -36,35 +36,7 @@
  */
 #include "gui/interop.h"
 
-#include <GL/glx.h>
-#include <cstddef>
-#include <string>
-#include <CL/cl.h>
-#include <CL/cl_gl.h>
-
-#include <boost/compute/event.hpp>
-#include <boost/compute/system.hpp>
-#include <boost/compute/algorithm/copy.hpp>
-#include <boost/compute/async/future.hpp>
-#include <boost/compute/container/vector.hpp>
-#include <boost/compute/interop/opengl.hpp>
-#include <boost/compute/interop/opengl/opengl_texture.hpp>
-#include <boost/compute/command_queue.hpp>
-#include <boost/compute/kernel.hpp>
-#include <boost/compute/program.hpp>
-#include <boost/compute/system.hpp>
-#include <boost/compute/interop/opengl.hpp>
-#include <boost/compute/utility/dim.hpp>
-#include <boost/compute/utility/source.hpp>
-
 #include "io/log/logger.h"
-
-/* OpenCL */
-boost::compute::context context_;
-boost::compute::command_queue queue_;
-boost::compute::program program_;
-GLuint gl_texture_;
-boost::compute::opengl_texture cl_texture_;
 
 interop::interop()
 {
@@ -166,28 +138,8 @@ interop::interop()
     program_ = boost::compute::program::create_with_source(cl_source, context_);
     program_.build();
 
-    /* OpenGL resize */
-    // resize viewport
-    glViewport(0, 0, window_width, window_height);
-
-    // delete old texture
-    if(gl_texture_)
-    {
-        glDeleteTextures(1, &gl_texture_);
-        gl_texture_ = 0;
-    }
-
-    // generate new texture
-    glGenTextures(1, &gl_texture_);
-    glBindTexture(GL_TEXTURE_2D, gl_texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-    // create opencl object for the texture
-    cl_texture_ = boost::compute::opengl_texture(context_, GL_TEXTURE_2D, 0, gl_texture_, CL_MEM_WRITE_ONLY);
+    // Resize
+    resize_window(window_width, window_height);
 
     // // create the OpenGL/OpenCL shared context
     // try
@@ -241,27 +193,27 @@ interop::interop()
     // glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     // glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, window_width, 0.0, window_height, -1.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    // glMatrixMode(GL_PROJECTION);
+    // glLoadIdentity();
+    // glOrtho(0.0, window_width, 0.0, window_height, -1.0, 1.0);
+    // glMatrixMode(GL_MODELVIEW);
+    // glLoadIdentity();
 
-    // setup the mandelbrot kernel
-    boost::compute::kernel kernel(program_, "mandelbrot");
-    kernel.set_arg(0, cl_texture_);
+    // // setup the mandelbrot kernel
+    // boost::compute::kernel kernel(program_, "mandelbrot");
+    // kernel.set_arg(0, cl_texture_);
 
-    // acquire the opengl texture so it can be used in opencl
-    boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue_);
+    // // acquire the opengl texture so it can be used in opencl
+    // boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue_);
 
-    // execute the mandelbrot kernel
-    queue_.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
+    // // execute the mandelbrot kernel
+    // queue_.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
 
-    // release the opengl texture so it can be used by opengl
-    boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue_);
+    // // release the opengl texture so it can be used by opengl
+    // boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue_);
 
-    // ensure opencl is finished before rendering in opengl
-    queue_.finish();
+    // // ensure opencl is finished before rendering in opengl
+    // queue_.finish();
 
     // // draw a single quad with the mandelbrot image texture
     // glEnable(GL_TEXTURE_2D);
@@ -288,40 +240,74 @@ interop::~interop()
 
 void interop::loop()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if(focus)
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // // Use our shader
-    // glUseProgram(program_id.id());
+        /* Paint OpenGL */
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, window_width, 0.0, window_height, -1.0, 1.0);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
 
-    // // First attribute buffer : vertices
-    // glEnableVertexAttribArray(0);
-    // glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        // setup the mandelbrot kernel
+        boost::compute::kernel kernel(program_, "mandelbrot");
+        kernel.set_arg(0, cl_texture_);
 
-    // /*
-    //     0           - index
-    //     3           - size
-    //     GL_FLOAT    - type
-    //     GL_FALSE    - normalized
-    //     0           - stride
-    //     (void *)0   - array buffer offset
-    // */
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+        // acquire the opengl texture so it can be used in opencl
+        boost::compute::opengl_enqueue_acquire_gl_objects(1, &cl_texture_.get(), queue_);
 
-    // // Draw the triangle
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
+        // execute the mandelbrot kernel
+        queue_.enqueue_nd_range_kernel(kernel, boost::compute::dim(0, 0), boost::compute::dim(window_width, window_height), boost::compute::dim(1, 1));
 
-    // glDisableVertexAttribArray(0);
+        // release the opengl texture so it can be used by opengl
+        boost::compute::opengl_enqueue_release_gl_objects(1, &cl_texture_.get(), queue_);
 
-    // draw a single quad with the mandelbrot image texture
-    glEnable(GL_TEXTURE_2D);
+        // ensure opencl is finished before rendering in opengl
+        queue_.finish();
+
+        // draw a single quad with the mandelbrot image texture
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, gl_texture_);
+
+        // clang-format off
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(0, 0);
+        glTexCoord2f(0, 1); glVertex2f(0, window_height);
+        glTexCoord2f(1, 1); glVertex2f(window_width, window_height);
+        glTexCoord2f(1, 0); glVertex2f(window_width, 0);
+        glEnd();
+        // clang-format on
+    }
+}
+
+void interop::resize_window(int const &width, int const &height)
+{
+    /* Set window size */
+    window_width  = width;
+    window_height = height;
+
+    /* OpenGL resize */
+    // resize viewport
+    glViewport(0, 0, window_width, window_height);
+
+    // delete old texture
+    if(gl_texture_)
+    {
+        glDeleteTextures(1, &gl_texture_);
+        gl_texture_ = 0;
+    }
+
+    // generate new texture
+    glGenTextures(1, &gl_texture_);
     glBindTexture(GL_TEXTURE_2D, gl_texture_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, window_width, window_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-    // clang-format off
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(0, 0);
-    glTexCoord2f(0, 1); glVertex2f(0, window_height);
-    glTexCoord2f(1, 1); glVertex2f(window_width, window_height);
-    glTexCoord2f(1, 0); glVertex2f(window_width, 0);
-    glEnd();
-    // clang-format on
+    // create opencl object for the texture
+    cl_texture_ = boost::compute::opengl_texture(context_, GL_TEXTURE_2D, 0, gl_texture_, CL_MEM_WRITE_ONLY);
 }

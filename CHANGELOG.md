@@ -36,6 +36,10 @@
 - Fixed OpenGL shader representation (``src/gui/shader.h``, ``src/gui/shader.cpp``)
 - Fixed OpenGL program representation (``src/gui/program.h``, ``src/gui/program.cpp``)
 - Completed third OpenGL task
+- Added interoperability (OpenCL/OpenGL) (``src/gui/interop.h``, ``src/gui/interop.cpp``)
+- Added window resize support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added window resize event (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added on focus support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
 
 2.0.1 - 2022-11-22
 ------------------

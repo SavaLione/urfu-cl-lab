@@ -55,7 +55,7 @@ sdl_wrapper::sdl_wrapper()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    window = SDL_CreateWindow(_name.c_str(), 0, 0, 1024, 1024, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow(_name.c_str(), 0, 0, 1024, 1024, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if(!window)
     {
         std::string _err = "Error creating SDL2 window: ";
@@ -115,6 +115,24 @@ void sdl_wrapper::pool_event()
             case SDL_MOUSEBUTTONDOWN:
                 spdlog::info("Touch x: {} y: {}", event.button.x, event.button.y);
                 break;
+            case SDL_WINDOWEVENT:
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                        spdlog::info("Window resize x: {} y: {}", event.window.data1, event.window.data2);
+                        resize_window(event.window.data1, event.window.data2);
+                        break;
+                    case SDL_WINDOWEVENT_FOCUS_LOST:
+                        focus = false;
+                        break;
+                    case SDL_WINDOWEVENT_FOCUS_GAINED:
+                        focus = true;
+                        break;
+                    default:
+                        break;
+                }
+                break;
             case SDL_QUIT:
                 _exit = true;
                 break;
@@ -142,3 +160,9 @@ void sdl_wrapper::run()
 }
 
 void sdl_wrapper::init() {}
+
+void sdl_wrapper::resize_window(int const &width, int const &height)
+{
+    window_width  = width;
+    window_height = height;
+}

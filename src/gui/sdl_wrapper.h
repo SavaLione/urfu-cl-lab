@@ -66,6 +66,11 @@ protected:
     SDL_GLContext context;
     SDL_Event event;
 
+    // Is in focus?
+    bool focus = false;
+
+    virtual void resize_window(int const &width, int const &height);
+
     int window_width  = 0;
     int window_height = 0;
     bool _exit        = false;

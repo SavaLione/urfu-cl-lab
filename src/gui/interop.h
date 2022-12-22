@@ -39,6 +39,19 @@
 
 #include "gui/sdl_wrapper.h"
 
+#include <boost/compute/event.hpp>
+#include <boost/compute/system.hpp>
+#include <boost/compute/algorithm/copy.hpp>
+#include <boost/compute/async/future.hpp>
+#include <boost/compute/container/vector.hpp>
+#include <boost/compute/interop/opengl.hpp>
+#include <boost/compute/interop/opengl/opengl_texture.hpp>
+#include <boost/compute/command_queue.hpp>
+#include <boost/compute/kernel.hpp>
+#include <boost/compute/program.hpp>
+#include <boost/compute/utility/dim.hpp>
+#include <boost/compute/utility/source.hpp>
+
 class interop : public sdl_wrapper
 {
 public:
@@ -48,13 +61,22 @@ public:
 private:
     void loop();
 
+    /* SDL2 */
+    void resize_window(int const &width, int const &height);
+
     /* OpenGL */
     GLuint vertex_array_id = 0;
     GLuint vertex_buffer   = 0;
+    GLuint gl_texture_;
     program program_id;
 
     /* OpenCL */
     std::string cl_source;
+
+    boost::compute::context context_;
+    boost::compute::command_queue queue_;
+    boost::compute::program program_;
+    boost::compute::opengl_texture cl_texture_;
 };
 
 #endif // GUI_INTEROP_H
