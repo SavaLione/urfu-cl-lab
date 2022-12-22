@@ -70,6 +70,7 @@ set(NYX_GUI_SRC
     src/gui/buffer_representation.cpp
     src/gui/cl_image.cpp
     src/gui/cl_mandelbrot.cpp
+    src/gui/cl_particles.cpp
     src/gui/gl_image.cpp
     src/gui/gl_matrices.cpp
     src/gui/image_representation.cpp

@@ -56,6 +56,7 @@
 #include "gui/vao_triangle.h"
 #include "gui/gl_matrices.h"
 #include "gui/interop.h"
+#include "gui/cl_particles.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -218,10 +219,11 @@ int main(int argc, char *argv[])
                     case 4:
                     case 5:
                     case 6:
+                    case 7:
                         settings_instance.set_laboratory_work(t);
                         break;
                     default:
-                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, or 6");
+                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, 6 or 7");
                         print_help();
                         break;
                 }
@@ -322,6 +324,12 @@ int main(int argc, char *argv[])
                     iop.run();
                     break;
                 }
+                case 7:
+                {
+                    cl_particles clp;
+                    clp.run();
+                    break;
+                }
                 default:
                     print_help();
                     break;
@@ -358,6 +366,7 @@ void print_help()
     std::cout << "                                      4 - draw OpenGL VAO triangle" << std::endl;
     std::cout << "                                      5 - draw OpenGL VAO triangle with matrices support" << std::endl;
     std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
+    std::cout << "                                      7 - draw OpenCL particles with interoperability" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;
