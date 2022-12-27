@@ -30,22 +30,22 @@
  */
 /**
  * @file
- * @brief OpenGL RGB cube
+ * @brief OpenGL RGB textured cube
  * @author Saveliy Pototskiy (SavaLione)
  * @date 27 Dec 2022
  */
-#ifndef GUI_RGB_CUBE_H
-#define GUI_RGB_CUBE_H
+#ifndef GUI_RGB_CUBE_TEXTURE_H
+#define GUI_RGB_CUBE_TEXTURE_H
 
 #include "gui/sdl_wrapper.h"
 
 #include <glm/glm.hpp>
 
-class rgb_cube : public sdl_wrapper
+class rgb_cube_texture : public sdl_wrapper
 {
 public:
-    rgb_cube();
-    ~rgb_cube();
+    rgb_cube_texture();
+    ~rgb_cube_texture();
 
 private:
     void loop();
@@ -85,4 +85,4 @@ private:
     glm::mat4 mvp;
 };
 
-#endif // GUI_RGB_CUBE_H
+#endif // GUI_RGB_CUBE_TEXTURE_H

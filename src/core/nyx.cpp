@@ -58,6 +58,7 @@
 #include "gui/interop.h"
 #include "gui/cl_particles.h"
 #include "gui/rgb_cube.h"
+#include "gui/rgb_cube_texture.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -222,10 +223,11 @@ int main(int argc, char *argv[])
                     case 6:
                     case 7:
                     case 8:
+                    case 9:
                         settings_instance.set_laboratory_work(t);
                         break;
                     default:
-                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, 6, 7 or 8");
+                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, 6, 7, 8 or 9");
                         print_help();
                         break;
                 }
@@ -338,6 +340,12 @@ int main(int argc, char *argv[])
                     rc.run();
                     break;
                 }
+                case 9:
+                {
+                    rgb_cube_texture rct;
+                    rct.run();
+                    break;
+                }
                 default:
                     print_help();
                     break;
@@ -376,6 +384,7 @@ void print_help()
     std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
     std::cout << "                                      7 - draw OpenCL particles with interoperability (don't work)" << std::endl;
     std::cout << "                                      8 - draw OpenGL RGB cube" << std::endl;
+    std::cout << "                                      9 - draw OpenGL RGB textured cube (don't work)" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;

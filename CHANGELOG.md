@@ -55,6 +55,7 @@
 - Changed application flags (``-l``, ``--laboratory-work``) -> (``-t``, ``--task-number``)
 - Marked as a deprecated class for drawing some buffer via OpenCL buffer (``src/gui/cl_image.h``, ``src/gui/cl_image.h``)
 - Added OpenGL RGB cube (``src/gui/rgb_cube.h``, ``src/gui/rgb_cube.h``)
+- Added OpenGL RGB textured cube (``src/gui/rgb_cube_texture.h``, ``src/gui/rgb_cube_texture.h``) (``It doesn't work``)
 
 2.0.1 - 2022-11-22
 ------------------
