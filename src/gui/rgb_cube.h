@@ -30,30 +30,55 @@
  */
 /**
  * @file
- * @brief OpenGL RGB triangle
+ * @brief OpenGL RGB cube
  * @author Saveliy Pototskiy (SavaLione)
- * @date 26 Nov 2022
+ * @date 27 Dec 2022
  */
-#ifndef GUI_RGB_TRIANGLE_H
-#define GUI_RGB_TRIANGLE_H
+#ifndef GUI_RGB_CUBE_H
+#define GUI_RGB_CUBE_H
 
 #include "gui/sdl_wrapper.h"
 
-#include <cstdint>
+#include <glm/glm.hpp>
 
-class rgb_triangle : public sdl_wrapper
+class rgb_cube : public sdl_wrapper
 {
 public:
-    rgb_triangle();
+    rgb_cube();
+    ~rgb_cube();
 
 private:
-    /* SDL2 */
     void loop();
     void pool_event();
-    void resize_window(int const &width, int const &height);
 
-    /* RGB OpenGL triangle */
-    std::int8_t rotate = 0;
+    /* OpenGL */
+    GLuint vertex_array_id = 0;
+    GLuint vertex_buffer   = 0;
+    GLuint matrix_id       = 0;
+    program program_id;
+
+    /* GLM */
+
+    /* Field of view */
+    std::float_t fov = 45.0f;
+
+    std::float_t ratio_x = 4.0f;
+    std::float_t ratio_y = 3.0f;
+
+    std::float_t display_range_near = 0.1f;
+    std::float_t display_range_far  = 100.0f;
+
+    /* Projection matrix */
+    glm::mat4 projection;
+
+    /* Camera matrix */
+    glm::mat4 view;
+
+    /* Model matrix */
+    glm::mat4 model;
+
+    /* Model view projection */
+    glm::mat4 mvp;
 };
 
-#endif // GUI_RGB_TRIANGLE_H
+#endif // rgb_cube

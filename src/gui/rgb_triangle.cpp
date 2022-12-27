@@ -30,7 +30,7 @@
  */
 /**
  * @file
- * @brief RGB OpenGL triangle
+ * @brief OpenGL RGB triangle
  * @author Saveliy Pototskiy (SavaLione)
  * @date 26 Nov 2022
  */

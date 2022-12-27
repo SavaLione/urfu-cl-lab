@@ -57,6 +57,7 @@
 #include "gui/gl_matrices.h"
 #include "gui/interop.h"
 #include "gui/cl_particles.h"
+#include "gui/rgb_cube.h"
 
 #include <cstdlib>
 #include <getopt.h>
@@ -220,10 +221,11 @@ int main(int argc, char *argv[])
                     case 5:
                     case 6:
                     case 7:
+                    case 8:
                         settings_instance.set_laboratory_work(t);
                         break;
                     default:
-                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, 6 or 7");
+                        spdlog::error("argument -t or --task-number must be 1, 2, 3, 4, 5, 6, 7 or 8");
                         print_help();
                         break;
                 }
@@ -330,6 +332,12 @@ int main(int argc, char *argv[])
                     clp.run();
                     break;
                 }
+                case 8:
+                {
+                    rgb_cube rc;
+                    rc.run();
+                    break;
+                }
                 default:
                     print_help();
                     break;
@@ -359,14 +367,15 @@ void print_help()
     std::cout << "  -v, --vector-size <size>        Vector of elements size (default: 102400000)" << std::endl;
     std::cout << "  -i, --iteration-count <count>   Count of iterations (default: 100)" << std::endl;
     std::cout << "  -t, --task-number <number>      Task number" << std::endl;
-    std::cout << "                                  --task-number must be: 1, 2, 3, 4, 5, or 6, where:" << std::endl;
+    std::cout << "                                  --task-number must be: 1, 2, 3, 4, 5, 6, 7, or 8 where:" << std::endl;
     std::cout << "                                      1 - draw some buffer via OpenCL buffer (deprecated)" << std::endl;
     std::cout << "                                      2 - draw Mandelbrot set via OpenCL buffer" << std::endl;
     std::cout << "                                      3 - draw OpenGL RGB triangle" << std::endl;
     std::cout << "                                      4 - draw OpenGL VAO triangle" << std::endl;
     std::cout << "                                      5 - draw OpenGL VAO triangle with matrices support" << std::endl;
     std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
-    std::cout << "                                      7 - draw OpenCL particles with interoperability" << std::endl;
+    std::cout << "                                      7 - draw OpenCL particles with interoperability (don't work)" << std::endl;
+    std::cout << "                                      8 - draw OpenGL RGB cube" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;

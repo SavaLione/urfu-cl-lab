@@ -76,6 +76,7 @@ set(NYX_GUI_SRC
     src/gui/image_representation.cpp
     src/gui/interop.cpp
     "src/gui/program.cpp"
+    src/gui/rgb_cube.cpp
     src/gui/rgb_triangle.cpp
     src/gui/sdl_wrapper.cpp
     src/gui/shader.cpp
