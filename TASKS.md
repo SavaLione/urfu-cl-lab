@@ -58,12 +58,12 @@ Task: Build an application that models and visualizes the behavior of particles 
     - [ ] Rotate
     - [ ] Move
     - [ ] Scale
-- [ ] Keyboard support
+- [x] Keyboard support
 
 ### Fourth OpenGL lab
-- [ ] Virtual cam
-- [ ] RGB cube
-- [ ] Keyboard support
+- [x] Virtual cam
+- [x] RGB cube
+- [x] Keyboard support
 
 ### Fifth OpenGL lab
 - [ ] Texture
