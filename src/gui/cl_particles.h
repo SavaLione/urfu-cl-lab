@@ -83,7 +83,7 @@ private:
     boost::compute::image2d cl_image_in;
     boost::compute::image2d cl_image_out;
 
-    image_representation ir;
+    image_representation<float> ir;
 };
 
 #endif // GUI_CL_PARTICLES_H

@@ -57,7 +57,7 @@ public:
     int gl_window_height();
 
 protected:
-    image_representation ir;
+    image_representation<std::uint8_t> ir;
 
 private:
     /* SDL2 */

@@ -91,7 +91,7 @@ void cl_image::init()
 
 void cl_image::resize_ir(int const &width, int const &height)
 {
-    ir = image_representation(width, height, 4);
+    ir = image_representation<std::uint8_t>(width, height, 4);
     for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
     {
         switch(rgb)

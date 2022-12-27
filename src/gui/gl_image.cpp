@@ -193,7 +193,7 @@ void gl_image::resize_window(int const &width, int const &height)
 
 void gl_image::resize_ir(int const &width, int const &height)
 {
-    ir = image_representation(window_width, window_height, 4);
+    ir = image_representation<std::uint8_t>(window_width, window_height, 4);
     for(std::size_t i = 0, rgb = 0; i < ir.size(); i++, rgb++)
     {
         switch(rgb)

@@ -42,9 +42,9 @@
 #include "gui/image_representation.h"
 #include "gui/buffer_representation.h"
 
-void draw_image_cl(image_representation &img);
-void draw_image_cl(image_representation &img, std::string const &kern);
-void draw_write_only_cl(image_representation &img, std::string const &kern);
-void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff);
+void draw_image_cl(image_representation<std::uint8_t> &img);
+void draw_image_cl(image_representation<std::uint8_t> &img, std::string const &kern);
+void draw_write_only_cl(image_representation<std::uint8_t> &img, std::string const &kern);
+void draw_image_buffer_cl(image_representation<std::uint8_t> &img, buffer_representation<boost::compute::uchar4_> &buff);
 
 #endif // COMPUTE_NEW_GPU_H

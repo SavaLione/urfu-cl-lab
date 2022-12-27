@@ -41,22 +41,23 @@
 #include <cstdlib>
 #include <vector>
 
+template<typename T>
 class image_representation
 {
 public:
     struct vec3
     {
-        std::int8_t r;
-        std::int8_t g;
-        std::int8_t b;
+        T r;
+        T g;
+        T b;
     };
 
     struct vec4
     {
-        std::int8_t r;
-        std::int8_t g;
-        std::int8_t b;
-        std::int8_t a;
+        T r;
+        T g;
+        T b;
+        T a;
     };
 
     image_representation() : _width(0), _height(0), _depth(0)
@@ -74,8 +75,8 @@ public:
     std::size_t const &height() const;
     std::size_t const &depth() const;
     std::size_t size();
-    uint8_t *data();
-    uint8_t const *const_data() const;
+    T *data();
+    T const *const_data() const;
     void fill_zeros();
     void set_pixel(std::size_t x, std::size_t y, vec4 color);
     void clear();
@@ -84,7 +85,70 @@ private:
     std::size_t _width;
     std::size_t _height;
     std::size_t _depth;
-    std::vector<uint8_t> _image;
+    std::vector<T> _image;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+std::size_t const &image_representation<T>::width() const
+{
+    return _width;
+}
+
+template<typename T>
+std::size_t const &image_representation<T>::height() const
+{
+    return _height;
+}
+
+template<typename T>
+std::size_t const &image_representation<T>::depth() const
+{
+    return _depth;
+}
+
+template<typename T>
+std::size_t image_representation<T>::size()
+{
+    return _image.size();
+}
+
+template<typename T>
+T *image_representation<T>::data()
+{
+    return _image.data();
+}
+
+template<typename T>
+T const *image_representation<T>::const_data() const
+{
+    return _image.data();
+}
+
+template<typename T>
+void image_representation<T>::fill_zeros()
+{
+    for(std::size_t i = 0; i < _image.size(); i++)
+        _image[i] = 0;
+}
+
+template<typename T>
+void image_representation<T>::set_pixel(std::size_t x, std::size_t y, vec4 color)
+{
+    _image[(y * _width + x) * 4 + 0] = color.r;
+    _image[(y * _width + x) * 4 + 1] = color.g;
+    _image[(y * _width + x) * 4 + 2] = color.b;
+    _image[(y * _width + x) * 4 + 3] = color.a;
+}
+
+template<typename T>
+void image_representation<T>::clear()
+{
+    _width  = 0;
+    _height = 0;
+    _depth  = 0;
+    _image.clear();
+}
 
 #endif // CORE_IMAGE_REPRESENTATION_H

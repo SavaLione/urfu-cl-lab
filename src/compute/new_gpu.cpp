@@ -154,7 +154,7 @@ __kernel void draw_image_buffer_cl(
 }
 )opencl_kernel";
 
-void draw_image_cl(image_representation &img)
+void draw_image_cl(image_representation<std::uint8_t> &img)
 {
     // get the default device
     compute::device device = compute::system::default_device();
@@ -224,7 +224,7 @@ void draw_image_cl(image_representation &img)
     queue.finish();
 }
 
-void draw_image_cl(image_representation &img, std::string const &kern)
+void draw_image_cl(image_representation<std::uint8_t> &img, std::string const &kern)
 {
     // get the default device
     compute::device device = compute::system::default_device();
@@ -294,7 +294,7 @@ void draw_image_cl(image_representation &img, std::string const &kern)
     queue.finish();
 }
 
-void draw_image_buffer_cl(image_representation &img, buffer_representation<boost::compute::uchar4_> &buff)
+void draw_image_buffer_cl(image_representation<std::uint8_t> &img, buffer_representation<boost::compute::uchar4_> &buff)
 {
     // get the default device
     compute::device device = compute::system::default_device();
@@ -370,7 +370,7 @@ void draw_image_buffer_cl(image_representation &img, buffer_representation<boost
     queue.finish();
 }
 
-void draw_write_only_cl(image_representation &img, std::string const &kern)
+void draw_write_only_cl(image_representation<std::uint8_t> &img, std::string const &kern)
 {
     // get the default device
     compute::device device = compute::system::default_device();
