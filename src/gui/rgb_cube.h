@@ -50,12 +50,16 @@ public:
 private:
     void loop();
     void pool_event();
+    void resize_window(int const &width, int const &height);
 
     /* OpenGL */
     GLuint vertex_array_id = 0;
     GLuint vertex_buffer   = 0;
+    GLuint color_buffer    = 0;
     GLuint matrix_id       = 0;
     program program_id;
+    std::array<GLfloat, 108> vertex_buffer_cube;
+    std::array<GLfloat, 108> color_buffer_cube;
 
     /* GLM */
 
