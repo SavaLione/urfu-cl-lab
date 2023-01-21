@@ -46,9 +46,17 @@
 #include "SDL_keycode.h"
 #include "gui/program.h"
 #include "io/log/logger.h"
+#include "io/texture_loader.h"
 
 rgb_cube_texture::rgb_cube_texture()
 {
+    /* OpenGL */
+    /* Enable depth test */
+    glEnable(GL_DEPTH_TEST);
+
+    /* Accept fragment if it closer to the camera than the former one */
+    glDepthFunc(GL_LESS);
+
     /* Shaders */
     fragment_shader = R"shader(
         #version 330 core
@@ -197,13 +205,90 @@ rgb_cube_texture::rgb_cube_texture()
         0.820f,  0.883f,  0.371f,
         0.982f,  0.099f,  0.879f
     };
+
+    g_vertex_buffer_cube =
+    {
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f,-1.0f,
+		 1.0f,-1.0f,-1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		 1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		 1.0f,-1.0f, 1.0f
+    };
+
+    g_uv_buffer_cube =
+    {
+		0.000059f, 1.0f-0.000004f, 
+		0.000103f, 1.0f-0.336048f, 
+		0.335973f, 1.0f-0.335903f, 
+		1.000023f, 1.0f-0.000013f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.999958f, 1.0f-0.336064f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.336024f, 1.0f-0.671877f, 
+		0.667969f, 1.0f-0.671889f, 
+		1.000023f, 1.0f-0.000013f, 
+		0.668104f, 1.0f-0.000013f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.000059f, 1.0f-0.000004f, 
+		0.335973f, 1.0f-0.335903f, 
+		0.336098f, 1.0f-0.000071f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.335973f, 1.0f-0.335903f, 
+		0.336024f, 1.0f-0.671877f, 
+		1.000004f, 1.0f-0.671847f, 
+		0.999958f, 1.0f-0.336064f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.668104f, 1.0f-0.000013f, 
+		0.335973f, 1.0f-0.335903f, 
+		0.667979f, 1.0f-0.335851f, 
+		0.335973f, 1.0f-0.335903f, 
+		0.668104f, 1.0f-0.000013f, 
+		0.336098f, 1.0f-0.000071f, 
+		0.000103f, 1.0f-0.336048f, 
+		0.000004f, 1.0f-0.671870f, 
+		0.336024f, 1.0f-0.671877f, 
+		0.000103f, 1.0f-0.336048f, 
+		0.336024f, 1.0f-0.671877f, 
+		0.335973f, 1.0f-0.335903f, 
+		0.667969f, 1.0f-0.671889f, 
+		1.000004f, 1.0f-0.671847f, 
+		0.667979f, 1.0f-0.335851f
+    };
+
     // clang-format on
 
     /* OpenGL */
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Create and compile program
@@ -217,9 +302,9 @@ rgb_cube_texture::rgb_cube_texture()
 
     // Camera matrix
     view = glm::lookAt(
-        glm::vec3(4, 3, -3), // Camera is at (4,3,-3), in World Space
-        glm::vec3(0, 0, 0),  // and looks at the origin
-        glm::vec3(0, 1, 0)   // Head is up (set to 0,-1,0 to look upside-down)
+        glm::vec3(4, 3, 3), // Camera is at (4,3,-3), in World Space
+        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
 
     // Model matrix : an identity matrix (model will be at the origin)
@@ -227,6 +312,12 @@ rgb_cube_texture::rgb_cube_texture()
 
     // Our ModelViewProjection : multiplication of our 3 matrices
     mvp = projection * view * model;
+
+    // Texture
+    texture = load_dds_texture("uvtemplate.DDS");
+
+    // Handle for uniform
+    texture_id = glGetUniformLocation(program_id.id(), "myTextureSampler");
 
     resize_window(window_width, window_height);
 }
@@ -238,31 +329,41 @@ void rgb_cube_texture::resize_window(int const &width, int const &height)
 
     if(vertex_buffer != 0)
         glDeleteBuffers(1, &vertex_buffer);
-    if(color_buffer != 0)
-        glDeleteBuffers(1, &color_buffer);
+    if(uv_buffer != 0)
+        glDeleteBuffers(1, &uv_buffer);
     if(vertex_array_id != 0)
         glDeleteVertexArrays(1, &vertex_array_id);
 
+    // MVP
+    mvp = projection * view * model;
+
+    // Vertex array
     glGenVertexArrays(1, &vertex_array_id);
     glBindVertexArray(vertex_array_id);
 
     // Vertex buffer
+    // glGenBuffers(1, &vertex_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_cube), vertex_buffer_cube.data(), GL_STATIC_DRAW);
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_cube), vertex_buffer_cube.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_cube), g_vertex_buffer_cube.data(), GL_STATIC_DRAW);
 
-    // Color buffer
-    glGenBuffers(1, &color_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_cube), color_buffer_cube.data(), GL_STATIC_DRAW);
+    // uv buffer
+    // glGenBuffers(1, &color_buffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_cube), color_buffer_cube.data(), GL_STATIC_DRAW);
+    glGenBuffers(1, &uv_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_cube), g_uv_buffer_cube.data(), GL_STATIC_DRAW);
 }
 
 rgb_cube_texture::~rgb_cube_texture()
 {
     if(vertex_buffer != 0)
         glDeleteBuffers(1, &vertex_buffer);
-    if(color_buffer != 0)
-        glDeleteBuffers(1, &color_buffer);
+    if(uv_buffer != 0)
+        glDeleteBuffers(1, &uv_buffer);
     if(vertex_array_id != 0)
         glDeleteVertexArrays(1, &vertex_array_id);
 }
@@ -278,6 +379,13 @@ void rgb_cube_texture::loop()
     // in the "MVP" uniform
     glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
 
+    // Bind our texture in Texture Unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Set our "myTextureSampler" sampler to use Texture Unit 0
+    glUniform1i(texture_id, 0);
+
     // First attribute buffer : vertices
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -292,9 +400,9 @@ void rgb_cube_texture::loop()
     */
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
-    // Color buffer
+    // UV
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
     /*
         1           - attribute (layout in the shader)
         3           - size
@@ -303,7 +411,7 @@ void rgb_cube_texture::loop()
         0           - stride
         (void *)0   - array buffer offset
     */
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
     // Draw the triangle
     glDrawArrays(GL_TRIANGLES, 0, 12 * 3);

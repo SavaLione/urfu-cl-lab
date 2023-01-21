@@ -384,7 +384,7 @@ void print_help()
     std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
     std::cout << "                                      7 - draw OpenCL particles with interoperability (don't work)" << std::endl;
     std::cout << "                                      8 - draw OpenGL RGB cube" << std::endl;
-    std::cout << "                                      9 - draw OpenGL RGB textured cube (don't work)" << std::endl;
+    std::cout << "                                      9 - draw OpenGL RGB textured cube" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;
     std::cout << "  -h, --help                      Display help information and exit" << std::endl;
     std::cout << "  -u, --build-info                Display build information end exit" << std::endl;

@@ -129,6 +129,7 @@ set(NYX_COMPUTE_SRC
 set(NYX_IO_SRC
     src/io/log/logger.cpp
     src/io/kernel_loader.cpp
+    src/io/texture_loader.cpp
 )
 
 set(NYX_PLATFORM_SRC

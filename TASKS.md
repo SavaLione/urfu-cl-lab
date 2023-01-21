@@ -66,13 +66,13 @@ Task: Build an application that models and visualizes the behavior of particles 
 - [x] Keyboard support
 
 ### Fifth OpenGL lab
-- [ ] Texture
+- [x] Texture
     - [ ] Load texture from BMP
     - [ ] Apply a texture to a cube
-    - [ ] Use UV coordinates
+    - [x] Use UV coordinates
     - [ ] mipmapping
     - [ ] DXT-5 texture
-    - [ ] DDS support
+    - [x] DDS support
 - [ ] Passing two textures to a shader
 - [ ] Texture blending
 - [ ] Keyboard support
