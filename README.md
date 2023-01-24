@@ -2,17 +2,28 @@
 OpenCL laboratory works
 
 ## Usage
-```sh
+```
 Usage: nyx [OPTION]
 
 Options:
-  -g, --gpu-only                  Perform only gpu tests
-  -c, --cpu-only                  Perform only cpu tests
+  -g, --gpu                       Perform gpu tests (on gpu via OpenCL)
+  -c, --cpu                       Perform cpu tests (on cpu)
   -v, --vector-size <size>        Vector of elements size (default: 102400000)
   -i, --iteration-count <count>   Count of iterations (default: 100)
-  -l, --laboratory-work <number>  Laboratory work number (default: 1)
+  -t, --task-number <number>      Task number
+                                  --task-number must be: 1, 2, 3, 4, 5, 6, 7, or 8 where:
+                                      1 - draw some buffer via OpenCL buffer (deprecated)
+                                      2 - draw Mandelbrot set via OpenCL buffer
+                                      3 - draw OpenGL RGB triangle
+                                      4 - draw OpenGL VAO triangle
+                                      5 - draw OpenGL VAO triangle with matrices support
+                                      6 - draw Mandelbrot set via OpenGL with interoperability
+                                      7 - draw OpenCL particles with interoperability (don't work)
+                                      8 - draw OpenGL RGB cube
+                                      9 - draw OpenGL RGB textured cube
   -b, --verbose                   Verbose output
-  -h, --help                      Display this help and exit
+  -h, --help                      Display help information and exit
+  -u, --build-info                Display build information end exit
 ```
 
 ## Additional readme files
