@@ -78,6 +78,7 @@ set(NYX_GUI_SRC
     src/gui/gl_image.cpp
     src/gui/gl_matrices.cpp
     src/gui/image_representation.cpp
+    src/gui/interop.cpp
     "src/gui/program.cpp"
     src/gui/rgb_cube_texture.cpp
     src/gui/rgb_cube.cpp
@@ -152,35 +153,28 @@ set(NYX_SRC
 add_executable(${PROJECT_NAME} ${NYX_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lmingw32")
-# target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::main)
-# target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::core)
-# target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::mixer)
-# target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::test)
-
-
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2main")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lsetupapi")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lhid")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-mwindows")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lm")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-ldinput8")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxguid")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxerr8")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-luser32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lgdi32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lwinmm")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-limm32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lole32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-loleaut32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lshell32")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-lversion")
-target_link_libraries(${PROJECT_NAME} PRIVATE "-luuid")
-
-
-
-target_link_libraries(${PROJECT_NAME} PRIVATE "-static-libgcc")
+if(MINGW)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lmingw32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2main")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lsetupapi")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lhid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-mwindows")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lm")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldinput8")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxguid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxerr8")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-luser32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lgdi32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lwinmm")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-limm32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lole32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-loleaut32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lshell32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lversion")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-luuid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-static-libgcc")
+endif(MINGW)
 
 # Libraries
 if(Threads_FOUND)
@@ -194,21 +188,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARY})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
-
-# target_link_libraries(${PROJECT_NAME} PRIVATE ${GLEW_LIBRARY})
-# target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE GLEW::GLEW)
-
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
 if(fmt_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
-
-
-
-# target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-# target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::main)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::core)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::mixer)

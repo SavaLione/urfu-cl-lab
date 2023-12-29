@@ -30,12 +30,12 @@
  */
 /**
  * @file
- * @brief OpenCL particles
+ * @brief Interoperability between OpenCL and OpenGL
  * @author Saveliy Pototskiy (SavaLione)
- * @date 22 Dec 2022
+ * @date 20 Dec 2022
  */
-#ifndef GUI_CL_PARTICLES_H
-#define GUI_CL_PARTICLES_H
+#ifndef GUI_INTEROP_H
+#define GUI_INTEROP_H
 
 #include "gui/sdl_wrapper.h"
 
@@ -46,14 +46,6 @@
     #include <windows.h>
     #include <wingdi.h>
 #endif
-
-// clang-format off
-#include <CL/cl_gl.h>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
-// clang-format on
 
 #include <boost/compute/event.hpp>
 #include <boost/compute/system.hpp>
@@ -68,13 +60,11 @@
 #include <boost/compute/utility/dim.hpp>
 #include <boost/compute/utility/source.hpp>
 
-#include "gui/image_representation.h"
-
-class cl_particles : public sdl_wrapper
+class interop : public sdl_wrapper
 {
 public:
-    cl_particles();
-    ~cl_particles();
+    interop();
+    ~interop();
 
 private:
     void loop();
@@ -96,10 +86,6 @@ private:
     boost::compute::command_queue cl_queue;
     boost::compute::program cl_program;
     boost::compute::opengl_texture cl_texture;
-    boost::compute::image2d cl_image_in;
-    boost::compute::image2d cl_image_out;
-
-    image_representation<float> ir;
 };
 
-#endif // GUI_CL_PARTICLES_H
+#endif // GUI_INTEROP_H

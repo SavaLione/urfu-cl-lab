@@ -56,6 +56,7 @@
 #include "gui/rgb_triangle.h"
 #include "gui/vao_triangle.h"
 #include "gui/gl_matrices.h"
+#include "gui/interop.h"
 #include "gui/cl_particles.h"
 #include "gui/rgb_cube.h"
 #include "gui/rgb_cube_texture.h"
@@ -322,6 +323,12 @@ int main(int argc, char *argv[])
                     glm.run();
                     break;
                 }
+                case 6:
+                {
+                    interop iop;
+                    iop.run();
+                    break;
+                }
                 case 7:
                 {
                     cl_particles clp;
@@ -376,6 +383,7 @@ void print_help()
     std::cout << "                                      4 - draw OpenGL VAO triangle" << std::endl;
     std::cout << "                                      5 - draw OpenGL VAO triangle with matrices support" << std::endl;
     std::cout << "                                      6 - draw Mandelbrot set via OpenGL with interoperability" << std::endl;
+    std::cout << "                                      7 - draw OpenCL particles with interoperability" << std::endl;
     std::cout << "                                      8 - draw OpenGL RGB cube" << std::endl;
     std::cout << "                                      9 - draw OpenGL RGB textured cube" << std::endl;
     std::cout << "  -b, --verbose                   Verbose output" << std::endl;

@@ -18,7 +18,7 @@ Options:
                                       4 - draw OpenGL VAO triangle
                                       5 - draw OpenGL VAO triangle with matrices support
                                       6 - draw Mandelbrot set via OpenGL with interoperability
-                                      7 - draw OpenCL particles with interoperability (don't work)
+                                      7 - draw OpenCL particles with interoperability
                                       8 - draw OpenGL RGB cube
                                       9 - draw OpenGL RGB textured cube
   -b, --verbose                   Verbose output
