@@ -39,6 +39,17 @@
 
 #include "gui/sdl_wrapper.h"
 
+#include <windows.h>
+#include <wingdi.h>
+
+// clang-format off
+#include <CL/cl_gl.h>
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
+// clang-format on
+
 #include <boost/compute/event.hpp>
 #include <boost/compute/system.hpp>
 #include <boost/compute/algorithm/copy.hpp>

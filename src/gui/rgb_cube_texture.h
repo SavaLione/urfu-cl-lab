@@ -40,6 +40,7 @@
 #include "gui/sdl_wrapper.h"
 
 #include <glm/glm.hpp>
+#include <array>
 
 class rgb_cube_texture : public sdl_wrapper
 {

@@ -1,3 +1,10 @@
+- Removed ``interop.h`` and ``interop.cpp``
+- Fixed ``execution_time.cpp`` bug
+- Updated ``.clang-format``
+- Changed license from ``BSD-3-Clause`` to ``GPL-2.0-only``
+- Added ``FindSDL2.cmake`` file in order to find SDL2 library
+- Removed ``.vscode`` directory from ``.gitignore``
+- Added ``.vscode`` directory with settings I often use (sorry for that)
 - Added OpenGL tasks
 - Added SDL2 wrapper (``core/sdl_wrapper.h``, ``core/sdl_wrapper.cpp``)
 - Removed graphics (SDL2 interaction) wrapper (``core/graphics.h``, ``core/graphics.cpp``)

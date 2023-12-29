@@ -76,8 +76,8 @@ public:
     }
 
 private:
-    std::chrono::steady_clock::time_point _start;
-    std::chrono::steady_clock::time_point _stop;
+    std::chrono::system_clock::time_point _start;
+    std::chrono::system_clock::time_point _stop;
 };
 
 #endif // CORE_EXECUTION_TIME_H

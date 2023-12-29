@@ -36,6 +36,9 @@
  */
 #include "gui/shader.h"
 
+#include <stdexcept>
+#include <vector>
+
 shader::~shader()
 {
     if(_id)

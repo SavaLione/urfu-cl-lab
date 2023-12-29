@@ -42,8 +42,8 @@
 #include <iterator>
 #include <string>
 #include <type_traits>
+#include <SDL2/SDL_keycode.h>
 
-#include "SDL_keycode.h"
 #include "gui/program.h"
 #include "io/log/logger.h"
 

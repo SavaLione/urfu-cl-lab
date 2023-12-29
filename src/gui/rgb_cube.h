@@ -39,6 +39,8 @@
 
 #include "gui/sdl_wrapper.h"
 
+#include <array>
+
 #include <glm/glm.hpp>
 
 class rgb_cube : public sdl_wrapper

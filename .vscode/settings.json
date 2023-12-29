@@ -1,0 +1,56 @@
+{
+    // End of line (we want LF instead of CRLF )
+    "files.eol": "\n",
+
+    // Tab size is equal 4 spaces
+    "editor.tabSize": 4,
+
+    // Insert spaces when pressing Tab
+    "editor.insertSpaces": true,
+
+    // I guess we don't want to override tab size settings
+    "editor.detectIndentation": false,
+
+    // Always use utf-8
+    "files.encoding": "utf8",
+
+    // Disable annoying css color picker
+    "css.colorDecorators.enable": false,
+
+    // Disable annoying scss color picker
+    "scss.colorDecorators.enable": false,
+
+    // Disable stupid enter autocomplete suggestions
+    "editor.acceptSuggestionOnEnter": "off",
+
+    // Spelling language (we want English and Russian spelling check)
+    "spellright.language": [
+        "en-US-10-1."
+    ],
+    "spellright.documentTypes": [
+        "latex",
+        "plaintext",
+        "jsonc",
+        "scss",
+        "yaml",
+        "markdown"
+    ],
+    "spellright.parserByClass": {
+        "bibtex": {
+            "parser": "plain"
+        }
+    },
+    "cSpell.language": "en-US,ru",
+    "files.associations": {
+        "iostream": "cpp",
+        "ostream": "cpp"
+    },
+
+    // Clangd setting
+    // You can add "-log=verbose" for verbose logging
+    "clangd.arguments": [
+        "-pretty", 
+        "--background-index",
+        "--query-driver=C:\\mingw\\bin\\g++.exe"
+    ]
+}

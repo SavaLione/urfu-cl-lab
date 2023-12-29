@@ -37,13 +37,14 @@
 #include "gui/rgb_cube_texture.h"
 
 #include <cstddef>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
 #include <iterator>
 #include <string>
 #include <type_traits>
 
-#include "SDL_keycode.h"
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <SDL2/SDL_keycode.h>
+
 #include "gui/program.h"
 #include "io/log/logger.h"
 #include "io/texture_loader.h"

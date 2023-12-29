@@ -1,5 +1,5 @@
 #################################################################################
-# Copyright (c) 2021-2022, Savely Pototsky (SavaLione)
+# Copyright (c) 2021-2023, Savely Pototsky (SavaLione)
 # savalione.com
 #################################################################################
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
@@ -34,7 +34,7 @@ CompactNamespaces: 'false'
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
 ContinuationIndentWidth: '4'
 FixNamespaceComments: 'true'
-IncludeBlocks: Regroup
+#IncludeBlocks: Regroup
 IndentCaseLabels: 'true'
 IndentPPDirectives: BeforeHash
 IndentWidth: '4'
@@ -46,7 +46,6 @@ PointerAlignment: Right
 # Need clangd (clang-format) 14
 # PackConstructorInitializers: Never
 ReflowComments: 'false'
-SortIncludes: 'true'
 SortUsingDeclarations: 'true'
 SpaceAfterCStyleCast: 'false'
 SpaceAfterLogicalNot: 'false'
@@ -67,5 +66,6 @@ SpacesInSquareBrackets: 'false'
 TabWidth: '4'
 UseTab: Never
 # Disable auto #include
-SortIncludes: false
-...
+IncludeBlocks: Preserve
+SortIncludes: Never
+# It's a good idea to add flag -header-insertion=never to clangd configure file
