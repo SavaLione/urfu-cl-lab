@@ -1,3 +1,74 @@
+2.6.0 - 2024-01-04
+------------------
+
+- Fixed CMake configuration file
+- Added install guide ``INSTALL.md``
+- Fixed ``execution_time.cpp`` bug
+- Updated ``.clang-format``
+- Changed license from ``BSD-3-Clause`` to ``GPL-2.0-or-later``
+- Added ``FindSDL2.cmake`` file in order to find SDL2 library
+- Removed ``.vscode`` directory from ``.gitignore``
+- Added ``.vscode`` directory with settings I often use (sorry for that)
+- Added OpenGL tasks
+- Added SDL2 wrapper (``core/sdl_wrapper.h``, ``core/sdl_wrapper.cpp``)
+- Removed graphics (SDL2 interaction) wrapper (``core/graphics.h``, ``core/graphics.cpp``)
+- Added class for easy drawing 2D image via buffer and OpenGL (``core/gl_image.h``, ``core/gl_image.cpp``)
+- Added RGB OpenGL triangle (``core/rgb_triangle.h``, ``core/rgb_triangle.cpp``)
+- Added keyboard interaction for RGB triangle
+- Added OpenGL VAO triangle (``core/vao_triangle.h``, ``core/vao_triangle.cpp``)
+- Changed file structure (``src/platform``, ``src/io``)
+- Added CMake auto configuration (``src/platform/platform.h.in``)
+- Added specific platform variables (``src/platform/platform.h.in``)
+- Added external ``fmt`` library support for ``spdlog``
+- Added logger definition files (``src/io/logger``)
+- Added a rule to ``.gitignore`` to ignore automatically generated files (``src/platform/platform.h``)
+- Added project description in CMake
+- Added project homepage url in CMake
+- Removed CMake linker flags (``CMAKE_EXE_LINKER_FLAGS``)
+- Added changes to GitHub linguist syntax highlighting (``.gitattributes``)
+    - Supported languages: ``https://github.com/github/linguist/blob/master/lib/linguist/languages.yml``
+- Fixed implicit conversion of NULL constant to ``GLuint`` (aka ``unsigned int``)
+- Fixed comparison between ``NULL`` and non-pointer (``GLuint`` (aka ``unsigned int``) and ``NULL``)
+- Fixed bad import bug (``src/core/new_gpu.cpp`` -> ``#include <fmt/core.h>``)
+- Changed print help information (``print_help()``)
+- Disabled clangd inlay hints (``.clangd``)
+- Added build information (``print_build_info()``, flags: ``--build-info``, ``-u``)
+- Added a function to determine the compiler name and version (``src/platform/compiler_version.h``, ``src/platform/compiler_version.cpp``)
+- Changed file structure
+- Changed default behavior (now by default we won't run any tasks)
+- Cleaned up CMake
+- Fixed type in source code (``OpenCV`` -> ``OpenCL``)
+- Fixed memory leak (``compile_shader(unsigned int type, std::string const &source)``)
+- Fixed memory leak (``throw std::runtime_error(_err);`` and ``glDeleteShader(id);``)
+- Added OpenGL shader representation (``src/gui/shader.h``, ``src/gui/shader.cpp``)
+- Added OpenGL program representation (``src/gui/program.h``, ``src/gui/program.cpp``)
+- Fixed argument parsing bug
+- Fixed potential memory leak in ``src/gui/shader`` (``char *message = (char *)malloc(length);``)
+- Fixed OpenGL shader representation (``src/gui/shader.h``, ``src/gui/shader.cpp``)
+- Fixed OpenGL program representation (``src/gui/program.h``, ``src/gui/program.cpp``)
+- Completed third OpenGL task
+- Added interoperability (OpenCL/OpenGL) (``src/gui/interop.h``, ``src/gui/interop.cpp``)
+- Added window resize support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added window resize event (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added on focus support (``src/gui/sdl_wrapper.h``, ``src/gui/sdl_wrapper.cpp``)
+- Added small fixes to ``interop``
+- Cleaned up ``interop``
+- Added window resize support for ``gl_image`` (``src/gui/gl_image.h``, ``src/gui/gl_image.h``)
+- Added on focus event to ``gl_image`` (``src/gui/gl_image.h``, ``src/gui/gl_image.h``)
+- Added ``clear()`` to image representation (``src/gui/image_representation.h``, ``src/gui/image_representation.h``)
+- Added window resize support for ``rgb_triangle`` (``src/gui/rgb_triangle.h``, ``src/gui/rgb_triangle.h``)
+- Added on focus event to ``rgb_triangle`` (``src/gui/rgb_triangle.h``, ``src/gui/rgb_triangle.h``)
+- Added window resize support for ``vao_triangle`` (``src/gui/vao_triangle.h``, ``src/gui/vao_triangle.h``)
+- Added on focus event to ``vao_triangle`` (``src/gui/vao_triangle.h``, ``src/gui/vao_triangle.h``)
+- Changed the default behavior when user didn't set any flag. The application will print help ``print_help()`` and exit
+- Fixed ``cl_image`` for drawing some buffer via OpenCL buffer (``src/gui/cl_image.h``, ``src/gui/cl_image.h``)
+- Changed application help information ``print_help()``
+- Changed application flags (``-l``, ``--laboratory-work``) -> (``-t``, ``--task-number``)
+- Marked as a deprecated class for drawing some buffer via OpenCL buffer (``src/gui/cl_image.h``, ``src/gui/cl_image.h``)
+- Added OpenGL RGB cube (``src/gui/rgb_cube.h``, ``src/gui/rgb_cube.h``)
+- Added OpenGL RGB textured cube (``src/gui/rgb_cube_texture.h``, ``src/gui/rgb_cube_texture.h``) (``It doesn't work``)
+- Added fifth laboratory work thar is completed (``src/gui/rgb_cube_texture.h``, ``src/gui/rgb_cube_texture.h``) (``It works now``)
+
 2.0.1 - 2022-11-22
 ------------------
 

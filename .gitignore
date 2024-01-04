@@ -1,8 +1,8 @@
 # Build directory
 /build
 
-# Visual Studio Code
-.vscode/
-
 # clangd
 .cache/
+
+# CMake auto generated files
+src/platform/platform.h

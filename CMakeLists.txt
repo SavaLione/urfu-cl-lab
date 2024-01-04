@@ -1,11 +1,17 @@
-cmake_minimum_required (VERSION 3.13.1)
+cmake_minimum_required (VERSION 3.19)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.0.1"
+    VERSION "2.6.0"
+    DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Savelii Pototskii (savalione.com) <monologuesplus@gmail.com>"
+    HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
 )
+
+# Defaults
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
 
 # Set default build to release
 if(NOT CMAKE_BUILD_TYPE)
@@ -23,9 +29,6 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
 else()
     message(STATUS "Unknown build type: " ${CMAKE_BUILD_TYPE})
 endif()
-
-# static
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -45,32 +48,44 @@ find_package(OpenMP)
 find_package(OpenCL REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(spdlog REQUIRED)
-find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Boost REQUIRED)
+find_package(fmt)
+find_package(glm REQUIRED)
+find_package(SDL2 REQUIRED)
+
+if(fmt_FOUND)
+    set(NYX_EXTERNAL_FMT ON)
+else()
+    set(NYX_EXTERNAL_FMT OFF)
+endif()
+
+# CMake configure
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/platform/platform.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/platform.h)
 
 # Sources
 set(NYX_CORE_SRC
-    src/core/buffer_representation.h
-    src/core/buffer_representation.cpp
-    src/core/cl_image.h
-    src/core/cl_image.cpp
-    src/core/cl_mandelbrot.h
-    src/core/cl_mandelbrot.cpp
-    src/core/execution_time.h
     src/core/execution_time.cpp
-    src/core/graphics.h
-    src/core/graphics.cpp
-    src/core/image_representation.h
-    src/core/image_representation.cpp
-    src/core/new_gpu.h
-    src/core/new_gpu.cpp
-    src/core/nyx.h
     src/core/nyx.cpp
-    src/core/platform.h
-    src/core/platform.cpp
-    src/core/settings.h
     src/core/settings.cpp
+)
+
+set(NYX_GUI_SRC
+    src/gui/buffer_representation.cpp
+    src/gui/cl_image.cpp
+    src/gui/cl_mandelbrot.cpp
+    src/gui/cl_particles.cpp
+    src/gui/gl_image.cpp
+    src/gui/gl_matrices.cpp
+    src/gui/image_representation.cpp
+    src/gui/interop.cpp
+    "src/gui/program.cpp"
+    src/gui/rgb_cube_texture.cpp
+    src/gui/rgb_cube.cpp
+    src/gui/rgb_triangle.cpp
+    src/gui/sdl_wrapper.cpp
+    src/gui/shader.cpp
+    src/gui/vao_triangle.cpp
 )
 
 set(NYX_COMPUTE_KERNELS_SRC
@@ -108,25 +123,58 @@ set(NYX_COMPUTE_KERNELS_SRC
 )
 
 set(NYX_COMPUTE_SRC
-    src/compute/compute_cpu.h
     src/compute/compute_cpu.cpp
-    src/compute/compute_gpu.h
     src/compute/compute_gpu.cpp
-    src/compute/fill_vectors.h
     src/compute/fill_vectors.cpp
-    src/compute/kernel_loader.h
-    src/compute/kernel_loader.cpp
+    src/compute/new_gpu.cpp
     ${NYX_COMPUTE_KERNELS_SRC}
+)
+
+set(NYX_IO_SRC
+    src/io/log/logger.cpp
+    src/io/kernel_loader.cpp
+    src/io/texture_loader.cpp
+)
+
+set(NYX_PLATFORM_SRC
+    src/platform/compiler_version.cpp
+    src/platform/platform.cpp
 )
 
 set(NYX_SRC
     ${NYX_CORE_SRC}
+    ${NYX_GUI_SRC}
     ${NYX_COMPUTE_SRC}
+    ${NYX_IO_SRC}
+    ${NYX_PLATFORM_SRC}
 )
 
 # Executable
 add_executable(${PROJECT_NAME} ${NYX_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
+
+if(MINGW)
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lmingw32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2main")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lSDL2")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lsetupapi")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lhid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-mwindows")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lm")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldinput8")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxguid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-ldxerr8")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-luser32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lgdi32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lwinmm")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-limm32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lole32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-loleaut32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lshell32")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-lversion")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-luuid")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "-static-libgcc")
+endif(MINGW)
 
 # Libraries
 if(Threads_FOUND)
@@ -140,10 +188,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENCL_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SPDLOG_LIBRARY})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SPDLOG_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE GLEW::GLEW)
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+if(fmt_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+endif()
+target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::main)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::core)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::mixer)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::test)
 
 # Output
 function_output_directory(${PROJECT_NAME})

@@ -1,5 +1,6 @@
 # Tasks
-## First OpenCL lab
+## OpenCL
+### First OpenCL lab
 - [x] Write OpenCL kernels
     - [x] add
     - [x] remove
@@ -26,7 +27,7 @@
     - [ ] Maximum number of work group dimensions
     - [ ] Maximum number of work group per dimension
 
-## Second OpenCL lab
+### Second OpenCL lab
 Task: Build an application that models and visualizes the behavior of particles on flat.
 
 - [x] Connection between OpenCL and OpenGL
@@ -40,3 +41,39 @@ Task: Build an application that models and visualizes the behavior of particles 
 - [ ] Collision between particle and window borders
 - [x] Pixel shader
 - [ ] Recreating the image
+
+## OpenGL
+### First OpenGL lab
+- [x] OpenGL RGB triangle
+
+### Second OpenGL lab
+- [x] OpenGL triangle via Vertex Array Object (VAO)
+- [x] Shaders
+    - [x] Fragment
+    - [x] Vertex
+
+### Third OpenGL lab
+- [x] OpenGL transformations
+- [ ] Basic transformations
+    - [ ] Rotate
+    - [ ] Move
+    - [ ] Scale
+- [x] Keyboard support
+
+### Fourth OpenGL lab
+- [x] Virtual cam
+- [x] RGB cube
+- [x] Keyboard support
+
+### Fifth OpenGL lab
+- [x] Texture
+    - [ ] Load texture from BMP
+    - [ ] Apply a texture to a cube
+    - [x] Use UV coordinates
+    - [ ] mipmapping
+    - [ ] DXT-5 texture
+    - [x] DDS support
+- [ ] Passing two textures to a shader
+- [ ] Texture blending
+- [ ] Keyboard support
+
