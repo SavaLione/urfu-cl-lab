@@ -1,7 +1,11 @@
-- Removed ``interop.h`` and ``interop.cpp``
+2.6.0 - 2024-01-04
+------------------
+
+- Fixed CMake configuration file
+- Added install guide ``INSTALL.md``
 - Fixed ``execution_time.cpp`` bug
 - Updated ``.clang-format``
-- Changed license from ``BSD-3-Clause`` to ``GPL-2.0-only``
+- Changed license from ``BSD-3-Clause`` to ``GPL-2.0-or-later``
 - Added ``FindSDL2.cmake`` file in order to find SDL2 library
 - Removed ``.vscode`` directory from ``.gitignore``
 - Added ``.vscode`` directory with settings I often use (sorry for that)

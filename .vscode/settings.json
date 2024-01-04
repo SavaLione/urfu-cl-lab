@@ -46,11 +46,25 @@
         "ostream": "cpp"
     },
 
-    // Clangd setting
+    // clangd setting
     // You can add "-log=verbose" for verbose logging
+    //
+    // For Windows use something like that:
+    //   clangd.arguments
+    //     -pretty
+    //     --background-index
+    //     --query-driver=C:\\mingw\\bin\\g++.exe
+    //
+    // For Unix use something like that:
+    //   clangd.path
+    //     /usr/bin/clangd-17
+    //   clang-format.executable
+    //     /usr/bin/clang-format-17
+    //
+    "clangd.path": "/usr/bin/clangd-17",
     "clangd.arguments": [
-        "-pretty", 
-        "--background-index",
-        "--query-driver=C:\\mingw\\bin\\g++.exe"
-    ]
+        "--header-insertion=never"
+    ],
+    "clang-format.executable": "/usr/bin/clang-format-17",
+    "clang-format.style": "file"
 }

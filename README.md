@@ -31,16 +31,9 @@ Options:
 * Example application output you can see here: [OUTPUT.md](OUTPUT.md)
 
 ## Compile and install
-```sh
-$ git clone https://github.com/SavaLione/urfu-cl-lab
-$ cd urfu-cl-lab
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-```
+Check [INSTALL.md](INSTALL.md).
 
 ## Additional information
-* Author of this project: Saveliy Pototskiy ([savalione.com](https://savalione.com))
+* Author of this project: Savelii Pototskii ([savalione.com](https://savalione.com))
 * Link to Github: https://github.com/SavaLione/urfu-cl-lab
 * Date of creation: 2022-09-13

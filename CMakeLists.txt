@@ -3,8 +3,8 @@ cmake_minimum_required (VERSION 3.19)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(nyx
-    VERSION "2.5.2"
-    DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Saveliy Pototskiy (savalione.com) <monologuesplus@gmail.com>"
+    VERSION "2.6.0"
+    DESCRIPTION "urfu OpenCL/OpenGL laboratory works. Savelii Pototskii (savalione.com) <monologuesplus@gmail.com>"
     HOMEPAGE_URL "https://github.com/SavaLione/urfu-cl-lab"
     LANGUAGES CXX
 )
